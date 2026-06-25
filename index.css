@@ -1,0 +1,595 @@
+/* ==================== VARIABLES Y CONFIGURACIÓN BÁSICA ==================== */
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface2: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --radius: 16px;
+  --radius-sm: 12px;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+/* ==================== DISEÑO DEL CONTENEDOR GENERAL ==================== */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+header {
+  background: linear-gradient(to right, var(--primary), var(--primary-light));
+  color: white;
+  padding: 2rem 2.5rem;
+  text-align: center;
+}
+
+h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle { 
+  opacity: 0.9; 
+  font-size: 1.1rem; 
+}
+
+.main-content { 
+  padding: 2.5rem; 
+}
+
+.section { 
+  margin-bottom: 2.5rem; 
+}
+
+h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ==================== COMPONENTES DE FORMULARIO Y BOTONES ==================== */
+input[type="text"], input[type="number"], select, input[type="date"] {
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+input:focus, select:focus { 
+  outline: none; 
+  border-color: var(--primary); 
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); 
+}
+
+button {
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.btn-primary { background: var(--primary); color: white; padding: 12px 24px; }
+.btn-primary:hover { background: #4f46e5; transform: translateY(-2px); }
+.btn-secondary { background: var(--surface2); color: var(--text-primary); padding: 10px 20px; border: 2px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-success { background: var(--success); color: white; padding: 10px 20px; }
+.btn-success:hover { background: #16a34a; }
+.btn-warning { background: var(--warning); color: white; padding: 10px 20px; }
+.btn-warning:hover { background: #d97706; }
+.btn-danger { background: var(--danger); color: white; padding: 10px 20px; }
+.btn-danger:hover { background: #dc2626; }
+
+.btn-add-week {
+  margin-top: 12px; 
+  padding: 8px 14px; 
+  font-size: 0.85rem; 
+  background: var(--surface2); 
+  border: 2px solid var(--border); 
+}
+
+/* ==================== SECCIÓN DE REPETICIONES Y CICLOS ==================== */
+.repeat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.repeat-grid label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.repeat-options {
+  background: var(--surface2);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  margin-top: 12px;
+}
+
+.interval-options {
+  margin-bottom: 12px;
+}
+
+.select-day {
+  padding: 6px 10px; 
+  font-size: 0.9rem;
+}
+
+.day-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+  gap: 8px;
+}
+
+.day-checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.cycle-weeks-container {
+  display: grid; 
+  gap: 12px;
+}
+
+.cycle-week-setup-card {
+  border: 2px solid var(--border); 
+  border-radius: var(--radius-sm); 
+  padding: 12px; 
+  background: white;
+}
+
+.cycle-week-header {
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 8px;
+}
+
+.cycle-week-title {
+  margin: 0; 
+  font-weight: 600; 
+  font-size: 0.95rem;
+}
+
+.btn-close-cycle {
+  padding: 4px 10px; 
+  background: transparent; 
+  color: var(--text-secondary); 
+  font-size: 1.1rem;
+}
+
+.cycle-templates-list {
+  margin-top: 12px; 
+  display: grid; 
+  gap: 8px;
+}
+
+.cycle-template-btn {
+  padding: 8px 14px; 
+  font-size: 0.85rem; 
+  text-align: left; 
+  background: white; 
+  border: 2px solid var(--border); 
+  border-radius: var(--radius-sm); 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  width: 100%;
+}
+
+.cycle-template-delete {
+  color: var(--danger); 
+  font-weight: 600;
+}
+
+/* ==================== LISTADO DE TAREAS CONFIGURADAS ==================== */
+.task-list { 
+  display: grid; 
+  gap: 12px; 
+  margin-top: 1rem; 
+}
+
+.task-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+}
+
+.task-card:hover {
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.task-details {
+  /* Estructura flex estándar */
+  flex: 1;
+}
+
+.task-title {
+  margin: 0 0 4px 0; 
+  font-weight: 600; 
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.task-title.completed {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.task-subtitle {
+  margin: 0; 
+  font-size: 0.85rem; 
+  color: var(--text-secondary);
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-action {
+  padding: 6px 10px; 
+  background: transparent; 
+  color: var(--primary); 
+  font-size: 1rem; 
+  border-radius: 6px;
+}
+
+.btn-action.btn-delete {
+  color: var(--danger);
+}
+
+.empty-tasks-msg {
+  color: var(--text-secondary); 
+  text-align: center; 
+  padding: 2rem;
+}
+
+/* ==================== PANELES DE EXPORTACIÓN Y CONTROL ==================== */
+.controls-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.export-panel {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  align-items: center;
+}
+
+.export-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.select-month {
+  padding: 10px; 
+  min-width: 120px;
+}
+
+.date-info {
+  background: #e0e7ff;
+  border: 1px solid #c7d2fe;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  color: #3730a3;
+}
+
+.week-info-badge {
+  margin-left: 12px;
+}
+
+/* ==================== CUADRÍCULA DE LA VISTA PREVIA (PANTALLA) ==================== */
+.preview-section {
+  margin-top: 3rem;
+  border-top: 2px dashed var(--border);
+  padding-top: 2rem;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.select-preview-range {
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  border-color: var(--primary-light);
+}
+
+.week-container {
+  padding: 5px 0;
+}
+
+.week-card {
+  margin-bottom: 2.5rem;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+}
+
+.week-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--surface2);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* 7 columnas en escritorio */
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+.day-header {
+  text-align: center;
+  font-weight: 600;
+  padding: 10px 4px;
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.calendar-day {
+  min-height: 130px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+}
+
+.calendar-day:hover {
+  background: white;
+  border-color: var(--primary-light);
+}
+
+.day-number {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+/* ==================== ETIQUETAS DE TAREAS (BADGES) ==================== */
+.task-badge {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 6px;
+  box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.05);
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.task-badge.trimestral {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+}
+
+.task-badge.mensual {
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+}
+
+/* Indicador flotante de guardado */
+.saved-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--success);
+  color: white;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: var(--shadow);
+}
+
+.saved-indicator.show { 
+  opacity: 1; 
+  transform: translateY(0); 
+}
+
+/* ==================== UTILIDADES GLOBALES COMPLETAMENTE EN CSS ==================== */
+.hidden { display: none !important; }
+.flex-1 { flex: 1; }
+.flex-align-center { display: flex; align-items: center; }
+.gap-8 { gap: 8px; }
+.w-60 { width: 60px; }
+.w-70 { width: 70px; }
+.w-80 { width: 80px; }
+.text-center { text-align: center; }
+.block-label { display: block; font-size: 0.9rem; color: var(--text-secondary); }
+.margin-top-sm { margin-top: 8px; }
+.margin-top-md { margin-top: 12px; }
+.margin-bottom-sm { margin-bottom: 8px; }
+.section-description { font-size: 0.9rem; color: var(--text-secondary); margin: 0 0 12px 0; }
+.label-text-muted { font-size: 0.95rem; color: var(--text-secondary); }
+
+/* ==================== RESPONSIVE DESIGN (MÓVILES Y TABLETS) ==================== */
+@media (max-width: 768px) {
+  body {
+    padding: 1rem 0.5rem;
+  }
+  
+  .main-content {
+    padding: 1.25rem;
+  }
+  
+  .controls-row, .export-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .export-group {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  input[type="text"], input[type="number"], select, input[type="date"], button {
+    width: 100%;
+  }
+
+  .w-60, .w-70, .w-80 {
+    width: 100% !important;
+  }
+
+  /* REESCRITURA DE LA CUADRÍCULA: En móviles los días pasan a ser filas verticales */
+  .calendar-grid {
+    grid-template-columns: 1fr; 
+    gap: 12px;
+  }
+
+  .day-header {
+    display: none; 
+  }
+
+  .calendar-day {
+    min-height: auto; 
+    padding: 12px;
+    border-left: 5px solid var(--primary-light); 
+  }
+
+  .day-number::before {
+    content: "Día "; 
+  }
+}
+
+/* ==================== CONTENEDOR OCULTO TEMPORAL Y ESTILOS DE EXPORTACIÓN PDF ==================== */
+.pdf-temp-buffer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 1122px;         /* Ancho exacto A4 Horizontal */
+  opacity: 0;            /* TRUCO: Al usuario no le aparece nada, pero mantiene su tamaño real */
+  pointer-events: none;  /* Evita que bloquee clics en tu aplicación */
+}
+
+/* Forzamos que las reglas del PDF sigan siendo de 7 columnas horizontales estrictas */
+.export-pdf .week-card {
+  min-height: 195mm;
+  width: 100%;
+  padding: 10mm 15mm;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  page-break-after: always; 
+  background: white;
+  margin-bottom: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.export-pdf .calendar-grid {
+  grid-template-columns: repeat(7, 1fr) !important; 
+  flex: 1;
+  align-items: stretch;
+}
+
+.export-pdf .day-header {
+  display: block !important; 
+}
+
+.export-pdf .calendar-day {
+  min-height: 100% !important;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 10px;
+  border: 2px solid #e2e8f0;
+}
+
+.pdf-month-header {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+}
