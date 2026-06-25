@@ -6,6 +6,12 @@
   <title>Planificador Semanal Profesional</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <link rel="stylesheet" href="index.css">
+  <meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Planificador">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192x192.png">
 </head>
 <body>
   <div class="container">
@@ -163,5 +169,14 @@
   <div class="saved-indicator" id="savedIndicator">💾 Cambios guardados automáticamente</div>
 
   <script src="index.js"></script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then((reg) => console.log('Service Worker registrado:', reg.scope))
+        .catch((err) => console.log('Error registrando SW:', err));
+    });
+  }
+</script>
 </body>
 </html>
