@@ -11,7 +11,7 @@ export class NDaysTask extends TaskBase {
         this.nDays=nDays;
     }
     thisDayHas(from,dayFromOrigin){
-        return this.fromIsBefore(from) &&  dayFromOrigin%this.nDays === 0;
+        return dayFromOrigin >= this.DaysFrom  && (dayFromOrigin - this.daysFrom)%this.nDays === 0;
     }
 }
 
@@ -39,3 +39,5 @@ export class QuaterlyTask extends NDaysTask{
         this.NDays=90;
     }
 }
+
+

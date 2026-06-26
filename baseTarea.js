@@ -2,14 +2,20 @@ export class TaskBase{
 
     name;
     total=1;
-    start;
+    daysFrom;
 
-    get Start(){
-        return this.start;
+    get DaysFrom(){
+        return this.daysFrom;
     }
 
-    set Start(start){
-        this.start=start;
+    set DaysFrom(daysFrom){
+        this.daysFrom=daysFrom;
+    }
+
+    getStart(from){
+        const f=new Date(from);
+        f.setDate(f.getDate()+this.DaysFrom);
+        return f;
     }
 
     get Total(){

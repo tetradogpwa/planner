@@ -7,13 +7,13 @@ import { TaskBase } from "./baseTarea.js";
 
 
 
-export class DaysOfWeekTask extends TaskBase{
-    
+export class DaysOfWeekTask extends TaskBase {
+
     flags = 0;
 
-    constructor(flags=0){
+    constructor(flags = 0) {
         super();
-        this.flags=flags;
+        this.flags = flags;
     }
 
     setDay(dayOfWeek) {
@@ -34,29 +34,34 @@ export class DaysOfWeekTask extends TaskBase{
         // Verifica si el bit está activado
         return (this.flags & (1 << dayOfWeek)) !== 0;
     }
-    fromIsBefore(from){
-        return from.getTime()>this.start.getTime()
-    }
-    thisDayHas(from,dayFromOrigin){
-        const dayOfWeek=dayFromOrigin%7;
-        return this.fromIsBefore(from) && this.hasDay(dayOfWeek);
+ 
+    thisDayHas(from, dayFromOrigin) {
+        const dayOfWeek = dayFromOrigin % 7;
+        const totalWeeks = dayFromOrigin / 7;
+        return dayFromOrigin >= this.DaysFrom 
+        && (    totalWeeks == 0 
+            &&  dayOfWeek >= this.Start.getDay() 
+            &&  this.hasDay(dayOfWeek)
+        ) || totalWeeks > 0 && this.hasDay(dayOfWeek);
     }
 }
 
-export class CiclesDaysOfWeekTask extends TaskBase{
-    cicles=[];
+export class CiclesDaysOfWeekTask extends TaskBase {
+    cicles = [];
 
-    get Cicles(){
+    get Cicles() {
         return this.cicles;
     }
 
-    set Cicles(cicles){
-        this.cicles=cicles;
+    set Cicles(cicles) {
+        this.cicles = cicles;
     }
 
-    thisDayHas(from,dayFromOrigin){
-        const posWeek=dayFromOrigin/this.cicles.length;
-        const dayOfWeek=dayFromOrigin%7;
-        return this.Cicles[posWeek].hasDay(dayOfWeek);
+    thisDayHas(from, dayFromOrigin) {
+        const weeks = dayFromOrigin / 7;
+        const dayOfWeek = dayFromOrigin % 7;
+        const posWeek=weeks/this.Cicles.length;
+        return dayFromOrigin >= this.DaysFrom 
+            && this.Cicles[posWeek].hasDay(dayOfWeek);
     }
 }

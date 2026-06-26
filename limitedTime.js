@@ -25,12 +25,12 @@ export class LimitedTimeTask extends TaskBase{
         const MAX=this.Repeat-1;
         let total=0;
         
-        for(let i=0;i<dayFromOrigin && this.fromIsBefore(from) &&  total <= MAX;i++){
-            if(this.Task.thisDayHas(i))total++;
+        for(let i=0;i<dayFromOrigin && total <= MAX;i++){
+            if(this.Task.thisDayHas(from,i))total++;
         };
         //si no ha pasado hasta ahora y ese dia por casualidad es, entonces lo es
         //el segundo o siguiente no lo es
-        return this.fromIsBefore(from) && total===MAX && this.Task.thisDayHas(dayFromOrigin);
+        return total===MAX && this.Task.thisDayHas(from,dayFromOrigin);
     }
 }
 

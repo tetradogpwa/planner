@@ -96,20 +96,28 @@ function updateDateUI() {
 }
 
 // ==================== INTERFAZ DE REPETICIÓN ====================
+
 window.updateRepeatUI = () => {
     const repeatType = document.querySelector('input[name="repeatType"]:checked').value;
     const repeatOptions = document.getElementById('repeatOptions');
     const daysIntervalDiv = document.getElementById('daysIntervalDiv');
     const specificDaysDiv = document.getElementById('specificDaysDiv');
     const cycleDiv = document.getElementById('cycleDiv');
+    const taskStartDayDiv = document.getElementById('taskStartDayDiv');
 
-    // Ocultar todo primero
+    // Ocultar todo
     repeatOptions.classList.add('hidden');
     daysIntervalDiv.classList.add('hidden');
     specificDaysDiv.classList.add('hidden');
     cycleDiv.classList.add('hidden');
 
-    // Mostrar lo necesario
+    // Mostrar u ocultar el día de inicio según si es ciclo o no
+    if (repeatType === 'cycle') {
+        taskStartDayDiv.classList.add('hidden');
+    } else {
+        taskStartDayDiv.classList.remove('hidden');
+    }
+
     if (repeatType === 'days-interval') {
         repeatOptions.classList.remove('hidden');
         daysIntervalDiv.classList.remove('hidden');
@@ -122,6 +130,98 @@ window.updateRepeatUI = () => {
     }
 };
 
+window.addTask = () => {
+    const taskName = document.getElementById('taskInput').value.trim();
+    if (!taskName) {
+        alert("Por favor, introduce un nombre para la tarea.");
+        return;
+    }
+
+    const repeatType = document.querySelector('input[name="repeatType"]:checked').value;
+    const total = parseInt(document.getElementById('timesPerDay').value) || 1;
+    // NUEVO: Capturar el día (0 si es un ciclo)
+    const startDay = repeatType === 'cycle' ? 0 : (parseInt(document.getElementById('startDay').value) || 0);
+    let newTask = null;
+
+    try {
+        if (repeatType === 'no-repeat') {
+            newTask = Main.CreateOneTimeTask(Main.CreateDailyTask(taskName, total, startDay), total, startDay);
+        } else if (repeatType === 'daily') {
+            newTask = Main.CreateDailyTask(taskName, total, startDay);
+        } else if (repeatType === 'days-interval') {
+            const interval = parseInt(document.getElementById('daysInterval').value) || 3;
+            newTask = Main.CreateNDaysTask(taskName, interval, total, startDay);
+        } else if (repeatType === 'specific-days') {
+            const checkboxes = document.querySelectorAll('#specificDaysDiv input[type="checkbox"]:checked');
+            const days = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            if (days.length === 0) {
+                alert("Selecciona al menos un día específico de la semana.");
+                return;
+            }
+            newTask = Main.CreateDaysOfWeekTask(taskName, days, total, startDay);
+        } else if (repeatType === 'cycle') {
+            const cycleArray = getCycleArray();
+            if (cycleArray.length === 0 || cycleArray.every(w => w.length === 0)) {
+                alert("Configura al menos un día en el ciclo semanal.");
+                return;
+            }
+            newTask = Main.CreateCycleDaysOfWeekTask(taskName, cycleArray, total, startDay);
+        }
+
+        if (newTask) {
+            tasks.push(newTask);
+            document.getElementById('taskInput').value = '';
+            saveData();
+            renderTasks();
+            window.updateWeekView();
+        }
+    } catch (e) {
+        console.error("Error al crear la tarea:", e);
+        alert("Ocurrió un error al crear la tarea. Revisa los parámetros.");
+    }
+};
+
+function renderTasks() {
+    const taskList = document.getElementById('taskList');
+    taskList.innerHTML = '';
+
+    if (tasks.length === 0) {
+        taskList.innerHTML = '<div class="empty-tasks-msg">No hay tareas configuradas. ¡Añade una arriba!</div>';
+        return;
+    }
+
+    tasks.forEach((task, index) => {
+        const card = document.createElement('div');
+        card.className = 'task-card';
+
+        let subtitle = task.constructor.name;
+        if (subtitle === 'DailyTask') subtitle = 'Diaria';
+        else if (subtitle === 'WeeklyTask') subtitle = 'Semanal';
+        else if (subtitle === 'NDaysTask') subtitle = `Cada ${task.NDays} días`;
+        else if (subtitle === 'DaysOfWeekTask') subtitle = 'Días específicos de la semana';
+        else if (subtitle === 'CiclesDaysOfWeekTask') subtitle = 'Ciclo de semanas personalizado';
+        else if (subtitle === 'OneTimeTask') subtitle = 'Una sola vez (Sin repetición)';
+
+        // NUEVO: Añadir el día en el que se inicia visualmente
+        if (task.DaysFrom !== undefined && task.constructor.name !== 'CiclesDaysOfWeekTask') {
+            const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            if (task.DaysFrom >= 0 && task.DaysFrom <= 6) {
+                subtitle += ` • Inicia: ${dayNames[task.DaysFrom]}`;
+            }
+        }
+
+        card.innerHTML = `
+            <div class="task-details">
+                <h4 class="task-title">${task.Name} ${task.Total > 1 ? `<span style="color:var(--primary)">[x${task.Total} veces al día]</span>` : ''}</h4>
+                <p class="task-subtitle">🔄 ${subtitle}</p>
+            </div>
+            <div class="task-actions">
+                <button class="btn-action btn-delete" onclick="deleteTask(${index})" title="Eliminar tarea">🗑️</button>
+            </div>
+        `;
+        taskList.appendChild(card);
+    });
+}
 // ==================== GESTIÓN DE CICLOS ====================
 window.addCycleWeek = () => {
     const container = document.getElementById('cycleWeeks');
@@ -206,90 +306,7 @@ window.loadCycleTemplate = (cycleArray) => {
 };
 
 // ==================== CREAR Y LISTAR TAREAS ====================
-window.addTask = () => {
-    const taskName = document.getElementById('taskInput').value.trim();
-    if (!taskName) {
-        alert("Por favor, introduce un nombre para la tarea.");
-        return;
-    }
 
-    const repeatType = document.querySelector('input[name="repeatType"]:checked').value;
-    const total = parseInt(document.getElementById('timesPerDay').value) || 1;
-    let newTask = null;
-
-    try {
-        if (repeatType === 'no-repeat') {
-            // Tarea de 1 solo uso: Se crea una diaria envuelta en OneTimeTask
-            newTask = Main.CreateOneTimeTask(Main.CreateDailyTask(taskName, total), total);
-        } else if (repeatType === 'daily') {
-            newTask = Main.CreateDailyTask(taskName, total);
-        } else if (repeatType === 'days-interval') {
-            const interval = parseInt(document.getElementById('daysInterval').value) || 3;
-            newTask = Main.CreateNDaysTask(taskName, interval, total);
-        } else if (repeatType === 'specific-days') {
-            const checkboxes = document.querySelectorAll('#specificDaysDiv input[type="checkbox"]:checked');
-            const days = Array.from(checkboxes).map(cb => parseInt(cb.value));
-            if (days.length === 0) {
-                alert("Selecciona al menos un día específico de la semana.");
-                return;
-            }
-            newTask = Main.CreateDaysOfWeekTask(taskName, days, total);
-        } else if (repeatType === 'cycle') {
-            const cycleArray = getCycleArray();
-            if (cycleArray.length === 0 || cycleArray.every(w => w.length === 0)) {
-                alert("Configura al menos un día en el ciclo semanal.");
-                return;
-            }
-            newTask = Main.CreateCycleDaysOfWeekTask(taskName, cycleArray, total);
-        }
-
-        if (newTask) {
-            tasks.push(newTask);
-            document.getElementById('taskInput').value = '';
-            saveData();
-            renderTasks();
-            window.updateWeekView();
-        }
-    } catch (e) {
-        console.error("Error al crear la tarea:", e);
-        alert("Ocurrió un error al crear la tarea. Revisa los parámetros.");
-    }
-};
-
-function renderTasks() {
-    const taskList = document.getElementById('taskList');
-    taskList.innerHTML = '';
-
-    if (tasks.length === 0) {
-        taskList.innerHTML = '<div class="empty-tasks-msg">No hay tareas configuradas. ¡Añade una arriba!</div>';
-        return;
-    }
-    console.log(tasks);
-    tasks.forEach((task, index) => {
-        const card = document.createElement('div');
-        card.className = 'task-card';
-
-        // Determinar un subtítulo legible según el tipo de clase
-        let subtitle = task.constructor.name;
-        if (subtitle === 'DailyTask') subtitle = 'Diaria';
-        else if (subtitle === 'WeeklyTask') subtitle = 'Semanal';
-        else if (subtitle === 'NDaysTask') subtitle = `Cada ${task.NDays} días`;
-        else if (subtitle === 'DaysOfWeekTask') subtitle = 'Días específicos de la semana';
-        else if (subtitle === 'CiclesDaysOfWeekTask') subtitle = 'Ciclo de semanas personalizado';
-        else if (subtitle === 'OneTimeTask') subtitle = 'Una sola vez (Sin repetición)';
-
-        card.innerHTML = `
-            <div class="task-details">
-                <h4 class="task-title">${task.Name} ${task.Total > 1 ? `<span style="color:var(--primary)">[x${task.Total} veces al día]</span>` : ''}</h4>
-                <p class="task-subtitle">🔄 ${subtitle}</p>
-            </div>
-            <div class="task-actions">
-                <button class="btn-action btn-delete" onclick="deleteTask(${index})" title="Eliminar tarea">🗑️</button>
-            </div>
-        `;
-        taskList.appendChild(card);
-    });
-}
 
 window.deleteTask = (index) => {
     if (confirm('¿Eliminar esta tarea de forma permanente?')) {
