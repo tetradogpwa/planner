@@ -877,3 +877,151 @@ select:focus {
     box-shadow: none;
   }
 }
+.export-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: var(--surface-alt);
+  flex-wrap: wrap;
+}
+
+.export-label {
+  font-weight: 600;
+  min-width: 180px;
+}
+
+.input-field.small {
+  width: 120px;
+}
+
+/* ==================== EXPORT BUTTON SYSTEM ==================== */
+
+.export-row button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+/* -------------------- PRIMARY (EXPORTAR) -------------------- */
+.export-row .btn-primary {
+  background: linear-gradient(135deg, var(--primary), #4f46e5);
+  color: white;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.25);
+}
+
+.export-row .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(99, 102, 241, 0.35);
+}
+
+.export-row .btn-primary:active {
+  transform: translateY(0px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* -------------------- SECONDARY -------------------- */
+.export-row .btn-secondary {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.export-row .btn-secondary:hover {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* -------------------- DANGER -------------------- */
+.export-row .btn-danger {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.2);
+}
+
+.export-row .btn-danger:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(239, 68, 68, 0.3);
+}
+
+/* -------------------- INPUTS EN EXPORT -------------------- */
+.export-row .input-field.small {
+  height: 38px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+
+.export-row .input-field.small:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* -------------------- EXPORT ROW IMPROVEMENT -------------------- */
+.export-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  transition: background 0.2s ease;
+}
+
+.export-row:hover {
+  background: var(--surface);
+}
+
+.export-label {
+  font-weight: 600;
+  min-width: 190px;
+  color: var(--text-primary);
+}
+
+/* -------------------- MICRO INTERACTION -------------------- */
+.export-row button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+/* -------------------- MOBILE -------------------- */
+@media (max-width: 600px) {
+  .export-label {
+    min-width: 100%;
+  }
+
+  .export-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .export-row button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .export-row .input-field.small {
+    width: 100%;
+  }
+}

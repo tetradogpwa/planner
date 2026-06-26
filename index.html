@@ -132,7 +132,6 @@
       <section class="section export-group">
         <h2>💾 Copias de seguridad y Exportación</h2>
         <div class="controls-row" style="flex-wrap: wrap; gap: 0.75rem;">
-          <button onclick="triggerExportPDF()" class="btn btn-primary">📄 Exportar a PDF</button>
           <button onclick="exportToJSON()" class="btn btn-secondary">📥 Exportar JSON (Backup)</button>
           <button onclick="document.getElementById('fileInput').click()" class="btn btn-secondary">📤 Importar JSON</button>
           <button onclick="clearAllData()" class="btn btn-danger">Borrar todo</button>
@@ -140,6 +139,57 @@
         <input type="file" id="fileInput" class="hidden" accept=".json" onchange="importFromJSON(event)">
       </section>
 
+      <section class="section">
+  <h2>💾 Exportación</h2>
+
+  <!-- 1. RESTO DEL MES -->
+  <div class="export-row">
+    <div class="export-label">1. Resto del mes</div>
+    <button onclick="exportRestoMes()" class="btn-primary">
+      Exportar
+    </button>
+  </div>
+
+  <!-- 2. X SEMANAS + Z OMITIR -->
+  <div class="export-row">
+    <div class="export-label">2. X semanas + Z a evitar</div>
+
+    <input id="weeksInput" type="number" value="4" class="input-field small">
+    <input id="avoidWeeksInput" type="number" value="0" class="input-field small">
+
+    <button onclick="exportWeeks()" class="btn-primary">
+      Exportar
+    </button>
+  </div>
+
+  <!-- 3. MES Y AÑO -->
+  <div class="export-row">
+    <div class="export-label">3. Mes + Año</div>
+
+    <select id="exportMonthSelect" class="input-field small">
+      <option value="0">Ene</option>
+      <option value="1">Feb</option>
+      <option value="2">Mar</option>
+      <option value="3">Abr</option>
+      <option value="4">May</option>
+      <option value="5">Jun</option>
+      <option value="6">Jul</option>
+      <option value="7">Ago</option>
+      <option value="8">Sep</option>
+      <option value="9">Oct</option>
+      <option value="10">Nov</option>
+      <option value="11">Dic</option>
+    </select>
+
+    <input id="exportYearInput" type="number" class="input-field small">
+
+    <button onclick="exportMonth()" class="btn-primary">
+      Exportar
+    </button>
+  </div>
+
+  </div>
+</section>
       <section class="section preview-section">
         <div class="preview-header">
           <h2>👁️ Vista previa dinámica</h2>

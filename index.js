@@ -418,24 +418,7 @@ function exportPDF(weeksData, filename) {
     });
 }
 
-window.exportRestOfMonth = () => {
-    const weeksData = Main.GetRestoOfMonth(startDate, tasks);
-    exportPDF(weeksData, 'Resto_Del_Mes_Planificador.pdf');
-};
 
-window.exportWeeks = () => {
-    const n = parseInt(document.getElementById('weeksInput').value) || 4;
-    const weeksData = Main.GetNWeeks(startDate, n, 0, tasks);
-    exportPDF(weeksData, `Proximas_${n}_Semanas.pdf`);
-};
-
-window.exportSpecificMonth = () => {
-    const month = parseInt(document.getElementById('exportMonthSelect').value);
-    const year = parseInt(document.getElementById('exportYearInput').value);
-    const weeksData = Main.GetMonth(startDate, month, year, tasks);
-    const monthName = document.getElementById('exportMonthSelect').options[month].text;
-    exportPDF(weeksData, `Mes_${monthName}_${year}.pdf`);
-};
 
 // ==================== COPIAS DE SEGURIDAD (JSON) ====================
 window.exportToJSON = () => {
@@ -480,4 +463,152 @@ window.clearAllData = () => {
         renderTasks();
         window.updateWeekView();
     }
+};
+
+
+import * as Main from './main.js';
+
+// ==================== ESTADO ====================
+let tasks = [];
+let startDate = new Date();
+let cycleTemplates = [];
+
+// ==================== LOAD ====================
+function loadData() {
+    const savedTasks = localStorage.getItem('planner_tasks');
+    if (savedTasks) tasks = Main.FromJson(savedTasks);
+
+    const savedDate = localStorage.getItem('planner_startDate');
+    if (savedDate) {
+        startDate = new Date(savedDate);
+        document.getElementById('startDateInput').value = savedDate.split('T')[0];
+    }
+
+    const savedCycles = localStorage.getItem('planner_cycles');
+    if (savedCycles) cycleTemplates = JSON.parse(savedCycles);
+
+    renderTasks();
+    updateWeekView();
+}
+
+// ==================== SAVE ====================
+function saveData() {
+    localStorage.setItem(
+        'planner_tasks',
+        JSON.stringify({ tasks: tasks.map(t => ({ ...t, className: t.constructor.name })) })
+    );
+
+    localStorage.setItem('planner_startDate', startDate.toISOString());
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+    loadData();
+    updateExportUI();
+});
+
+// ==================== UI EXPORT ====================
+window.updateExportUI = () => {
+    const mode = document.getElementById('exportMode').value;
+
+    document.getElementById('exportWeeksOptions').classList.add('hidden');
+    document.getElementById('exportMonthOptions').classList.add('hidden');
+
+    if (mode === 'weeks') {
+        document.getElementById('exportWeeksOptions').classList.remove('hidden');
+    }
+
+    if (mode === 'month') {
+        document.getElementById('exportMonthOptions').classList.remove('hidden');
+    }
+};
+
+// ==================== EXPORT FIX PRINCIPAL ====================
+window.triggerExportPDF = () => {
+    const mode = document.getElementById('exportMode').value;
+
+    let weeksData;
+    let filename = "export.pdf";
+
+    if (mode === 'resto') {
+        weeksData = Main.GetRestoOfMonth(startDate, tasks);
+        filename = "resto_mes.pdf";
+    }
+
+    if (mode === 'weeks') {
+        const n = parseInt(document.getElementById('weeksInput').value) || 4;
+        const avoid = parseInt(document.getElementById('avoidWeeksInput').value) || 0;
+
+        weeksData = Main.GetNWeeks(startDate, n, avoid, tasks);
+        filename = `semanas_${n}_evitando_${avoid}.pdf`;
+    }
+
+    if (mode === 'month') {
+        const m = parseInt(document.getElementById('exportMonthSelect').value);
+        const y = parseInt(document.getElementById('exportYearInput').value);
+
+        weeksData = Main.GetMonth(startDate, m, y, tasks);
+        filename = `mes_${m + 1}_${y}.pdf`;
+    }
+
+    exportPDF(weeksData, filename);
+};
+
+// ==================== PDF ====================
+function exportPDF(weeksData, filename) {
+    const container = document.createElement('div');
+    container.innerHTML = `<div>${generateWeeksHTML(weeksData, true)}</div>`;
+    document.body.appendChild(container);
+
+    html2pdf().from(container).set({
+        filename,
+        jsPDF: { format: 'a4', orientation: 'landscape' }
+    }).save().then(() => container.remove());
+}
+
+// ==================== WEEK RENDER ====================
+function updateWeekView() {
+    const weeksData = Main.GetNWeeks(startDate, 4, 0, tasks);
+    document.getElementById('cycleDisplay').innerHTML = generateWeeksHTML(weeksData);
+}
+
+function generateWeeksHTML(weeksData) {
+    return weeksData.map(w => `<pre>${JSON.stringify(w, null, 2)}</pre>`).join('');
+}
+
+// ==================== TASKS (mínimo funcional) ====================
+function renderTasks() {
+    const el = document.getElementById('taskList');
+    el.innerHTML = tasks.map((t, i) =>
+        `<div>${t.Name} <button onclick="deleteTask(${i})">X</button></div>`
+    ).join('');
+}
+
+window.deleteTask = (i) => {
+    tasks.splice(i, 1);
+    saveData();
+    renderTasks();
+};
+
+// ==================== EXPORT SIMPLE ROW SYSTEM ====================
+
+window.exportRestoMes = () => {
+    const data = Main.GetRestoOfMonth(startDate, tasks);
+    exportPDF(data, "resto_mes.pdf");
+};
+
+window.exportWeeks = () => {
+    const x = parseInt(document.getElementById('weeksInput').value) || 4;
+    const z = parseInt(document.getElementById('avoidWeeksInput').value) || 0;
+
+    const data = Main.GetNWeeks(startDate, x, z, tasks);
+    exportPDF(data, `semanas_${x}_evitando_${z}.pdf`);
+};
+
+window.exportMonth = () => {
+    const month = parseInt(document.getElementById('exportMonthSelect').value);
+    const year = parseInt(document.getElementById('exportYearInput').value);
+
+    const data = Main.GetMonth(startDate, month, year, tasks);
+    exportPDF(data, `mes_${month + 1}_${year}.pdf`);
 };
