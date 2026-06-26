@@ -9,14 +9,14 @@ export class LimitedTimeTask extends TaskBase{
         return this.task;
     }
 
-    set _Task(task){
+    set Task(task){
         this.task=task;
     }
 
     get Repeat(){
         return this.repeat;
     }
-    set _Repeat(repeat){
+    set Repeat(repeat){
         this.repeat=repeat;
     }
     
@@ -36,6 +36,6 @@ export class LimitedTimeTask extends TaskBase{
 
 export class OneTimeTask extends LimitedTimeTask{
     constructor(){
-        this._Repeat=1;
+        this.Repeat=1;
     }
 }

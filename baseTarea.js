@@ -1,9 +1,3 @@
-
-
-
-
-
-
 export class TaskBase{
 
     name;
@@ -13,7 +7,7 @@ export class TaskBase{
         return this.total;
     }
 
-    set _Total(total){
+    set Total(total){
         this.total=total;
     }
 
@@ -21,7 +15,7 @@ export class TaskBase{
         return this.name;
     }
 
-    set _Name(name){
+    set Name(name){
         this.name=name;
     }
 

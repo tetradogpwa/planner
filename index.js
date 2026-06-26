@@ -264,7 +264,7 @@ function renderTasks() {
         taskList.innerHTML = '<div class="empty-tasks-msg">No hay tareas configuradas. ¡Añade una arriba!</div>';
         return;
     }
-
+    console.log(tasks);
     tasks.forEach((task, index) => {
         const card = document.createElement('div');
         card.className = 'task-card';

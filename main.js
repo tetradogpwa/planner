@@ -4,18 +4,6 @@ import { NDaysTask, DailyTask, WeeklyTask, MonthlyTask, QuaterlyTask } from './n
 import { LimitedTimeTask, OneTimeTask } from './limitedTime.js';
 import { DaysOfWeekTask, CiclesDaysOfWeekTask } from './daysOfWeek.js';
 
-// ==================== LISTA DE TODAS LAS CLASES ====================
-const AllTaskClasses = [
-  DailyTask,
-  WeeklyTask,
-  MonthlyTask,
-  QuaterlyTask,
-  NDaysTask,
-  LimitedTimeTask,
-  OneTimeTask,
-  DaysOfWeekTask,
-  CiclesDaysOfWeekTask,
-];
 
 // ==================== CONVERSIÓN JSON ↔ OBJETOS ====================
 /**
@@ -36,25 +24,44 @@ export function FromJson(dataStr) {
  */
 function ProcessTask({ className, ...data }) {
   let task = undefined;
-  const ClassTask = AllTaskClasses.find(a => a.name === className);
-  if(className=="CiclesDaysOfWeekTask"){
-    task=new CiclesDaysOfWeekTask();
-    for(let {flags} of data.cicles){
-      task.Cicles.push(new DaysOfWeekTask(flags))
-    }
-  }
-  else if (ClassTask) {
-    task = new ClassTask();
-    for (const prop of Object.keys(data)) {
-      // Usar setter si existe
-      if (typeof task[`_${prop}`] !== 'undefined') {
-        task[`_${prop}`] = data[prop];
-      } else {
-        task[prop] = data[prop];
+  switch (className) {
+    case CiclesDaysOfWeekTask.name:
+      task = new CiclesDaysOfWeekTask();
+      for (let { flags } of data.cicles) {
+        task.Cicles.push(new DaysOfWeekTask(flags))
       }
-    }
+      break;
+    case DaysOfWeekTask.name:
+      task = new DaysOfWeekTask(data.flags);
+      break;
+    case OneTimeTask.name:
+      task = new OneTimeTask();
+      break;
+    case LimitedTimeTask.name:
+      task = new LimitedTimeTask();
+      break;
+    case NDaysTask.name: task = new NDaysTask(); break;
+    case DailyTask.name: task = new DailyTask(); break;
+    case WeeklyTask.name: task = new WeeklyTask(); break;
+    case MonthlyTask.name: task = new MonthlyTask(); break;
+    case QuaterlyTask.name: task = new QuaterlyTask(); break;
   }
-
+  switch (className) {
+    case OneTimeTask.name:
+    case LimitedTimeTask.name:
+      task.Task = ProcessTask(data.task);
+      break;
+    case NDaysTask.name:
+    case DailyTask.name:
+    case WeeklyTask.name:
+    case MonthlyTask.name:
+    case QuaterlyTask.name:
+      task.NDays = data.nDays; break;
+  }
+  if (task) {
+    task.Total = data.total;
+    task.Name = data.name;
+  }
   return task;
 }
 
@@ -285,11 +292,11 @@ export function CreateDaysOfWeekTask(name, daysArray, total = 1) {
   const task = new DaysOfWeekTask();
   task._Name = name;
   task._Total = total;
-  
+
   for (let day of daysArray) {
     task.setDay(day);
   }
-  
+
   return task;
 }
 
@@ -300,7 +307,7 @@ export function CreateCycleDaysOfWeekTask(name, cycleWeeks, total = 1) {
   const task = new CiclesDaysOfWeekTask();
   task._Name = name;
   task._Total = total;
-  
+
   const cycles = cycleWeeks.map(weekDays => {
     const weekTask = new DaysOfWeekTask();
     for (let day of weekDays) {
@@ -308,7 +315,7 @@ export function CreateCycleDaysOfWeekTask(name, cycleWeeks, total = 1) {
     }
     return weekTask;
   });
-  
+
   task.Cicles = cycles;
   return task;
 }
