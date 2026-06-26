@@ -5,28 +5,14 @@ import * as Main from './main.js';
 let tasks = [];
 let startDate = new Date();
 let cycleTemplates = [];
-
-// ==================== INICIALIZACIÓN ====================
-document.addEventListener('DOMContentLoaded', () => {
-    loadData();
-    updateRepeatUI();
-    
-    // Asegurarse de que haya al menos una semana en la vista de ciclos
-    if (document.getElementById('cycleWeeks').children.length === 0) {
-        window.addCycleWeek();
-    }
-    
-    renderTasks();
-    updateDateUI();
-    window.updateWeekView();
-});
-
-// ==================== CARGA Y GUARDADO ====================
 function loadData() {
-    // Cargar tareas
+    // Cargar tareas de forma segura
     const savedTasks = localStorage.getItem('planner_tasks');
-    if (savedTasks) {
+    if (savedTasks && Main.FromJson) {
         tasks = Main.FromJson(savedTasks);
+    } else if (savedTasks) {
+        // Alternativa si FromJson tuviera problemas
+        try { tasks = JSON.parse(savedTasks); } catch(e){}
     }
 
     // Cargar fecha de inicio
@@ -49,10 +35,27 @@ function loadData() {
 }
 
 function saveData() {
-    localStorage.setItem('planner_tasks', Main.ToJson(tasks));
+    // Guardamos usando la misma lógica exacta de tu clase TaskBase de forma nativa
+    const backupStructure = { tasks: tasks.map(t => ({ ...t, className: t.constructor.name })) };
+    localStorage.setItem('planner_tasks', JSON.stringify(backupStructure));
     localStorage.setItem('planner_startDate', startDate.toISOString());
     showSavedIndicator();
 }
+// ==================== INICIALIZACIÓN ====================
+document.addEventListener('DOMContentLoaded', () => {
+    loadData();
+    updateRepeatUI();
+    
+    // Asegurarse de que haya al menos una semana en la vista de ciclos
+    if (document.getElementById('cycleWeeks').children.length === 0) {
+        window.addCycleWeek();
+    }
+    
+    renderTasks();
+    updateDateUI();
+    window.updateWeekView();
+});
+
 
 let savedIndicatorTimeout;
 function showSavedIndicator() {

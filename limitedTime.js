@@ -1,4 +1,4 @@
-import { TaskBase } from "./baseTarea";
+import { TaskBase } from "./baseTarea.js";
 
 
 
