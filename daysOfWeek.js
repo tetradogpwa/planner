@@ -12,6 +12,7 @@ export class DaysOfWeekTask extends TaskBase{
     flags = 0;
 
     constructor(flags=0){
+        super();
         this.flags=flags;
     }
 

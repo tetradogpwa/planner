@@ -17,21 +17,25 @@ export class NDaysTask extends TaskBase {
 
 export class DailyTask extends NDaysTask{
     constructor(){
+        super();
         this.NDays=1;
     }
 }
 export class WeeklyTask extends NDaysTask{
     constructor(){
+        super();
         this.NDays=7;
     }
 }
 export class MonthlyTask extends NDaysTask{
     constructor(){
+        super();
         this.NDays=30;
     }
 }
 export class QuaterlyTask extends NDaysTask{
     constructor(){
+        super();
         this.NDays=90;
     }
 }

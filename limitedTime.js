@@ -36,6 +36,7 @@ export class LimitedTimeTask extends TaskBase{
 
 export class OneTimeTask extends LimitedTimeTask{
     constructor(){
+        super();
         this.Repeat=1;
     }
 }
