@@ -48,8 +48,11 @@ function ProcessTask({ className, ...data }) {
   }
   switch (className) {
     case OneTimeTask.name:
+      task.Task = ProcessTask(data.task);
+      break;
     case LimitedTimeTask.name:
       task.Task = ProcessTask(data.task);
+      task.Repeat = data.repeat ?? 1;
       break;
     case DailyTask.name: task.nDays = 1; break;
     case WeeklyTask.name: task.nDays = 7; break;

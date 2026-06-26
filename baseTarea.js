@@ -40,7 +40,16 @@ export class TaskBase{
     }
 
    static toJson(tasks){
-        return JSON.stringify(tasks.map(t=>({...t,className:t.constructor.name})));
+        // Serializa recursivamente para que las tareas anidadas
+        // (LimitedTimeTask / OneTimeTask) también lleven su className.
+        const serialize = t => {
+            const obj = { ...t, className: t.constructor.name };
+            if (t.task && typeof t.task === 'object' && t.task.constructor) {
+                obj.task = serialize(t.task);
+            }
+            return obj;
+        };
+        return JSON.stringify(tasks.map(serialize));
     }
 
 }
