@@ -12,7 +12,7 @@ export class NDaysTask extends TaskBase {
     }
     thisDayHas(from,dayFromOrigin){
         return this.nDays===1 
-        || dayFromOrigin >= this.DaysFrom  && (dayFromOrigin - this.daysFrom)%this.nDays === 0 &&  (dayFromOrigin - this.daysFrom)/this.nDays >=1;
+        || dayFromOrigin >= this.DaysFrom  && (dayFromOrigin - this.daysFrom)%this.nDays === 0 ;
     }
 }
 

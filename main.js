@@ -11,8 +11,8 @@ import { DaysOfWeekTask, CiclesDaysOfWeekTask } from './daysOfWeek.js';
  */
 export function FromJson(dataStr) {
   try {
-    const tasksDirty = JSON.parse(dataStr).tasks;
-    return tasksDirty.map(ProcessTask).filter(r => r !== undefined);
+    const tasksDirty = JSON.parse(dataStr);
+    return (tasksDirty.tasks??tasksDirty).map(ProcessTask).filter(r => r !== undefined);
   } catch (e) {
     console.error('Error parsing JSON:', e);
     return [];
