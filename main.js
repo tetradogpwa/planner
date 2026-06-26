@@ -23,7 +23,7 @@ const AllTaskClasses = [
  */
 export function FromJson(dataStr) {
   try {
-    const tasksDirty = JSON.parse(dataStr);
+    const tasksDirty = JSON.parse(dataStr).tasks;
     return tasksDirty.map(ProcessTask).filter(r => r !== undefined);
   } catch (e) {
     console.error('Error parsing JSON:', e);
@@ -37,8 +37,13 @@ export function FromJson(dataStr) {
 function ProcessTask({ className, ...data }) {
   let task = undefined;
   const ClassTask = AllTaskClasses.find(a => a.name === className);
-
-  if (ClassTask) {
+  if(className=="CiclesDaysOfWeekTask"){
+    task=new CiclesDaysOfWeekTask();
+    for(let {flags} of data.cicles){
+      task.Cicles.push(new DaysOfWeekTask(flags))
+    }
+  }
+  else if (ClassTask) {
     task = new ClassTask();
     for (const prop of Object.keys(data)) {
       // Usar setter si existe

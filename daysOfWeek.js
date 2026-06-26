@@ -11,6 +11,10 @@ class DaysOfWeekTask extends TaskBase{
     
     flags = 0;
 
+    constructor(flags=0){
+        this.flags=flags;
+    }
+
     setDay(dayOfWeek) {
         if (!this.hasDay(dayOfWeek)) {
             // Activa el bit correspondiente al día
