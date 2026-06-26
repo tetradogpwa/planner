@@ -2,7 +2,7 @@ import { TaskBase } from "./baseTarea";
 
 
 
-class NDaysTask extends TaskBase {
+export class NDaysTask extends TaskBase {
     nDays;
     get NDays(){
         return this.nDays;
@@ -15,30 +15,23 @@ class NDaysTask extends TaskBase {
     }
 }
 
-class DailyTask extends NDaysTask{
+export class DailyTask extends NDaysTask{
     constructor(){
         this.nDays=1;
     }
 }
-class WeeklyTask extends NDaysTask{
+export class WeeklyTask extends NDaysTask{
     constructor(){
         this.nDays=7;
     }
 }
-class MonthlyTask extends NDaysTask{
+export class MonthlyTask extends NDaysTask{
     constructor(){
         this.nDays=30;
     }
 }
-class QuaterlyTask extends NDaysTask{
+export class QuaterlyTask extends NDaysTask{
     constructor(){
         this.nDays=90;
     }
 }
-export {
-    NDaysTask,
-    DailyTask,
-    WeeklyTask,
-    MonthlyTask,
-    QuaterlyTask,
-};

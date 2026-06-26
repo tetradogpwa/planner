@@ -2,7 +2,7 @@ import { TaskBase } from "./baseTarea";
 
 
 
-class LimitedTimeTask extends TaskBase{
+export class LimitedTimeTask extends TaskBase{
     task;
     repeat=1;
     get Task(){
@@ -34,13 +34,8 @@ class LimitedTimeTask extends TaskBase{
     }
 }
 
-class OneTimeTask extends LimitedTimeTask{
+export class OneTimeTask extends LimitedTimeTask{
     constructor(){
         this._Repeat=1;
     }
 }
-
-export {
-    LimitedTimeTask,
-    OneTimeTask,
-};

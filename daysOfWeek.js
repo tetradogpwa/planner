@@ -7,7 +7,7 @@ import { TaskBase } from "./baseTarea";
 
 
 
-class DaysOfWeekTask extends TaskBase{
+export class DaysOfWeekTask extends TaskBase{
     
     flags = 0;
 
@@ -40,7 +40,7 @@ class DaysOfWeekTask extends TaskBase{
     }
 }
 
-class CiclesDaysOfWeekTask extends TaskBase{
+export class CiclesDaysOfWeekTask extends TaskBase{
     cicles=[];
 
     get Cicles(){
@@ -57,9 +57,3 @@ class CiclesDaysOfWeekTask extends TaskBase{
         return this.Cicles[posWeek].hasDay(dayOfWeek);
     }
 }
-
-
-export {
-    DaysOfWeekTask,
-    CiclesDaysOfWeekTask,
-};

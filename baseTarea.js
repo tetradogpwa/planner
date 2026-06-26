@@ -4,7 +4,7 @@
 
 
 
-class TaskBase{
+export class TaskBase{
 
     name;
     total=1;
@@ -35,7 +35,3 @@ class TaskBase{
     }
 
 }
-
-export {
-    TaskBase
-};
