@@ -8,11 +8,8 @@ let cycleTemplates = [];
 function loadData() {
     // Cargar tareas de forma segura
     const savedTasks = localStorage.getItem('planner_tasks');
-    if (savedTasks && Main.FromJson) {
+    if (savedTasks) {
         tasks = Main.FromJson(savedTasks);
-    } else if (savedTasks) {
-        // Alternativa si FromJson tuviera problemas
-        try { tasks = JSON.parse(savedTasks); } catch(e){}
     }
 
     // Cargar fecha de inicio
@@ -32,6 +29,9 @@ function loadData() {
         cycleTemplates = JSON.parse(savedCycles);
     }
     renderCycleTemplates();
+    renderTasks();
+    updateWeekView();
+    
 }
 
 function saveData() {
@@ -191,6 +191,7 @@ function renderTasks() {
     }
 
     tasks.forEach((task, index) => {
+    
         const card = document.createElement('div');
         card.className = 'task-card';
 
@@ -220,6 +221,7 @@ function renderTasks() {
             </div>
         `;
         taskList.appendChild(card);
+    
     });
 }
 // ==================== GESTIÓN DE CICLOS ====================
@@ -376,8 +378,10 @@ function generateWeeksHTML(weeksData, isExport = false) {
 
             if (dayTasks && dayTasks.length > 0) {
                 dayTasks.forEach(task => {
-                    const extraBadge = task.Total > 1 ? ` x${task.Total}` : '';
-                    html += `<div class="task-badge">${task.Name}${extraBadge}</div>`;
+                    for(let i=0;i<task.Total;i++){
+                        const extraBadge = task.Total > 1 ?i==0?'[0-12]':'[12-24]' : '';
+                        html += `<div class="task-badge">${task.Name} ${extraBadge}</div>`;
+                    }
                 });
             }
 
