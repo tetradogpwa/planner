@@ -51,17 +51,16 @@ function ProcessTask({ className, ...data }) {
     case LimitedTimeTask.name:
       task.Task = ProcessTask(data.task);
       break;
-    case NDaysTask.name:
-    case DailyTask.name:
-    case WeeklyTask.name:
-    case MonthlyTask.name:
-    case QuaterlyTask.name:
-      task.NDays = data.nDays; break;
+    case DailyTask.name: task.nDays = 1; break;
+    case WeeklyTask.name: task.nDays = 7; break;
+    case MonthlyTask.name: task.nDays = 30; break;
+    case QuaterlyTask.name: task.nDays = 90; break;
+    case NDaysTask.name: task.NDays = data.nDays; break;
   }
   if (task) {
     task.Total = data.total;
     task.Name = data.name;
-    task.DaysFrom = data.daysFrom??0;
+    task.DaysFrom = data.daysFrom ?? 0;
   }
   return task;
 }
@@ -317,7 +316,7 @@ export function CreateCycleDaysOfWeekTask(name, cycleWeeks, total = 1, daysFrom 
   task.DaysFrom = daysFrom;
   task.Total = total;
 
-  task.Cicles =  cycleWeeks.map(weekDays => {
+  task.Cicles = cycleWeeks.map(weekDays => {
     const weekTask = new DaysOfWeekTask();
     for (let day of weekDays) {
       weekTask.setDay(day);
