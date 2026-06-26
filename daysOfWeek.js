@@ -34,10 +34,12 @@ export class DaysOfWeekTask extends TaskBase{
         // Verifica si el bit está activado
         return (this.flags & (1 << dayOfWeek)) !== 0;
     }
-
-    thisDayHas(dayFromOrigin){
+    fromIsBefore(from){
+        return from.getTime()>this.start.getTime()
+    }
+    thisDayHas(from,dayFromOrigin){
         const dayOfWeek=dayFromOrigin%7;
-        return this.hasDay(dayOfWeek);
+        return this.fromIsBefore(from) && this.hasDay(dayOfWeek);
     }
 }
 
@@ -52,7 +54,7 @@ export class CiclesDaysOfWeekTask extends TaskBase{
         this.cicles=cicles;
     }
 
-    thisDayHas(dayFromOrigin){
+    thisDayHas(from,dayFromOrigin){
         const posWeek=dayFromOrigin/this.cicles.length;
         const dayOfWeek=dayFromOrigin%7;
         return this.Cicles[posWeek].hasDay(dayOfWeek);

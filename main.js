@@ -61,6 +61,7 @@ function ProcessTask({ className, ...data }) {
   if (task) {
     task.Total = data.total;
     task.Name = data.name;
+    task.Start=new Date(data.start);
   }
   return task;
 }
@@ -76,11 +77,11 @@ export function ToJson(tasks) {
 /**
  * Obtiene las tareas que aplican a un día específico (contando desde origin)
  */
-export function GetTasksOfDay(dayFromOrigin, tasks) {
+export function GetTasksOfDay(from,dayFromOrigin, tasks) {
   if (!Array.isArray(tasks)) return [];
   return tasks.filter(t => {
     try {
-      return t && typeof t.thisDayHas === 'function' && t.thisDayHas(dayFromOrigin);
+      return t && typeof t.thisDayHas === 'function' && t.thisDayHas(from,dayFromOrigin);
     } catch (e) {
       console.error('Error checking task for day', dayFromOrigin, e);
       return false;
@@ -126,7 +127,7 @@ export function GetWeek(from, numWeek, tasks) {
 
   let weekTasks = [];
   for (let i = 0; i < 7; i++) {
-    weekTasks.push(GetTasksOfDay(dayFromOrigin + i, tasks));
+    weekTasks.push(GetTasksOfDay(from,dayFromOrigin + i, tasks));
   }
 
   return { mondayTo, weekTasks };
@@ -224,74 +225,81 @@ export function ValidateTask(task) {
 /**
  * Crea una tarea simple (sin repetición)
  */
-export function CreateSimpleTask(name, total = 1) {
+export function CreateSimpleTask(name, total = 1,start = new Date()) {
   const task = new TaskBase();
-  task._Name = name;
-  task._Total = total;
+  task.Name = name;
+  task.Start=start;
+  task.Total = total;
   return task;
 }
 
 /**
  * Crea una tarea diaria
  */
-export function CreateDailyTask(name, total = 1) {
+export function CreateDailyTask(name, total = 1,start = new Date()) {
   const task = new DailyTask();
-  task._Name = name;
-  task._Total = total;
+  task.Name = name;
+  task.Start=start;
+  task.Total = total;
   return task;
 }
 
 /**
  * Crea una tarea semanal
  */
-export function CreateWeeklyTask(name, total = 1) {
+export function CreateWeeklyTask(name, total = 1,start = new Date()) {
   const task = new WeeklyTask();
-  task._Name = name;
-  task._Total = total;
+  task.Name = name;
+  task.Start=start;
+  task.Total = total;
   return task;
 }
 
 /**
  * Crea una tarea de N días
  */
-export function CreateNDaysTask(name, nDays, total = 1) {
+export function CreateNDaysTask(name, nDays, total = 1,start = new Date()) {
   const task = new NDaysTask();
-  task._Name = name;
-  task._NDays = nDays;
-  task._Total = total;
+  task.Name = name;
+  task.Start=start;
+  task.NDays = nDays;
+  task.Total = total;
   return task;
 }
 
 /**
  * Crea una tarea limitada en tiempo
  */
-export function CreateLimitedTimeTask(baseTask, repeat = 1, total = 1) {
+export function CreateLimitedTimeTask(baseTask, repeat = 1, total = 1,start = new Date()) {
   const task = new LimitedTimeTask();
-  task._Name = baseTask.Name;
-  task._Task = baseTask;
-  task._Repeat = repeat;
-  task._Total = total;
+  task.Name = baseTask.Name;
+  task.Start=start;
+  task.Task = baseTask;
+  task.Repeat = repeat;
+  task.Total = total;
   return task;
 }
 
 /**
  * Crea una tarea de un solo uso
  */
-export function CreateOneTimeTask(baseTask, total = 1) {
+export function CreateOneTimeTask(baseTask, total = 1,start = new Date()) {
   const task = new OneTimeTask();
-  task._Name = baseTask.Name;
-  task._Task = baseTask;
-  task._Total = total;
+  task.Name = baseTask.Name;
+  task.Start=start;
+  task.Task = baseTask;
+  task.Total = total;
   return task;
 }
 
 /**
  * Crea una tarea de días específicos de la semana
  */
-export function CreateDaysOfWeekTask(name, daysArray, total = 1) {
+export function CreateDaysOfWeekTask(name, daysArray, total = 1,start = new Date()) {
   const task = new DaysOfWeekTask();
-  task._Name = name;
-  task._Total = total;
+  task.Name = name;
+  task.Start=start;
+  task.Total = total;
 
   for (let day of daysArray) {
     task.setDay(day);
@@ -303,10 +311,11 @@ export function CreateDaysOfWeekTask(name, daysArray, total = 1) {
 /**
  * Crea una tarea con ciclo personalizado
  */
-export function CreateCycleDaysOfWeekTask(name, cycleWeeks, total = 1) {
+export function CreateCycleDaysOfWeekTask(name, cycleWeeks, total = 1,start = new Date()) {
   const task = new CiclesDaysOfWeekTask();
-  task._Name = name;
-  task._Total = total;
+  task.Name = name;
+  task.Start=start;
+  task.Total = total;
 
   const cycles = cycleWeeks.map(weekDays => {
     const weekTask = new DaysOfWeekTask();

@@ -10,8 +10,8 @@ export class NDaysTask extends TaskBase {
     set NDays(nDays){
         this.nDays=nDays;
     }
-    thisDayHas(dayFromOrigin){
-        return dayFromOrigin%this.nDays === 0;
+    thisDayHas(from,dayFromOrigin){
+        return this.fromIsBefore(from) &&  dayFromOrigin%this.nDays === 0;
     }
 }
 

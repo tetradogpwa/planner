@@ -2,6 +2,15 @@ export class TaskBase{
 
     name;
     total=1;
+    start;
+
+    get Start(){
+        return this.start;
+    }
+
+    set Start(start){
+        this.start=start;
+    }
 
     get Total(){
         return this.total;
@@ -20,7 +29,7 @@ export class TaskBase{
     }
 
 
-    thisDayHas(dayFromOrigin){
+    thisDayHas(from,dayFromOrigin){
         throw new Error("Not implemented");
     }
 
