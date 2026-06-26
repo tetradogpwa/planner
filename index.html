@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Planificador">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
 </head>
+
 <body>
   <div class="container">
     <header>
@@ -37,13 +41,8 @@
       <section class="section">
         <h2>➕ Nueva tarea</h2>
         <div class="controls-row">
-          <input 
-            type="text" 
-            id="taskInput" 
-            placeholder="Nombre de la tarea" 
-            class="input-field flex-1"
-            onkeypress="if(event.key==='Enter') addTask()"
-          >
+          <input type="text" id="taskInput" placeholder="Nombre de la tarea" class="input-field flex-1"
+            onkeypress="if(event.key==='Enter') addTask()">
           <button onclick="addTask()" class="btn btn-primary">Agregar/Guardar</button>
         </div>
       </section>
@@ -119,12 +118,8 @@
             <div id="cycleWeeks" class="cycle-weeks-container"></div>
             <button onclick="addCycleWeek()" class="btn btn-secondary btn-sm">+ Añadir semana</button>
             <div class="controls-row" style="margin-top: 12px;">
-              <input 
-                type="text" 
-                id="cycleName" 
-                placeholder="Nombre del ciclo (ej: Turnos rotativos)" 
-                class="input-field flex-1"
-              >
+              <input type="text" id="cycleName" placeholder="Nombre del ciclo (ej: Turnos rotativos)"
+                class="input-field flex-1">
               <button onclick="saveCycleTemplate()" class="btn btn-primary">Guardar ciclo</button>
             </div>
             <div id="cycleTemplates" class="cycle-templates-list"></div>
@@ -138,7 +133,8 @@
         <div class="form-group">
           <label>Número de veces que se repite por día:</label>
           <div class="input-group">
-            <input type="number" id="timesPerDay" min="1" max="10" value="1" class="input-field" style="max-width: 100px;">
+            <input type="number" id="timesPerDay" min="1" max="10" value="1" class="input-field"
+              style="max-width: 100px;">
             <span class="input-label">veces/día</span>
           </div>
         </div>
@@ -161,7 +157,8 @@
 
           <div class="export-group">
             <div class="controls-row">
-              <input type="number" id="weeksInput" min="1" max="52" value="4" class="input-field" style="max-width: 100px;">
+              <input type="number" id="weeksInput" min="1" max="52" value="4" class="input-field"
+                style="max-width: 100px;">
               <button onclick="exportWeeks()" class="btn btn-warning">Próximas N semanas</button>
             </div>
             <span class="group-label">Descarga las próximas semanas que especifiques</span>
@@ -183,7 +180,8 @@
                 <option value="10">Noviembre</option>
                 <option value="11">Diciembre</option>
               </select>
-              <input type="number" id="exportYearInput" min="2024" max="2035" value="2026" class="input-field" style="max-width: 120px;">
+              <input type="number" id="exportYearInput" min="2024" max="2035" value="2026" class="input-field"
+                style="max-width: 120px;">
               <button onclick="exportSpecificMonth()" class="btn btn-success">Descargar mes</button>
             </div>
             <span class="group-label">Descarga un mes completo en PDF</span>
@@ -196,7 +194,8 @@
         <h2>💾 Copias de seguridad de datos</h2>
         <div class="controls-row">
           <button onclick="exportToJSON()" class="btn btn-secondary">Exportar JSON</button>
-          <button onclick="document.getElementById('fileInput').click()" class="btn btn-secondary">Importar JSON</button>
+          <button onclick="document.getElementById('fileInput').click()" class="btn btn-secondary">Importar
+            JSON</button>
           <button onclick="clearAllData()" class="btn btn-danger">Borrar todo</button>
         </div>
         <input type="file" id="fileInput" class="hidden" accept=".json" onchange="importFromJSON(event)">
@@ -223,5 +222,15 @@
 
   <!-- SCRIPTS -->
   <script src="index.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('Service Worker registrado:', reg.scope))
+          .catch((err) => console.log('Error registrando SW:', err));
+      });
+    }
+  </script>
 </body>
+
 </html>
