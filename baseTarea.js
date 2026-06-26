@@ -2,7 +2,7 @@ export class TaskBase{
 
     name;
     total=1;
-    daysFrom;
+    daysFrom=0;
 
     get DaysFrom(){
         return this.daysFrom;

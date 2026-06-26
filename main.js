@@ -61,7 +61,7 @@ function ProcessTask({ className, ...data }) {
   if (task) {
     task.Total = data.total;
     task.Name = data.name;
-    task.DaysFrom = data.daysFrom;
+    task.DaysFrom = data.daysFrom??0;
   }
   return task;
 }
