@@ -1,14 +1,6 @@
 import { TaskBase } from "./baseTarea.js";
 
-
-
-
-
-
-
-
 export class DaysOfWeekTask extends TaskBase {
-
     flags = 0;
 
     constructor(flags = 0) {
@@ -36,13 +28,11 @@ export class DaysOfWeekTask extends TaskBase {
     }
  
     thisDayHas(from, dayFromOrigin) {
+        // Si el día evaluado es anterior al inicio de la tarea, no aplica
+        if (dayFromOrigin < this.DaysFrom) return false;
+        
         const dayOfWeek = dayFromOrigin % 7;
-        const totalWeeks = dayFromOrigin / 7;
-        return dayFromOrigin >= this.DaysFrom 
-        && (    totalWeeks == 0 
-            &&  dayOfWeek >= this.Start.getDay() 
-            &&  this.hasDay(dayOfWeek)
-        ) || totalWeeks > 0 && this.hasDay(dayOfWeek);
+        return this.hasDay(dayOfWeek);
     }
 }
 
@@ -58,10 +48,16 @@ export class CiclesDaysOfWeekTask extends TaskBase {
     }
 
     thisDayHas(from, dayFromOrigin) {
-        const weeks = dayFromOrigin / 7;
+        // Si el día evaluado es anterior al inicio de la tarea, no aplica
+        if (dayFromOrigin < this.DaysFrom) return false;
+
+        // Necesario usar Math.floor para no obtener decimales
+        const weeks = Math.floor(dayFromOrigin / 7);
         const dayOfWeek = dayFromOrigin % 7;
-        const posWeek=weeks/this.Cicles.length;
-        return dayFromOrigin >= this.DaysFrom 
-            && this.Cicles[posWeek].hasDay(dayOfWeek);
+        
+        // Necesario usar módulo (%) para rotar entre los ciclos disponibles
+        const posWeek = weeks % this.Cicles.length;
+        
+        return this.Cicles[posWeek].hasDay(dayOfWeek);
     }
 }

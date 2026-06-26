@@ -111,12 +111,8 @@ window.updateRepeatUI = () => {
     specificDaysDiv.classList.add('hidden');
     cycleDiv.classList.add('hidden');
 
-    // Mostrar u ocultar el día de inicio según si es ciclo o no
-    if (repeatType === 'cycle') {
-        taskStartDayDiv.classList.add('hidden');
-    } else {
-        taskStartDayDiv.classList.remove('hidden');
-    }
+    // Mostrar siempre el selector del día de inicio
+    taskStartDayDiv.classList.remove('hidden');
 
     if (repeatType === 'days-interval') {
         repeatOptions.classList.remove('hidden');
@@ -139,8 +135,10 @@ window.addTask = () => {
 
     const repeatType = document.querySelector('input[name="repeatType"]:checked').value;
     const total = parseInt(document.getElementById('timesPerDay').value) || 1;
-    // NUEVO: Capturar el día (0 si es un ciclo)
-    const startDay = repeatType === 'cycle' ? 0 : (parseInt(document.getElementById('startDay').value) || 0);
+    
+    // CORRECCIÓN: Ahora siempre captura el valor, sea ciclo o no
+    const startDay = parseInt(document.getElementById('startDay').value) || 0;
+    
     let newTask = null;
 
     try {
@@ -181,6 +179,8 @@ window.addTask = () => {
     }
 };
 
+    
+    // ...resto del código de addTask igual...
 function renderTasks() {
     const taskList = document.getElementById('taskList');
     taskList.innerHTML = '';
