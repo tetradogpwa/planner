@@ -1,5 +1,4 @@
-const CACHE_NAME = 'planificador-v3.3';
-const CACHE_NAME = 'planificador-v3.4';
+const CACHE_NAME = 'planificador-v3.6';
 
 const ASSETS = [
   './',
