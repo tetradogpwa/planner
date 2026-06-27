@@ -1,29 +1,42 @@
 <div class="add-task-card">
-
-  <div class="form-group">
-    <label>Nombre de la tarea</label>
-    <input type="text" id="taskName" placeholder="Ej: Gym">
-  </div>
-
-  <div class="form-group">
-    <label>Repeticiones al día</label>
-    <input type="number" id="timesPerDay" value="1" min="1">
+  <div class="form-row">
+    <div class="form-group">
+      <label>Nombre</label>
+      <input type="text" id="taskName" placeholder="Ej: Gym">
+    </div>
+    <div class="form-group form-group--small">
+      <label>Veces/día</label>
+      <input type="number" id="timesPerDay" value="1" min="1">
+    </div>
   </div>
 
   <div class="form-group">
     <label>Tipo de repetición</label>
-
-    <div class="repeat-grid">
-      <label><input type="radio" name="repeat" value="no-repeat" checked> Sin repetición</label>
-      <label><input type="radio" name="repeat" value="daily"> Diario</label>
-      <label><input type="radio" name="repeat" value="interval"> Cada N días</label>
-      <label><input type="radio" name="repeat" value="days"> Días específicos</label>
-      <label><input type="radio" name="repeat" value="cycle"> Ciclo</label>
+    <div class="repeat-options">
+      <label class="repeat-option">
+        <input type="radio" name="repeat" value="no-repeat" checked>
+        <span>Sin repetición</span>
+      </label>
+      <label class="repeat-option">
+        <input type="radio" name="repeat" value="daily">
+        <span>Diario</span>
+      </label>
+      <label class="repeat-option">
+        <input type="radio" name="repeat" value="interval">
+        <span>Cada N días</span>
+      </label>
+      <label class="repeat-option">
+        <input type="radio" name="repeat" value="days">
+        <span>Días específicos</span>
+      </label>
+      <label class="repeat-option">
+        <input type="radio" name="repeat" value="cycle">
+        <span>Ciclo</span>
+      </label>
     </div>
   </div>
 
   <div id="extraOptions"></div>
 
-  <button id="addTaskBtn">Añadir tarea</button>
-
+  <button id="addTaskBtn">＋ Añadir tarea</button>
 </div>
