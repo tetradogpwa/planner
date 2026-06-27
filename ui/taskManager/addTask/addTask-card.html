@@ -1,0 +1,29 @@
+<div class="add-task-card">
+
+  <div class="form-group">
+    <label>Nombre de la tarea</label>
+    <input type="text" id="taskName" placeholder="Ej: Gym">
+  </div>
+
+  <div class="form-group">
+    <label>Repeticiones al día</label>
+    <input type="number" id="timesPerDay" value="1" min="1">
+  </div>
+
+  <div class="form-group">
+    <label>Tipo de repetición</label>
+
+    <div class="repeat-grid">
+      <label><input type="radio" name="repeat" value="no-repeat" checked> Sin repetición</label>
+      <label><input type="radio" name="repeat" value="daily"> Diario</label>
+      <label><input type="radio" name="repeat" value="interval"> Cada N días</label>
+      <label><input type="radio" name="repeat" value="days"> Días específicos</label>
+      <label><input type="radio" name="repeat" value="cycle"> Ciclo</label>
+    </div>
+  </div>
+
+  <div id="extraOptions"></div>
+
+  <button id="addTaskBtn">Añadir tarea</button>
+
+</div>

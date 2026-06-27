@@ -1,0 +1,47 @@
+.export-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.export-card h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.export-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.75rem;
+  background: var(--surface-alt);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.export-label {
+  min-width: 180px;
+  font-weight: 600;
+}
+
+.input-field.small {
+  width: 100px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}

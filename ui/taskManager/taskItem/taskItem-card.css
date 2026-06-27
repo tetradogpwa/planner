@@ -1,0 +1,42 @@
+.task-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: var(--transition);
+}
+
+.task-card:hover {
+  border-color: var(--primary-light);
+  background: #fafbff;
+  transform: translateY(-2px);
+}
+
+.task-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.task-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.btn-action {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.4rem;
+  border-radius: 8px;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}

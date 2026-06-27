@@ -1,0 +1,23 @@
+.day-cell {
+  background: var(--surface-alt);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.day-number {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
