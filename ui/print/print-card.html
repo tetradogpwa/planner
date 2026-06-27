@@ -1,0 +1,26 @@
+<div class="print-card">
+  <h3>🖨️ Exportar PDF</h3>
+
+  <div class="print-section">
+    <h4>Rápido</h4>
+    <div class="btn-row">
+      <button id="printWeekBtn">📄 Semana actual</button>
+      <button id="printAllBtn">📋 12 semanas</button>
+    </div>
+  </div>
+
+  <div class="print-section">
+    <h4>Rango personalizado</h4>
+    <div class="print-row">
+      <label>Semanas a exportar</label>
+      <input id="printWeeks" type="number" value="4" min="1" max="52" style="width:70px"/>
+    </div>
+    <div class="print-row">
+      <label>Semanas a evitar al inicio</label>
+      <input id="printAvoid" type="number" value="0" min="0" style="width:70px"/>
+    </div>
+    <button id="printCustomBtn">Exportar rango</button>
+  </div>
+
+  <div id="printStatus" class="print-status"></div>
+</div>

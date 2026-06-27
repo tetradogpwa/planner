@@ -1,96 +1,33 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Planner SPA</title>
-
   <link rel="stylesheet" href="./index.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-
 <body>
-
 <header class="topbar">
   <h1>📅 Planner</h1>
 </header>
-
 <div class="layout">
-
-  <!-- MENU -->
   <nav class="sidebar">
-
     <button class="nav-item active" data-view="tasks">🧩 Gestión tareas</button>
     <button class="nav-item" data-view="week">📆 Semana actual</button>
     <button class="nav-item" data-view="allWeeks">📊 Todas semanas</button>
-
     <hr/>
-
     <button class="nav-item" data-view="data">💾 Gestión datos</button>
     <button class="nav-item" data-view="print">🖨️ Imprimir / PDF</button>
-
   </nav>
-
-  <!-- CONTENT -->
   <main class="content">
-
-    <!-- TASKS -->
-    <section id="view-tasks" class="view active">
-      <h2>Gestión de tareas</h2>
-
-      <div id="addTaskMount"></div>
-      <div id="tasksMount"></div>
-
-    </section>
-
-    <!-- WEEK -->
-    <section id="view-week" class="view">
-      <h2>Semana actual</h2>
-      <div id="weekMount"></div>
-    </section>
-
-    <!-- ALL WEEKS -->
-    <section id="view-allWeeks" class="view">
-      <h2>Vista completa</h2>
-      <div id="allWeeksMount"></div>
-    </section>
-
-    <!-- DATA -->
-    <section id="view-data" class="view">
-      <h2>Gestión de datos</h2>
-
-      <input type="file" id="importFile" accept=".json" />
-      <button id="importBtn">Importar JSON</button>
-
-      <button id="exportJsonBtn">Exportar JSON</button>
-      <button id="clearAllBtn" style="background:#ef4444;">Borrar todo</button>
-
-      <pre id="dataStatus"></pre>
-    </section>
-
-    <!-- PRINT -->
-    <section id="view-print" class="view">
-      <h2>Impresión / PDF</h2>
-
-      <div>
-        <button id="printWeekBtn">Semana actual PDF</button>
-        <button id="printAllBtn">Todas las semanas PDF</button>
-      </div>
-
-      <hr/>
-
-      <div>
-        <label>Semanas:</label>
-        <input id="printWeeks" type="number" value="4"/>
-        <button id="printCustomBtn">Exportar rango</button>
-      </div>
-
-    </section>
-
+    <section id="view-tasks"    class="view active"></section>
+    <section id="view-week"     class="view"></section>
+    <section id="view-allWeeks" class="view"></section>
+    <section id="view-data"     class="view"></section>
+    <section id="view-print"    class="view"></section>
   </main>
 </div>
-
 <script type="module" src="./index.js"></script>
 </body>
-
 </html>

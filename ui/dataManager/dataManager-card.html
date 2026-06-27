@@ -1,45 +1,20 @@
 <div class="export-card">
+  <h3>💾 Gestión de datos</h3>
 
-  <h3>💾 Exportación</h3>
-
-  <!-- RESTO MES -->
   <div class="export-row">
-    <div class="export-label">Resto del mes</div>
-    <button id="exportRestoBtn" class="btn-primary">Exportar</button>
+    <div class="export-label">Importar tareas</div>
+    <input type="file" id="importJsonInput" accept=".json"/>
   </div>
 
-  <!-- SEMANAS -->
   <div class="export-row">
-    <div class="export-label">X semanas + Z evitar</div>
-
-    <input id="weeksInput" type="number" value="4" class="input-field small">
-    <input id="avoidInput" type="number" value="0" class="input-field small">
-
-    <button id="exportWeeksBtn" class="btn-primary">Exportar</button>
+    <div class="export-label">Exportar JSON</div>
+    <button id="exportJsonBtn" class="btn-primary">⬇️ Descargar</button>
   </div>
 
-  <!-- MES -->
   <div class="export-row">
-    <div class="export-label">Mes + Año</div>
-
-    <select id="monthSelect" class="input-field small">
-      <option value="0">Ene</option>
-      <option value="1">Feb</option>
-      <option value="2">Mar</option>
-      <option value="3">Abr</option>
-      <option value="4">May</option>
-      <option value="5">Jun</option>
-      <option value="6">Jul</option>
-      <option value="7">Ago</option>
-      <option value="8">Sep</option>
-      <option value="9">Oct</option>
-      <option value="10">Nov</option>
-      <option value="11">Dic</option>
-    </select>
-
-    <input id="yearInput" type="number" class="input-field small">
-
-    <button id="exportMonthBtn" class="btn-primary">Exportar</button>
+    <div class="export-label">Borrar todo</div>
+    <button id="clearAllBtn" class="btn-primary" style="background:var(--danger)">🗑️ Borrar</button>
   </div>
 
+  <pre id="dataStatus"></pre>
 </div>

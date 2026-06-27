@@ -1,16 +1,26 @@
 :root {
-  --bg: #0f172a;
-  --panel: #111827;
-  --panel2: #1f2937;
-  --text: #e5e7eb;
-  --muted: #94a3b8;
-  --accent: #6366f1;
-  --danger: #ef4444;
+  /* Base */
+  --bg:      #0f172a;
+  --panel:   #111827;
+  --panel2:  #1f2937;
+  --text:    #e5e7eb;
+  --muted:   #94a3b8;
+  --accent:  #6366f1;
+  --danger:  #ef4444;
+
+  /* Variables usadas por los componentes */
+  --surface:       #1f2937;
+  --surface-alt:   #111827;
+  --border:        #374151;
+  --radius:        12px;
+  --primary:       #6366f1;
+  --primary-dark:  #4f46e5;
+  --primary-light: #818cf8;
+  --text-secondary:#9ca3af;
+  --transition:    all 0.2s ease;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -28,6 +38,7 @@ body {
   background: var(--panel);
   border-bottom: 1px solid #2b3442;
 }
+.topbar h1 { margin: 0; font-size: 1.2rem; }
 
 /* LAYOUT */
 .layout {
@@ -45,7 +56,6 @@ body {
   gap: .5rem;
   border-right: 1px solid #2b3442;
 }
-
 .nav-item {
   padding: .75rem;
   border: none;
@@ -55,14 +65,12 @@ body {
   cursor: pointer;
   border-radius: 8px;
 }
-
-.nav-item:hover {
-  background: var(--panel2);
-}
-
-.nav-item.active {
-  background: var(--accent);
-  color: white;
+.nav-item:hover  { background: var(--panel2); }
+.nav-item.active { background: var(--accent); color: white; }
+.sidebar hr {
+  border: none;
+  border-top: 1px solid #2b3442;
+  margin: 0.5rem 0;
 }
 
 /* CONTENT */
@@ -71,14 +79,8 @@ body {
   padding: 1.5rem;
   overflow: auto;
 }
-
-.view {
-  display: none;
-}
-
-.view.active {
-  display: block;
-}
+.view         { display: none; }
+.view.active  { display: block; }
 
 /* BASIC UI */
 button {
@@ -90,25 +92,28 @@ button {
   cursor: pointer;
   margin: .25rem 0;
 }
+button:hover { opacity: .9; }
 
-button:hover {
-  opacity: .9;
+input[type="text"],
+input[type="number"],
+select {
+  background: var(--surface-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
 }
-
 input[type="file"] {
-  margin: 1rem 0;
+  margin: 0.5rem 0;
   color: var(--text);
 }
-
 pre {
   background: #0b1220;
   padding: 1rem;
   border-radius: 8px;
   color: var(--muted);
+  font-size: 0.85rem;
 }
-
-.sidebar hr {
-  border: none;
-  border-top: 1px solid #2b3442;
-  margin: 0.5rem 0;
-}
+label { color: var(--text); }
