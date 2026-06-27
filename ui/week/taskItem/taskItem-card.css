@@ -1,49 +1,162 @@
+/* ── Contenedor del día (acordeón) ── */
 .day-cell {
   background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0.4rem;
-  /* sin min-height fijo: crece con el contenido */
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  overflow: hidden;
+  transition: border-color 0.2s;
 }
 
-.day-number {
-  font-size: 0.65rem;
+.day-cell:hover {
+  border-color: #4b5563;
+}
+
+/* Día de hoy */
+.day-cell.is-today {
+  border-color: var(--primary);
+}
+
+.day-cell.is-today .day-header {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+/* ── Cabecera clicable ── */
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  color: var(--text);
+  margin: 0;
+  text-align: left;
+  gap: 0.5rem;
+  transition: background 0.18s;
+}
+
+.day-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 1;
+}
+
+.day-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.day-name {
+  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-secondary);
-  text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 0.1rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
+.day-cell.is-today .day-name {
+  color: var(--primary-light);
+}
+
+.day-date {
+  font-size: 0.68rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.day-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Contador de tareas */
+.task-count-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--primary-light);
+  padding: 1px 7px;
+  border-radius: 999px;
+  /* Oculto cuando no hay tareas */
+  display: none;
+}
+
+.task-count-badge.has-tasks {
+  display: inline-block;
+}
+
+/* Sin tareas */
+.task-count-badge.empty {
+  background: rgba(255,255,255,0.05);
+  color: var(--muted);
+  display: inline-block;
+}
+
+/* Chevron */
+.chevron {
+  font-size: 0.85rem;
+  color: var(--muted);
+  transition: transform 0.25s ease;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* ── Cuerpo colapsable ── */
+.day-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.day-body-inner {
+  overflow: hidden;
+}
+
+/* Estado abierto */
+.day-cell.open .day-body {
+  grid-template-rows: 1fr;
+}
+
+.day-cell.open .chevron {
+  transform: rotate(180deg);
+}
+
+.day-cell.open .day-header {
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Lista de tareas ── */
 .task-list {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  padding: 0.5rem 0.7rem;
 }
 
 .empty-day {
-  color: var(--border);
-  font-size: 0.7rem;
-  text-align: center;
-  padding: 0.5rem 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  padding: 0.35rem 0;
+  font-style: italic;
 }
 
+/* ── Badges ── */
 .task-badge {
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 2px 5px;
-  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 5px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   border-left: 3px solid transparent;
   line-height: 1.5;
-  /* permite que el texto haga wrap dentro de la celda */
   white-space: normal;
   word-break: break-word;
 }

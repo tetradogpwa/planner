@@ -5,11 +5,12 @@ import { DataManagerCard } from './ui/dataManager/dataManager-card.js';
 import { PrintCard }       from './ui/print/print-card.js';
 import { WeekCard }        from './ui/week/week-card.js';
 
-// Service Worker
-if ('serviceWorker' in navigator) {
+// ── Service Worker ──────────────────────────────────────────
+if ('serviceWorker' in navigator && false) {
   navigator.serviceWorker.register('./sw.js').catch(console.warn);
 }
 
+// ── Vistas ──────────────────────────────────────────────────
 const views = {
   tasks:    document.getElementById('view-tasks'),
   week:     document.getElementById('view-week'),
@@ -24,15 +25,65 @@ function setView(name) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.querySelector(`[data-view="${name}"]`).classList.add('active');
   render(name);
+  // Cerrar sidebar en mobile al navegar
+  closeSidebarMobile();
 }
 
 document.querySelectorAll('.nav-item').forEach(b =>
   b.addEventListener('click', () => setView(b.dataset.view))
 );
 
+// ── Sidebar: mobile toggle ───────────────────────────────────
+const menuToggle     = document.getElementById('menuToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function openSidebarMobile() {
+  document.body.classList.add('sidebar-open');
+  menuToggle.setAttribute('aria-expanded', 'true');
+}
+
+function closeSidebarMobile() {
+  document.body.classList.remove('sidebar-open');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}
+
+menuToggle.addEventListener('click', () => {
+  if (document.body.classList.contains('sidebar-open')) {
+    closeSidebarMobile();
+  } else {
+    openSidebarMobile();
+  }
+});
+
+sidebarOverlay.addEventListener('click', closeSidebarMobile);
+
+// Cerrar con Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.body.classList.contains('sidebar-open')) {
+    closeSidebarMobile();
+  }
+});
+
+// ── Sidebar: desktop collapse ────────────────────────────────
+const sidebar             = document.getElementById('sidebar');
+const sidebarCollapseBtn  = document.getElementById('sidebarCollapseBtn');
+
+const COLLAPSED_KEY = 'planner_sidebar_collapsed';
+
+// Restaurar estado guardado
+if (localStorage.getItem(COLLAPSED_KEY) === '1') {
+  sidebar.classList.add('collapsed');
+}
+
+sidebarCollapseBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('collapsed');
+  const isCollapsed = sidebar.classList.contains('collapsed');
+  localStorage.setItem(COLLAPSED_KEY, isCollapsed ? '1' : '0');
+});
+
+// ── Render views ─────────────────────────────────────────────
 async function render(view) {
   switch (view) {
-
     case 'tasks':
       new TaskManagerCard(views.tasks, Context).init();
       break;

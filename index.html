@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,18 +9,55 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
+
 <header class="topbar">
+  <button class="hamburger" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
   <h1>📅 Planner</h1>
+  <div class="topbar-spacer"></div>
 </header>
+
+<!-- Overlay para cerrar el menú en mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <div class="layout">
-  <nav class="sidebar">
-    <button class="nav-item active" data-view="tasks">🧩 Gestión tareas</button>
-    <button class="nav-item" data-view="week">📆 Semana actual</button>
-    <button class="nav-item" data-view="allWeeks">📊 Todas semanas</button>
-    <hr/>
-    <button class="nav-item" data-view="data">💾 Gestión datos</button>
-    <button class="nav-item" data-view="print">🖨️ Imprimir / PDF</button>
+  <nav class="sidebar" id="sidebar" aria-label="Navegación principal">
+
+    <div class="sidebar-nav">
+      <button class="nav-item active" data-view="tasks">
+        <span class="nav-icon">🧩</span>
+        <span class="nav-label">Gestión tareas</span>
+      </button>
+      <button class="nav-item" data-view="week">
+        <span class="nav-icon">📆</span>
+        <span class="nav-label">Semana actual</span>
+      </button>
+      <button class="nav-item" data-view="allWeeks">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Todas semanas</span>
+      </button>
+
+      <hr class="sidebar-divider"/>
+
+      <button class="nav-item" data-view="data">
+        <span class="nav-icon">💾</span>
+        <span class="nav-label">Gestión datos</span>
+      </button>
+      <button class="nav-item" data-view="print">
+        <span class="nav-icon">🖨️</span>
+        <span class="nav-label">Imprimir / PDF</span>
+      </button>
+    </div>
+
+    <!-- Botón de colapso (solo desktop) -->
+    <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Contraer menú">
+      <span class="collapse-icon">◀</span>
+      <span class="nav-label">Contraer</span>
+    </button>
+
   </nav>
+
   <main class="content">
     <section id="view-tasks"    class="view active"></section>
     <section id="view-week"     class="view"></section>
@@ -28,6 +66,7 @@
     <section id="view-print"    class="view"></section>
   </main>
 </div>
+
 <script type="module" src="./index.js"></script>
 </body>
 </html>

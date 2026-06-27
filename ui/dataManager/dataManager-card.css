@@ -1,38 +1,51 @@
 .export-card {
-  display: grid;
-  gap: 1rem;
-  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1.25rem;
   background: var(--surface);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 
 .export-card h3 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
+/* ── Fila: siempre en columna, label arriba, acción abajo ── */
 .export-row {
   display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
   background: var(--surface-alt);
   border-radius: 10px;
   border: 1px solid var(--border);
 }
 
 .export-label {
-  min-width: 180px;
+  font-size: 0.82rem;
   font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.input-field.small {
-  width: 100px;
+/* Input file ocupa todo el ancho */
+input[type="file"] {
+  font-size: 0.82rem;
+  width: 100%;
+  min-width: 0;
+  color: var(--text);
 }
 
+/* Botones ocupan todo el ancho — fácil de tocar en mobile */
 .btn-primary {
+  display: block;
+  width: 100%;
   background: var(--primary);
   color: white;
   border: none;
@@ -40,8 +53,21 @@
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.875rem;
+  text-align: center;
+  margin: 0;
 }
 
 .btn-primary:hover {
   background: var(--primary-dark);
+  opacity: 1;
+}
+
+#dataStatus {
+  background: transparent;
+  border: none;
+  padding: 0.1rem 0;
+  font-size: 0.82rem;
+  color: var(--primary-light);
+  min-height: 1.2rem;
 }

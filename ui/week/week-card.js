@@ -1,6 +1,6 @@
 import { TaskItemCard } from './taskItem/taskItem-card.js';
 
-const DAY_NAMES = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO'];
+const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 export class WeekCard {
   constructor(root, weekData, index) {
@@ -33,13 +33,17 @@ export class WeekCard {
     this.title.textContent = `Semana ${this.index + 1} · ${fmt(monday)} – ${fmt(sunday)}`;
 
     this.daysContainer.innerHTML = '';
+
     this.week.weekTasks.forEach((tasksOfDay, dayIndex) => {
       const wrapper = document.createElement('div');
+
       const dayDate = new Date(monday);
       dayDate.setDate(dayDate.getDate() + dayIndex);
-      // pasamos el nombre del día y su fecha a la celda
+
       const label = DAY_NAMES[dayIndex];
-      new TaskItemCard(wrapper, tasksOfDay || [], dayIndex, label).init();
+
+      // Pasamos también la fecha real del día para detectar "hoy"
+      new TaskItemCard(wrapper, tasksOfDay || [], dayIndex, label, dayDate).init();
       this.daysContainer.appendChild(wrapper);
     });
   }
