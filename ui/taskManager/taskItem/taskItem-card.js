@@ -1,86 +1,55 @@
-export class TaskCard {
-    constructor(root, task, index) {
-        this.root = root;
-        this.task = task;
-        this.index = index;
+export class TaskItemCard {
+  constructor(root, tasks, dayIndex) {
+    this.root     = root;
+    this.tasks    = tasks;
+    this.dayIndex = dayIndex;
+  }
+
+  async init() {
+    const [html, css] = await Promise.all([
+      fetch('./ui/week/taskItem/taskItem-card.html').then(r => r.text()),
+      fetch('./ui/week/taskItem/taskItem-card.css').then(r => r.text()),
+    ]);
+    this.root.innerHTML = `<style>${css}</style>${html}`;
+    this.cache();
+    this.render();
+  }
+
+  cache() {
+    this.dayNumber = this.root.querySelector('.day-number');
+    this.list      = this.root.querySelector('.task-list');
+  }
+
+  render() {
+    this.dayNumber.textContent = `Día ${this.dayIndex + 1}`;
+    this.list.innerHTML = '';
+
+    if (!this.tasks?.length) {
+      this.list.innerHTML = `<span class="empty-day">—</span>`;
+      return;
     }
 
-    async init() {
-        const [html, css] = await Promise.all([
-            fetch('./ui/task/task-card.html').then(r => r.text()),
-            fetch('./ui/task/task-card.css').then(r => r.text())
-        ]);
+    this.tasks.forEach((task, taskIdx) => {
+      const hasSlot = task.Total > 1;
 
-        this.root.innerHTML = `
-            <style>${css}</style>
-            ${html}
-        `;
+      for (let i = 0; i < task.Total; i++) {
+        const badge = document.createElement('div');
 
-        this.cache();
-        this.render();
-        this.bind();
-    }
-
-    cache() {
-        this.title = this.root.querySelector('.task-title');
-        this.subtitle = this.root.querySelector('.task-subtitle');
-        this.deleteBtn = this.root.querySelector('#deleteBtn');
-    }
-
-    render() {
-
-        let subtitle;
-        const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-          
-        this.title.textContent = this.task.Name;
-
-
-        switch (this.task.constructor.name) {
-            case 'DailyTask':
-                subtitle = 'Diaria';
-                break;
-
-            case 'WeeklyTask':
-                subtitle = 'Semanal';
-                break;
-
-            case 'NDaysTask':
-                subtitle = `Cada ${task.NDays} días`;
-                break;
-
-            case 'DaysOfWeekTask':
-                subtitle = 'Días específicos';
-                break;
-
-            case 'CiclesDaysOfWeekTask':
-                subtitle = 'Ciclo personalizado';
-                break;
-
-            case 'OneTimeTask':
-                subtitle = 'Una sola vez';
-                break;
-        }
-        if (this.task.DaysFrom !== undefined) {
-            if (this.task.DaysFrom >= 0 && this.task.DaysFrom <= 6) {
-                subtitle += ` • Inicia: ${days[this.task.DaysFrom]}`;
-            }
+        // Color: ámbar si tiene horario, violeta si impar, cian si par
+        if (hasSlot) {
+          badge.className = 'task-badge badge-slot';
+        } else if (taskIdx % 2 === 0) {
+          badge.className = 'task-badge badge-odd';
+        } else {
+          badge.className = 'task-badge badge-even';
         }
 
-        this.subtitle.textContent = subtitle;
-    }
+        const slot = hasSlot ? (i === 0 ? ' · 0–12H' : ' · 12–24H') : '';
+        badge.textContent = `${task.Name.toUpperCase()}${slot}`;
+        badge.title       = badge.textContent;
 
-    bind() {
-        this.deleteBtn.onclick = () => {
-            this.emit('task-delete', {
-                index: this.index
-            });
-        };
-    }
-
-    emit(type, detail) {
-        this.root.dispatchEvent(new CustomEvent(type, {
-            detail,
-            bubbles: true
-        }));
-    }
+        this.list.appendChild(badge);
+      }
+    });
+  }
 }

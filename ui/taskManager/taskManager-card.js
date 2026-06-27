@@ -1,4 +1,4 @@
-import { AddTaskCard } from './addTask/addTask-card.js'; // ← path corregido
+import { AddTaskCard } from './addTask/addTask-card.js';
 
 export class TaskManagerCard {
   constructor(root, context) {
@@ -17,35 +17,54 @@ export class TaskManagerCard {
 
   mount() {
     const addRoot  = this.root.querySelector('#addTaskMount');
-    const listRoot = this.root.querySelector('#taskListMount');
+    this.listRoot  = this.root.querySelector('#taskListMount');
+    this.countEl   = this.root.querySelector('#taskCount');
+    const toggle   = this.root.querySelector('#editToggle');
 
+    // Switch gestión → activa/desactiva modo edición
+    toggle.addEventListener('change', () => {
+      this.listRoot.classList.toggle('edit-mode', toggle.checked);
+    });
+
+    // AddTaskCard emite 'task-create' con bubbles
     const add = new AddTaskCard(addRoot);
     add.init();
-
-    // AddTaskCard dispara 'task-create' con bubbles:true → lo capturamos aquí
     addRoot.addEventListener('task-create', (e) => {
       this.context.Tasks.push(e.detail);
-      this.renderList(listRoot);
+      this.renderList();
     });
 
-    this.listRoot = listRoot;
-    this.renderList(listRoot);
+    this.renderList();
   }
 
-  renderList(listRoot = this.listRoot) {
-    listRoot.innerHTML = '';
+  renderList() {
+    this.listRoot.innerHTML = '';
+    this.countEl.textContent = this.context.Tasks.length;
+
     this.context.Tasks.forEach((t, i) => {
-      const div = document.createElement('div');
-      div.className = 'task-row';
-      div.innerHTML = `
-        <span>${t.Name}</span>
-        <button data-i="${i}" style="background:var(--danger)">Eliminar</button>
+      const row = document.createElement('div');
+      row.className = 'task-row';
+      row.innerHTML = `
+        <button class="btn-trash" title="Eliminar">🗑️</button>
+        <span class="task-name">${t.Name}</span>
+        <span class="task-type">${this.typeLabel(t)}</span>
       `;
-      div.querySelector('button').onclick = () => {
+      row.querySelector('.btn-trash').onclick = () => {
         this.context.Tasks.splice(i, 1);
-        this.renderList(listRoot);
+        this.renderList();
       };
-      listRoot.appendChild(div);
+      this.listRoot.appendChild(row);
     });
+  }
+
+  typeLabel(t) {
+    switch (t.constructor?.name) {
+      case 'DailyTask':      return 'Diaria';
+      case 'WeeklyTask':     return 'Semanal';
+      case 'NDaysTask':      return `Cada ${t.NDays}d`;
+      case 'DaysOfWeekTask': return 'Días esp.';
+      case 'OneTimeTask':    return 'Una vez';
+      default:               return t.constructor?.name ?? '—';
+    }
   }
 }
