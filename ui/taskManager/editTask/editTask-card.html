@@ -1,0 +1,50 @@
+<div class="edit-task-card">
+  <div class="edit-task-header">
+    <span class="edit-task-title">✏️ Editar tarea</span>
+    <button class="btn-close-edit" id="cancelEditBtn" title="Cancelar">✕</button>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Nombre</label>
+      <input type="text" id="editTaskName" placeholder="Ej: Gym">
+    </div>
+    <div class="form-group form-group--small">
+      <label>Veces/día</label>
+      <input type="number" id="editTimesPerDay" value="1" min="1">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Tipo de repetición</label>
+    <div class="repeat-options">
+      <label class="repeat-option">
+        <input type="radio" name="edit-repeat" value="no-repeat">
+        <span>Sin repetición</span>
+      </label>
+      <label class="repeat-option">
+        <input type="radio" name="edit-repeat" value="daily">
+        <span>Diario</span>
+      </label>
+      <label class="repeat-option">
+        <input type="radio" name="edit-repeat" value="interval">
+        <span>Cada N días</span>
+      </label>
+      <label class="repeat-option">
+        <input type="radio" name="edit-repeat" value="days">
+        <span>Días específicos</span>
+      </label>
+      <label class="repeat-option">
+        <input type="radio" name="edit-repeat" value="cycle">
+        <span>Ciclo</span>
+      </label>
+    </div>
+  </div>
+
+  <div id="editExtraOptions"></div>
+
+  <div class="edit-actions">
+    <button id="saveEditBtn" class="btn-save-edit">💾 Guardar cambios</button>
+    <button id="cancelEditBtn2" class="btn-cancel-edit">Cancelar</button>
+  </div>
+</div>

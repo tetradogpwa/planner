@@ -1,56 +1,18 @@
-import { DailyTask, NDaysTask }              from '../../../back/nDays.js';
-import { OneTimeTask }                        from '../../../back/limitedTime.js';
-import { DaysOfWeekTask, CiclesDaysOfWeekTask } from '../../../back/daysOfWeek.js';
-
-// ── Factories (antes en main.js) ─────────────────────────────────────────────
-
-function createDailyTask(name, total = 1, daysFrom = 0) {
-  const t = new DailyTask();
-  t.Name = name; t.Total = total; t.DaysFrom = daysFrom;
-  return t;
-}
-
-function createNDaysTask(name, nDays, total = 1, daysFrom = 0) {
-  const t = new NDaysTask();
-  t.Name = name; t.NDays = nDays; t.Total = total; t.DaysFrom = daysFrom;
-  return t;
-}
-
-function createOneTimeTask(baseTask, total = 1, daysFrom = 0) {
-  const t = new OneTimeTask();
-  t.Name = baseTask.Name; t.Task = baseTask; t.Total = total; t.DaysFrom = daysFrom;
-  return t;
-}
-
-function createDaysOfWeekTask(name, daysArray, total = 1, daysFrom = 0) {
-  const t = new DaysOfWeekTask();
-  t.Name = name; t.Total = total; t.DaysFrom = daysFrom;
-  daysArray.forEach(d => t.setDay(d));
-  return t;
-}
-
-function createCycleDaysOfWeekTask(name, cycleWeeks, total = 1, daysFrom = 0) {
-  const t = new CiclesDaysOfWeekTask();
-  t.Name = name; t.Total = total; t.DaysFrom = daysFrom;
-  t.Cicles = cycleWeeks.map(weekDays => {
-    const week = new DaysOfWeekTask();
-    weekDays.forEach(d => week.setDay(d));
-    return week;
-  });
-  return t;
-}
-
-// ── Constantes ───────────────────────────────────────────────────────────────
+import {
+  createDailyTask,
+  createNDaysTask,
+  createOneTimeTask,
+  createDaysOfWeekTask,
+  createCycleDaysOfWeekTask,
+} from '../../../back/taskFactory.js';
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-
-// ── Componente ───────────────────────────────────────────────────────────────
 
 export class AddTaskCard {
   constructor(root) {
     this.root       = root;
     this.repeatType = 'no-repeat';
-    this.cycleWeeks = [0]; // bitmask por semana del ciclo
+    this.cycleWeeks = [0];
   }
 
   async init() {
@@ -80,8 +42,6 @@ export class AddTaskCard {
     this.btn.addEventListener('click', () => this.createTask());
     this.renderExtra();
   }
-
-  // ── Sección extra ─────────────────────────────────────────────────────────
 
   renderExtra() {
     this.extra.innerHTML = '';
@@ -113,8 +73,7 @@ export class AddTaskCard {
       const checked = (flags & (1 << i)) ? 'checked' : '';
       return `
         <label class="day-toggle">
-          <input type="checkbox" data-day="${i}" value="${i}" ${checked}
-                 data-prefix="${prefix}">
+          <input type="checkbox" data-day="${i}" value="${i}" ${checked} data-prefix="${prefix}">
           ${d}
         </label>`;
     }).join('');
@@ -170,52 +129,44 @@ export class AddTaskCard {
     this.extra.appendChild(builder);
   }
 
-  // ── Crear tarea ──────────────────────────────────────────────────────────
-
   createTask() {
     const name  = this.name.value.trim();
     const total = parseInt(this.times.value) || 1;
     if (!name) return alert('Nombre requerido');
 
-    let task = null;
+    const task = this.#buildTask(name, total, 0);
+    if (!task) return;
 
+    this.root.dispatchEvent(new CustomEvent('task-create', { detail: task, bubbles: true }));
+    this.reset();
+  }
+
+  #buildTask(name, total, daysFrom) {
     switch (this.repeatType) {
       case 'no-repeat':
-        task = createOneTimeTask(createDailyTask(name, total, 0), total, 0);
-        break;
-
+        return createOneTimeTask(createDailyTask(name, total, daysFrom), total, daysFrom);
       case 'daily':
-        task = createDailyTask(name, total, 0);
-        break;
-
+        return createDailyTask(name, total, daysFrom);
       case 'interval': {
         const n = parseInt(this.extra.querySelector('#interval')?.value) || 3;
-        task = createNDaysTask(name, n, total, 0);
-        break;
+        return createNDaysTask(name, n, total, daysFrom);
       }
-
       case 'days': {
         const days = [...this.extra.querySelectorAll('input[type="checkbox"]:checked')]
           .map(x => parseInt(x.dataset.day));
-        if (!days.length) return alert('Selecciona al menos un día');
-        task = createDaysOfWeekTask(name, days, total, 0);
-        break;
+        if (!days.length) { alert('Selecciona al menos un día'); return null; }
+        return createDaysOfWeekTask(name, days, total, daysFrom);
       }
-
       case 'cycle': {
-        if (!this.cycleWeeks.length) return alert('Añade al menos una semana al ciclo');
-        if (!this.cycleWeeks.some(f => f !== 0)) return alert('Marca al menos un día en el ciclo');
+        if (!this.cycleWeeks.length) { alert('Añade al menos una semana al ciclo'); return null; }
+        if (!this.cycleWeeks.some(f => f !== 0)) { alert('Marca al menos un día en el ciclo'); return null; }
         const cycleWeekDays = this.cycleWeeks.map(flags =>
-          DAY_NAMES.map((_, i) => i).filter(i => (flags & (1 << i)) !== 0)
+          [0,1,2,3,4,5,6].filter(i => (flags & (1 << i)) !== 0)
         );
-        task = createCycleDaysOfWeekTask(name, cycleWeekDays, total, 0);
-        break;
+        return createCycleDaysOfWeekTask(name, cycleWeekDays, total, daysFrom);
       }
+      default: return null;
     }
-
-    if (!task) return;
-    this.root.dispatchEvent(new CustomEvent('task-create', { detail: task, bubbles: true }));
-    this.reset();
   }
 
   reset() {

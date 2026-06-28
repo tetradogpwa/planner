@@ -1,4 +1,4 @@
-const CACHE_NAME = 'planificador-v3.8';
+const CACHE_NAME = 'planificador-v3.9';
 
 const ASSETS = [
   './',
@@ -11,8 +11,9 @@ const ASSETS = [
   './back/daysOfWeek.js',
   './back/limitedTime.js',
   './back/nDays.js',
-  './back/serializer.js',   // ← nuevo (antes en main.js)
-  './back/calendar.js',     // ← nuevo (antes en main.js)
+  './back/serializer.js',
+  './back/calendar.js',
+  './back/taskFactory.js',   // ← nuevo
   // UI - Data Manager
   './ui/dataManager/dataManager-card.html',
   './ui/dataManager/dataManager-card.css',
@@ -29,6 +30,10 @@ const ASSETS = [
   './ui/taskManager/addTask/addTask-card.html',
   './ui/taskManager/addTask/addTask-card.css',
   './ui/taskManager/addTask/addTask-card.js',
+  // UI - Edit Task (nuevo)
+  './ui/taskManager/editTask/editTask-card.html',
+  './ui/taskManager/editTask/editTask-card.css',
+  './ui/taskManager/editTask/editTask-card.js',
   // UI - Task Item
   './ui/taskManager/taskItem/taskItem-card.html',
   './ui/taskManager/taskItem/taskItem-card.css',
@@ -45,7 +50,6 @@ const ASSETS = [
   './manifest.json',
   './icon-192x192.png',
   './icon-512x512.png',
-  // Librerías externas
   'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
 ];
 
@@ -72,14 +76,12 @@ self.addEventListener('fetch', event => {
     caches.match(event.request).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
-        if (!response || response.status !== 200 || response.type !== 'basic')
-          return response;
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
         const clone = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         return response;
       }).catch(() => {
-        if (event.request.mode === 'navigate')
-          return caches.match('./index.html');
+        if (event.request.mode === 'navigate') return caches.match('./index.html');
       });
     })
   );
