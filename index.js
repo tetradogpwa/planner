@@ -1,16 +1,16 @@
 import { Context }         from './context.js';
-import * as Main           from './back/main.js';
+import { GetNWeeks }       from './back/calendar.js';
 import { TaskManagerCard } from './ui/taskManager/taskManager-card.js';
 import { DataManagerCard } from './ui/dataManager/dataManager-card.js';
 import { PrintCard }       from './ui/print/print-card.js';
 import { WeekCard }        from './ui/week/week-card.js';
 
-// ── Service Worker ──────────────────────────────────────────
+// ── Service Worker ────────────────────────────────────────
 if ('serviceWorker' in navigator && false) {
   navigator.serviceWorker.register('./sw.js').catch(console.warn);
 }
 
-// ── Vistas ──────────────────────────────────────────────────
+// ── Vistas ───────────────────────────────────────────────
 const views = {
   tasks:    document.getElementById('view-tasks'),
   week:     document.getElementById('view-week'),
@@ -25,7 +25,6 @@ function setView(name) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.querySelector(`[data-view="${name}"]`).classList.add('active');
   render(name);
-  // Cerrar sidebar en mobile al navegar
   closeSidebarMobile();
 }
 
@@ -33,7 +32,7 @@ document.querySelectorAll('.nav-item').forEach(b =>
   b.addEventListener('click', () => setView(b.dataset.view))
 );
 
-// ── Sidebar: mobile toggle ───────────────────────────────────
+// ── Sidebar: mobile toggle ───────────────────────────────
 const menuToggle     = document.getElementById('menuToggle');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
 
@@ -41,47 +40,35 @@ function openSidebarMobile() {
   document.body.classList.add('sidebar-open');
   menuToggle.setAttribute('aria-expanded', 'true');
 }
-
 function closeSidebarMobile() {
   document.body.classList.remove('sidebar-open');
   menuToggle.setAttribute('aria-expanded', 'false');
 }
 
 menuToggle.addEventListener('click', () => {
-  if (document.body.classList.contains('sidebar-open')) {
-    closeSidebarMobile();
-  } else {
-    openSidebarMobile();
-  }
+  document.body.classList.contains('sidebar-open')
+    ? closeSidebarMobile()
+    : openSidebarMobile();
 });
-
 sidebarOverlay.addEventListener('click', closeSidebarMobile);
-
-// Cerrar con Escape
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.body.classList.contains('sidebar-open')) {
+  if (e.key === 'Escape' && document.body.classList.contains('sidebar-open'))
     closeSidebarMobile();
-  }
 });
 
-// ── Sidebar: desktop collapse ────────────────────────────────
-const sidebar             = document.getElementById('sidebar');
-const sidebarCollapseBtn  = document.getElementById('sidebarCollapseBtn');
+// ── Sidebar: desktop collapse ────────────────────────────
+const sidebar            = document.getElementById('sidebar');
+const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+const COLLAPSED_KEY      = 'planner_sidebar_collapsed';
 
-const COLLAPSED_KEY = 'planner_sidebar_collapsed';
-
-// Restaurar estado guardado
-if (localStorage.getItem(COLLAPSED_KEY) === '1') {
-  sidebar.classList.add('collapsed');
-}
+if (localStorage.getItem(COLLAPSED_KEY) === '1') sidebar.classList.add('collapsed');
 
 sidebarCollapseBtn.addEventListener('click', () => {
   sidebar.classList.toggle('collapsed');
-  const isCollapsed = sidebar.classList.contains('collapsed');
-  localStorage.setItem(COLLAPSED_KEY, isCollapsed ? '1' : '0');
+  localStorage.setItem(COLLAPSED_KEY, sidebar.classList.contains('collapsed') ? '1' : '0');
 });
 
-// ── Render views ─────────────────────────────────────────────
+// ── Render ───────────────────────────────────────────────
 async function render(view) {
   switch (view) {
     case 'tasks':
@@ -89,7 +76,7 @@ async function render(view) {
       break;
 
     case 'week': {
-      const weeks = Main.GetNWeeks(Context.StartDate, 1, 0, Context.Tasks);
+      const weeks = GetNWeeks(Context.StartDate, 1, 0, Context.Tasks);
       if (weeks.length > 0) {
         new WeekCard(views.week, weeks[0], 0).init();
       } else {
@@ -100,8 +87,8 @@ async function render(view) {
 
     case 'allWeeks': {
       views.allWeeks.innerHTML = '<h2 style="margin-top:0">Vista completa</h2>';
-      const weeks = Main.GetNWeeks(Context.StartDate, 12, 0, Context.Tasks);
-      if (weeks.length === 0) {
+      const weeks = GetNWeeks(Context.StartDate, 12, 0, Context.Tasks);
+      if (!weeks.length) {
         views.allWeeks.innerHTML += '<p style="color:var(--muted)">Sin tareas para mostrar.</p>';
         break;
       }

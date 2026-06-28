@@ -1,4 +1,4 @@
-import * as Main from '../../back/main.js';
+import { FromJson, ToJson } from '../../back/serializer.js';
 
 export class DataManagerCard {
   constructor(root, context) {
@@ -18,10 +18,11 @@ export class DataManagerCard {
   mount() {
     // Exportar JSON
     this.root.querySelector('#exportJsonBtn').onclick = () => {
-      const blob = new Blob([Main.ToJson(this.context.Tasks)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href     = URL.createObjectURL(blob);
-      a.download = 'planner.json';
+      const blob = new Blob([ToJson(this.context.Tasks)], { type: 'application/json' });
+      const a = Object.assign(document.createElement('a'), {
+        href:     URL.createObjectURL(blob),
+        download: 'planner.json',
+      });
       a.click();
     };
 
@@ -29,27 +30,31 @@ export class DataManagerCard {
     this.root.querySelector('#importJsonInput').onchange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const r = new FileReader();
-      r.onload = ev => {
+      const reader = new FileReader();
+      reader.onload = ev => {
         try {
-          const parsed = Main.FromJson(ev.target.result);
+          const parsed = FromJson(ev.target.result);
           this.context.Tasks.length = 0;
           parsed.forEach(t => this.context.Tasks.push(t));
-          this.root.querySelector('#dataStatus').textContent =
-            `✅ ${parsed.length} tarea(s) importada(s)`;
+          this.#setStatus(`✅ ${parsed.length} tarea(s) importada(s)`);
         } catch {
-          this.root.querySelector('#dataStatus').textContent = '❌ JSON inválido';
+          this.#setStatus('❌ JSON inválido');
         }
       };
-      r.readAsText(file);
+      reader.readAsText(file);
     };
 
     // Borrar todo
     this.root.querySelector('#clearAllBtn').onclick = () => {
       if (confirm('¿Borrar todas las tareas?')) {
         this.context.Tasks.length = 0;
-        this.root.querySelector('#dataStatus').textContent = '🗑️ Datos borrados';
+        this.#setStatus('🗑️ Datos borrados');
       }
     };
+  }
+
+  #setStatus(msg) {
+    const el = this.root.querySelector('#dataStatus');
+    if (el) el.textContent = msg;
   }
 }

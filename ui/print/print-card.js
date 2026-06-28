@@ -1,4 +1,4 @@
-import * as Main from '../../back/main.js';
+import { GetNWeeks } from '../../back/calendar.js';
 
 export class PrintCard {
   constructor(root, context) {
@@ -25,25 +25,20 @@ export class PrintCard {
     };
   }
 
-  setStatus(msg) {
+  #setStatus(msg) {
     const el = this.root.querySelector('#printStatus');
     if (el) el.textContent = msg;
   }
 
   async export(nWeeks, avoid) {
-    this.setStatus('⏳ Generando PDF…');
+    this.#setStatus('⏳ Generando PDF…');
 
-    const weeks    = Main.GetNWeeks(this.context.StartDate, nWeeks, avoid, this.context.Tasks);
+    const weeks    = GetNWeeks(this.context.StartDate, nWeeks, avoid, this.context.Tasks);
     const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     const fmt      = d => d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
 
     const container = document.createElement('div');
-    container.style.cssText = [
-      'font-family:system-ui,sans-serif',
-      'padding:16px',
-      'background:#fff',
-      'color:#111',
-    ].join(';');
+    container.style.cssText = 'font-family:system-ui,sans-serif;padding:16px;background:#fff;color:#111;';
 
     weeks.forEach((week, wi) => {
       const monday = week.mondayTo;
@@ -58,20 +53,14 @@ export class PrintCard {
         const badges = tasks.flatMap(t =>
           Array.from({ length: t.Total }, (_, i) => {
             const slot = t.Total > 1 ? (i === 0 ? ' (0-12h)' : ' (12-24h)') : '';
-            return `<div style="
-              background:#ede9fe;color:#4f46e5;
-              font-size:9px;padding:2px 5px;
-              border-radius:4px;margin-bottom:2px;
-              line-height:1.4;
-            ">${t.Name}${slot}</div>`;
+            return `<div style="background:#ede9fe;color:#4f46e5;font-size:9px;
+                                padding:2px 5px;border-radius:4px;margin-bottom:2px;
+                                line-height:1.4;">${t.Name}${slot}</div>`;
           })
         ).join('');
 
         return `
-          <div style="
-            border:1px solid #e5e7eb;border-radius:6px;
-            padding:6px;min-height:80px;
-          ">
+          <div style="border:1px solid #e5e7eb;border-radius:6px;padding:6px;min-height:80px;">
             <div style="font-size:9px;font-weight:700;color:#6366f1;margin-bottom:4px;">
               ${dayName} ${fmt(dayDate)}
             </div>
@@ -92,24 +81,23 @@ export class PrintCard {
     });
 
     document.body.appendChild(container);
-
     try {
       await html2pdf()
         .set({
-          filename:   `planner-${nWeeks}sem.pdf`,
-          margin:     [8, 8, 8, 8],
+          filename:    `planner-${nWeeks}sem.pdf`,
+          margin:      [8, 8, 8, 8],
           html2canvas: { scale: 2 },
-          jsPDF:      { format: 'a4', orientation: 'landscape', unit: 'mm' },
+          jsPDF:       { format: 'a4', orientation: 'landscape', unit: 'mm' },
         })
         .from(container)
         .save();
-      this.setStatus('✅ PDF generado');
+      this.#setStatus('✅ PDF generado');
     } catch (e) {
       console.error(e);
-      this.setStatus('❌ Error al generar PDF');
+      this.#setStatus('❌ Error al generar PDF');
     } finally {
       container.remove();
-      setTimeout(() => this.setStatus(''), 4000);
+      setTimeout(() => this.#setStatus(''), 4000);
     }
   }
 }
