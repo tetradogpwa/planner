@@ -56,6 +56,9 @@ node tools/tasks/tasks.mjs amend T-004 --request "Lo nuevo que pide" [--criterio
   - "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de
     color, rem con --fs-*, contraste AA en tema claro y oscuro)".
   - "No se sale de la pantalla con letra al 200 % en móvil".
+  Y en toda tarea que cambie comportamiento, un criterio de pruebas
+  concreto: qué prueba unitaria (`tests/unit/`) o qué spec E2E
+  (`tests/e2e/specs/`) la demuestra, y "`bash tools/test.sh` sale en ✓".
 - Si `amend` falla porque la tarea ya está hecha, la herramienta te dice
   cómo crear la relacionada: hazlo.
 - Si haces `amend` sobre una tarea **en curso**, MiniMax no verá el

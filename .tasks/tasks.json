@@ -1,5 +1,5 @@
 {
-  "next": 11,
+  "next": 19,
   "tasks": [
     {
       "id": "T-001",
@@ -653,11 +653,11 @@
     {
       "id": "T-008",
       "title": "API interna del planificador (base para MCP)",
-      "status": "pendiente",
+      "status": "en_revision",
       "relatedTo": null,
       "created": "2026-10-19T04:38:59Z",
-      "updated": "2026-10-19T04:38:59Z",
-      "attempts": 0,
+      "updated": "2026-10-19T05:28:38Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-10-19T04:38:59Z",
@@ -678,11 +678,26 @@
         "No expone nada al exterior todavía: esta tarea solo crea la capa. La usará T-009 (servidor MCP). Expón también window.PlannerApi para depurar desde consola."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "78689bbe14a9620d43d53a50f083de0a458fd6ab",
       "history": [
         {
           "at": "2026-10-19T04:38:59Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-19T05:24:56Z",
+          "event": "foto del árbol",
+          "note": "78689bbe14"
+        },
+        {
+          "at": "2026-10-19T05:24:56Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-19T05:28:38Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
         }
       ]
     },
@@ -758,6 +773,318 @@
       "history": [
         {
           "at": "2026-10-19T04:40:44Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-011",
+      "title": "Quitar el botón 'Atajos de teclado' de Apariencia",
+      "status": "hecha",
+      "relatedTo": "T-007",
+      "created": "2026-10-19T05:23:59Z",
+      "updated": "2026-10-19T05:24:48Z",
+      "attempts": 1,
+      "requests": [
+        {
+          "at": "2026-10-19T05:23:59Z",
+          "text": "Quita de apariencia la parte de accesibilidad ya que no tiene nada que ver."
+        }
+      ],
+      "criteria": [
+        "La vista Apariencia ya no muestra la fila del botón 'Atajos de teclado' ni su texto explicativo.",
+        "El botón 'Atajos de teclado' de Legal y privacidad y el atajo '?' siguen abriendo la ayuda igual que antes.",
+        "Los textos que mencionan Apariencia como sitio de la ayuda dicen solo Legal y privacidad: ui/shortcuts/shortcuts-card.html (línea ~50) y legal/ACCESSIBILITY.md (líneas ~128-129).",
+        "Sin restos: ni CSS ni JS huérfano del botón eliminado; node --check pasa en settings-card.js."
+      ],
+      "notes": [
+        "Quitar en ui/settings/settings-card.html el <p class=\"settings-shortcuts-row\"> (líneas 15-20); en settings-card.css las reglas .settings-shortcuts-row y .settings-shortcuts-btn (~líneas 152-180); en settings-card.js el bloque de #settings-shortcuts-btn con el import dinámico (~líneas 163-171).",
+        "No toques ui/legal/ ni ui/shortcuts/shortcuts-card.js. No cambies la fecha de legal/TERMS.md ni EULA.md (ACCESSIBILITY.md sí se puede editar)."
+      ],
+      "feedback": [],
+      "baseTree": "6779766fd3dde59a7967f8c46657b43feddd4f4f",
+      "history": [
+        {
+          "at": "2026-10-19T05:23:59Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T05:24:10Z",
+          "event": "foto del árbol",
+          "note": "6779766fd3"
+        },
+        {
+          "at": "2026-10-19T05:24:10Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-011-20261019-072410.log"
+        },
+        {
+          "at": "2026-10-19T05:24:38Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T05:24:48Z",
+          "event": "estado → hecha",
+          "note": "Diff limpio: quitados HTML, CSS y JS del botón en Apariencia, sin restos; textos de shortcuts-card.html y ACCESSIBILITY.md apuntan solo a Legal. Legal y '?' intactos. node --check OK. No se abrió la UI."
+        }
+      ]
+    },
+    {
+      "id": "T-012",
+      "title": "Corregir el desfase de días tras el cambio de hora",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-10-19T05:37:22Z",
+      "updated": "2026-10-19T05:37:22Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T05:37:22Z",
+          "text": "(Detectado por Claude al montar las pruebas) Tras el cambio de hora de octubre, las tareas de un día de la semana aparecen un día antes y se pinta una semana de más."
+        }
+      ],
+      "criteria": [
+        "Con TZ=Europe/Madrid y inicio el lunes 19/10/2026, una tarea de los lunes cae en lunes en las semanas del 19/10, 26/10, 02/11 y 09/11 (hoy sale en domingo a partir del 26/10).",
+        "GetNWeeks(from, 3, 0, tareas) devuelve exactamente 3 semanas también cuando cruzan el cambio de hora (hoy devuelve 4), y lo mismo con el cambio de marzo (29/03/2026).",
+        "Prueba unitaria nueva en tests/unit/calendar.test.mjs que cubre los dos cambios de hora y sale en rojo con el código actual (compruébalo antes de arreglarlo).",
+        "Las pruebas existentes siguen pasando: bash tools/test.sh sale en ✓."
+      ],
+      "notes": [
+        "Causa: back/calendar.js calcula días y semanas dividiendo milisegundos con Math.ceil. Al cruzar el cambio de hora de octubre una semana mide 7 días + 1 h: GetWeek (dayFromOrigin, ~línea 52) da 8 en vez de 7 y getDiffWeeks (~línea 14) suma una semana. Usa la diferencia en días naturales (p. ej. Math.round, o restar fechas construidas con Date.UTC(año, mes, día)) en getDiffWeeks, GetWeek y getWeeksInMonth.",
+        "Reproducción: TZ=Europe/Madrid node -e con GetNWeeks(new Date(2026,9,19), 3, 0, [createDaysOfWeekTask('L',[0])]) imprime 4 semanas y el lunes cae en el índice 6 desde el 26/10. tools/test.sh ya fija TZ=Europe/Madrid.",
+        "Solo back/calendar.js y tests/unit/calendar.test.mjs. No cambies back/daysOfWeek.js ni el resto."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T05:37:22Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-013",
+      "title": "Pruebas unitarias: resto de back/ y preferencias de apariencia",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-10-19T05:42:04Z",
+      "updated": "2026-10-19T05:42:04Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "text": "Crea task para que se hagan los test como tú diseñes (parte 1: unitarias)."
+        }
+      ],
+      "criteria": [
+        "tests/unit/calendar.test.mjs amplía: getDiffWeeks, getLastDayOfMonth (incluido febrero bisiesto 2028) y getWeeksInMonth, con fechas de junio para no depender del cambio de hora.",
+        "tests/unit/tareas.test.mjs amplía: WeeklyTask, MonthlyTask y QuaterlyTask (días en que caen) y DaysOfWeekTask.setDay/unSetDay/hasDay (marcar dos veces no cambia nada, desmarcar quita el día).",
+        "tests/unit/preferences.test.mjs nuevo para ui/settings/preferences.js: contrastRatio (negro/blanco = 21, mismo color = 1), isHexColor, suggestContrastFixes (cada sugerencia cumple el mínimo pedido), resolveAutoTarget y savedThemeScheme.",
+        "Protección de contraste: para cada tema de BASES, cada par de CONTRAST_CHECKS cumple su mínimo (4,5:1 texto, 3:1 bordes/foco). Si algún par no lo cumple, es un fallo real (ver criterio de ✓).",
+        "Solo se añaden o cambian archivos en tests/ (pruebas, fixtures y tests/e2e/helpers.mjs); no se toca código de la app.",
+        "Cada prueba nueva se ha visto en rojo rompiendo a propósito el código que cubre y deshaciendo después el cambio; el resumen dice qué se rompió y qué prueba falló.",
+        "bash tools/test.sh sale en ✓, salvo pruebas que revelen un fallo real de la app: esas se dejan en rojo (sin tocar la app ni rebajar la prueba) y se describen en el resumen para que Claude registre la corrección."
+      ],
+      "notes": [
+        "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
+        "preferences.js usa window.matchMedia al importarse (línea 158), así que en Node falla con 'window is not defined'. Antes del import dinámico define un stub mínimo de entorno: globalThis.window = { matchMedia: () => ({ matches: false, addEventListener() {} }) } (y localStorage si algo lo pide). Es solo entorno; no imites ninguna lógica.",
+        "No pruebes LimitedTimeTask con Repeat > 1: su comportamiento actual (solo la N-ésima aparición) está pendiente de confirmar con el usuario. No pruebes GetRestoOfMonth/GetMonth (dependen de la fecha de hoy)."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-014",
+      "title": "E2E: crear tareas de cada tipo y verlas en la Semana",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-10-19T05:42:04Z",
+      "updated": "2026-10-19T05:42:04Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "text": "Crea task para que se hagan los test como tú diseñes (parte 2: tipos de repetición)."
+        }
+      ],
+      "criteria": [
+        "Spec nueva tests/e2e/specs/01-tipos-de-repeticion.spec.mjs que crea desde el formulario una tarea de cada tipo: Sin repetición, Diario, Cada N días (N=3), Días específicos (lunes y jueves) y Ciclo (2 semanas: añadir una semana, quitar otra y volver a añadirla, marcar días distintos en cada una).",
+        "Para cada una comprueba en la lista su etiqueta de tipo (.task-type: 'Una vez', 'Diaria', 'Cada 3d', 'Días esp.', 'Ciclo') y en la vista Semana en qué celdas (.day-cell, de lunes a domingo) aparece su insignia: Días específicos solo en lunes y jueves; Cada 3 días en lunes, jueves y domingo; Diario en las 7; Sin repetición en exactamente una.",
+        "Una tarea con Veces/día = 2 muestra dos insignias en el día, con ' · 0–12H' y ' · 12–24H'.",
+        "Los avisos del formulario (nombre vacío, Días específicos sin días, ciclo sin días marcados) muestran su alert y no crean tarea; la prueba acepta el alert con browser.acceptAlert() y comprueba que el contador no cambia.",
+        "Solo se añaden o cambian archivos en tests/ (pruebas, fixtures y tests/e2e/helpers.mjs); no se toca código de la app.",
+        "Cada prueba nueva se ha visto en rojo rompiendo a propósito el código que cubre y deshaciendo después el cambio; el resumen dice qué se rompió y qué prueba falló.",
+        "bash tools/test.sh sale en ✓, salvo pruebas que revelen un fallo real de la app: esas se dejan en rojo (sin tocar la app ni rebajar la prueba) y se describen en el resumen para que Claude registre la corrección."
+      ],
+      "notes": [
+        "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
+        "Formulario: ui/taskManager/addTask/addTask-card.{html,js}: #taskName, #timesPerDay, radios name=repeat (no-repeat, daily, interval, days, cycle), #interval, casillas de días con data-day (0 = lunes), #addTaskBtn. Lista: .task-row .task-name / .task-type (ui/taskManager/taskManager-card.js). Semana: Alt+2 o el menú; celdas .day-cell con .task-list .task-badge (ui/week/taskItem/taskItem-card.js); el CSS pone las insignias en mayúsculas.",
+        "La semana 0 empieza el lunes de la semana de la fecha de inicio (dayFromOrigin 0 = ese lunes), aunque hoy sea otro día. Si necesitas una utilidad nueva (p. ej. crear una tarea de días concretos o leer las insignias de cada día), añádela a tests/e2e/helpers.mjs."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-015",
+      "title": "E2E: editar y borrar tareas, con el foco en su sitio",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-10-19T05:42:04Z",
+      "updated": "2026-10-19T05:42:14Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "text": "Crea task para que se hagan los test como tú diseñes (parte 3: editar y borrar)."
+        }
+      ],
+      "criteria": [
+        "Spec nueva tests/e2e/specs/02-editar-borrar.spec.mjs. Editar: con 'Gestionar' activado, cambia nombre y tipo (Diaria → Días específicos) de una tarea, guarda, y la lista y la vista Semana muestran el cambio; sigue igual tras recargar la app.",
+        "Cancelar la edición (✕) no cambia la tarea y deja el foco en el botón Editar de esa fila.",
+        "Borrar: con tres tareas, borrar la del medio la quita de la lista y de la Semana, baja el contador y deja el foco en el botón Eliminar de la fila que ocupa ahora su posición; borrar la última lleva el foco a la anterior; vaciar la lista lleva el foco al interruptor 'Gestionar'. El foco nunca queda en <body>.",
+        "Solo se añaden o cambian archivos en tests/ (pruebas, fixtures y tests/e2e/helpers.mjs); no se toca código de la app.",
+        "Cada prueba nueva se ha visto en rojo rompiendo a propósito el código que cubre y deshaciendo después el cambio; el resumen dice qué se rompió y qué prueba falló.",
+        "bash tools/test.sh sale en ✓, salvo pruebas que revelen un fallo real de la app: esas se dejan en rojo (sin tocar la app ni rebajar la prueba) y se describen en el resumen para que Claude registre la corrección."
+      ],
+      "notes": [
+        "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
+        "ui/taskManager/taskManager-card.js: #editToggle (Gestionar), .btn-edit / .btn-trash por fila, panel .edit-panel; ui/taskManager/editTask/editTask-card.{html,js}: #editTaskName, #editTimesPerDay, radios name=edit-repeat, #saveEditBtn, #cancelEditBtn. Elemento con foco: browser.execute(() => document.activeElement) o comparar con .isFocused().",
+        "Corrección de la nota anterior: \"o comparar con .isFocused()\" quiere decir await $(selector).isFocused()."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T05:42:14Z",
+          "event": "modificada",
+          "note": "nota"
+        }
+      ]
+    },
+    {
+      "id": "T-016",
+      "title": "E2E: importar, exportar y borrar datos; exportar PDF",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-10-19T05:42:04Z",
+      "updated": "2026-10-19T05:42:04Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "text": "Crea task para que se hagan los test como tú diseñes (parte 4: datos y PDF)."
+        }
+      ],
+      "criteria": [
+        "Spec nueva tests/e2e/specs/03-datos.spec.mjs con un fixture tests/e2e/fixtures/tareas.json (3 tareas de tipos distintos, en el formato de ToJson). Importar: el estado dice '✅ 3 tarea(s) importada(s)', la lista las muestra y siguen tras recargar.",
+        "Exportar: el JSON que genera 'Descargar' contiene las tareas actuales; ida y vuelta: exportar, borrar todo, importar lo exportado y la lista queda igual que al principio.",
+        "Borrar todo: cancelar el confirm no borra nada; aceptarlo vacía la lista, el estado dice '🗑️ Datos borrados' y sigue vacía tras recargar.",
+        "PDF: en Exportar PDF, 'Semana actual' y 'Exportar rango' terminan con el estado '✅ PDF generado' (no '❌ Error al generar PDF').",
+        "Solo se añaden o cambian archivos en tests/ (pruebas, fixtures y tests/e2e/helpers.mjs); no se toca código de la app.",
+        "Cada prueba nueva se ha visto en rojo rompiendo a propósito el código que cubre y deshaciendo después el cambio; el resumen dice qué se rompió y qué prueba falló.",
+        "bash tools/test.sh sale en ✓, salvo pruebas que revelen un fallo real de la app: esas se dejan en rojo (sin tocar la app ni rebajar la prueba) y se describen en el resumen para que Claude registre la corrección."
+      ],
+      "notes": [
+        "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
+        "ui/dataManager/dataManager-card.{html,js}: #importJsonInput (input file), #exportJsonBtn (crea un <a download> con un blob y le hace click), #clearAllBtn (confirm), #dataStatus. ui/print/print-card.{html,js}: #printWeekBtn, #printAllBtn, #printWeeks, #printAvoid, #printCustomBtn, #printStatus.",
+        "Importar: prueba primero $('#importJsonInput').setValue(rutaAbsoluta). Si WebKitWebDriver no lo admite, crea el File en la página con DataTransfer y dispara 'change' en el input (sigue ejecutando el manejador real y su FileReader); explica en el resumen qué camino usaste. Exportar: la descarga no se puede leer desde WebDriver; captura el href del <a> envolviendo HTMLAnchorElement.prototype.click con browser.execute y lee el blob con fetch(href) dentro de la página. Confirm: browser.dismissAlert() / acceptAlert()."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-017",
+      "title": "E2E: apariencia y letra al 200 % sin desbordar en móvil",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-10-19T05:42:04Z",
+      "updated": "2026-10-19T05:42:04Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "text": "Crea task para que se hagan los test como tú diseñes (parte 5: apariencia)."
+        }
+      ],
+      "criteria": [
+        "Spec nueva tests/e2e/specs/04-apariencia.spec.mjs: elegir tema Oscuro, Claro, Alto contraste claro y Alto contraste oscuro cambia document.documentElement.dataset.theme y el fondo calculado del body; el tema elegido sigue tras recargar.",
+        "Elegir el tamaño de texto 200 % se aplica (la variable --fs de alguna parte cambia en :root) y sigue tras recargar.",
+        "Con la ventana a 390×844 y texto al 200 %, ninguna de las 7 vistas (Tareas con 3 tareas creadas, Semana, Vista completa, Datos, PDF, Apariencia, Legal) tiene desbordamiento horizontal: document.documentElement.scrollWidth <= clientWidth + 1. Si alguna desborda, es un fallo real (ver criterio de ✓): di qué vista y qué elemento es el más ancho.",
+        "Solo se añaden o cambian archivos en tests/ (pruebas, fixtures y tests/e2e/helpers.mjs); no se toca código de la app.",
+        "Cada prueba nueva se ha visto en rojo rompiendo a propósito el código que cubre y deshaciendo después el cambio; el resumen dice qué se rompió y qué prueba falló.",
+        "bash tools/test.sh sale en ✓, salvo pruebas que revelen un fallo real de la app: esas se dejan en rojo (sin tocar la app ni rebajar la prueba) y se describen en el resumen para que Claude registre la corrección."
+      ],
+      "notes": [
+        "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
+        "ui/settings/settings-card.{html,js}: radios name=theme (auto, light, dark, contrast-light, contrast-dark); escala de texto en #textScaleOptions (valores de TEXT_SCALES en ui/settings/preferences.js, applyPreferences ~línea 549 pone root.dataset.theme). Tamaño de ventana: browser.setWindowSize(390, 844) (minWidth de la ventana = 380). Para el menú en móvil puede hacer falta abrir el lateral; cambia de vista con Alt+1…7 si es más simple."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T05:42:04Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-018",
+      "title": "E2E: uso completo con teclado (atajos, foco y diálogos)",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-10-19T05:42:05Z",
+      "updated": "2026-10-19T05:42:05Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T05:42:05Z",
+          "text": "Crea task para que se hagan los test como tú diseñes (parte 6: teclado, protege lo hecho en T-007)."
+        }
+      ],
+      "criteria": [
+        "Spec nueva tests/e2e/specs/05-teclado.spec.mjs. Términos: en la pantalla de términos, Flecha derecha/izquierda e Inicio/Fin cambian de pestaña y solo la seleccionada tiene tabindex=0; se aceptan con el teclado (Tab hasta el botón y Enter).",
+        "Tras arrancar, el primer Tab enfoca el enlace 'Saltar al contenido' y Enter lleva el foco a <main>.",
+        "Alt+1…Alt+7 abren cada vista, el foco queda en su encabezado y el botón del menú tiene aria-current='page'. En el menú lateral, Flecha abajo/arriba, Inicio y Fin mueven el foco entre opciones.",
+        "Alt+N enfoca #taskName desde otra vista; '?' no abre la ayuda mientras se escribe en #taskName, y sí fuera de un campo.",
+        "Ayuda de atajos: se abre con '?', Tab y Shift+Tab no salen del diálogo, Escape lo cierra y el foco vuelve al elemento que la abrió; abrirla dos veces no duplica #shortcuts-modal. Modal legal: abrirlo desde un enlace de Legal enfoca su título, atrapa el foco y al cerrarlo vuelve al enlace.",
+        "En la vista Semana, Flecha abajo/arriba mueve el foco entre las cabeceras de día.",
+        "Solo se añaden o cambian archivos en tests/ (pruebas, fixtures y tests/e2e/helpers.mjs); no se toca código de la app.",
+        "Cada prueba nueva se ha visto en rojo rompiendo a propósito el código que cubre y deshaciendo después el cambio; el resumen dice qué se rompió y qué prueba falló.",
+        "bash tools/test.sh sale en ✓, salvo pruebas que revelen un fallo real de la app: esas se dejan en rojo (sin tocar la app ni rebajar la prueba) y se describen en el resumen para que Claude registre la corrección."
+      ],
+      "notes": [
+        "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
+        "Teclas: import { Key } from 'webdriverio' y browser.keys([Key.Alt, '2']), browser.keys([Key.Tab]), browser.keys([Key.Shift, Key.Tab]). Foco: browser.execute(() => document.activeElement?.id || document.activeElement?.className). Referencias: index.js (setView, atajos al final, navegación del lateral), ui/a11y.js (trapFocus, focusHeading), ui/shortcuts/shortcuts-card.js, ui/legal/legal-card.js, ui/terms/terms-card.js, ui/week/taskItem/taskItem-card.js (bindRovingKeyboard)."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T05:42:05Z",
           "event": "creada"
         }
       ]

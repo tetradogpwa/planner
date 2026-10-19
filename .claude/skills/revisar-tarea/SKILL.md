@@ -47,18 +47,38 @@ MiniMax).
    ```bash
    node --check <cada .js modificado>
    (cd src-tauri && cargo check)   # si cambió Rust, build.rs o tauri.conf.json
+   bash tools/test.sh              # unitarias + E2E (en segundo plano: compila)
    ```
-6. **Interfaz:** si la tarea cambia la UI, ábrela y compruébala en tema
+   No te fíes del "Resumen" que pegue MiniMax: ejecútalo tú.
+6. **Pruebas de la tarea:**
+   - Si cambió lógica o un flujo, hay una prueba nueva o ampliada que lo
+     cubre (`tests/unit/` o `tests/e2e/specs/`).
+   - La prueba ejecuta el código real: rómpelo tú a propósito (con copia
+     de seguridad del archivo) y comprueba que se pone en rojo.
+   - En el diff de `tests/` no hay pruebas borradas, rebajadas ni con
+     `.skip`/`.only`, ni cambios en `tools/test.sh` o `wdio.conf.mjs`
+     que la tarea no pidiera.
+7. **Interfaz:** si la tarea cambia la UI, ábrela y compruébala en tema
    claro y oscuro y con letra al 200 % en un ancho de móvil. Para medir el
    contraste de un par nuevo, usa `contrastRatio` de
    `ui/settings/preferences.js`.
 
 ## 3. Veredicto
 
-**Aprobar:**
+**Aprobar** (solo con `bash tools/test.sh` en ✓, ejecutado por ti):
 ```bash
 node tools/tasks/tasks.mjs status T-00X hecha --note "Qué se comprobó"
 ```
+
+**Y hacer commit en el acto** (regla del proyecto: un commit por
+funcionalidad implementada y probada):
+- Solo los archivos de esa tarea (los de `tasks.mjs diff T-00X --stat`)
+  más `.tasks/tasks.json`. Nunca `git add -A` ni `git add .`: puede
+  haber trabajo de otras tareas sin revisar en el árbol.
+- Revisa con `git status` lo que va a entrar antes de confirmar.
+- Mensaje: `T-00X: título de la tarea`, y en el cuerpo qué cambió, qué
+  pruebas lo cubren y el resultado de `bash tools/test.sh`.
+- No hagas `git push`: eso lo decide el usuario.
 
 **Devolver:** una corrección por problema, accionable y con su ubicación:
 ```bash
@@ -78,6 +98,5 @@ Después vuelve a lanzarla con la skill `delegar-minimax`.
 Breve:
 - Qué tarea, veredicto y qué cambió (archivos principales).
 - Qué comprobaste y qué no pudiste comprobar.
+- Si se aprobó, el hash del commit.
 - Si se devolvió, por qué.
-
-No hagas commits: el usuario decide cuándo.

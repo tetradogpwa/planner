@@ -26,6 +26,11 @@ los comentarios y la documentación van en **español**.
   Una petición que modifica una tarea **no terminada** se añade a esa tarea
   (`amend`); una tarea **hecha** no se modifica, se crea otra con
   `--relacionada`.
+- **Un commit por funcionalidad implementada y probada.** Claude hace el
+  commit al aprobar cada tarea (con `bash tools/test.sh` en ✓), solo
+  con los archivos de esa tarea y el mensaje `T-00X: título`. MiniMax
+  nunca hace commits, y nadie hace `git push` sin que lo pida el
+  usuario.
 
 ## Estructura
 
@@ -41,7 +46,8 @@ los comentarios y la documentación van en **español**.
 | `ui/terms/`, `ui/consent/` | Pantallas previas a la app: términos y consentimiento o pago |
 | `legal/` | Textos legales en Markdown que muestra la app |
 | `src-tauri/` | Capa nativa Rust; `build.rs` incrusta `.env` y copia el frontend a `dist/` |
-| `tools/` | Scripts de build por plataforma, cola de tareas y lanzador de MiniMax |
+| `tools/` | Scripts de build por plataforma, pruebas, cola de tareas y lanzador de MiniMax |
+| `tests/unit/`, `tests/e2e/` | Pruebas: lógica de `back/` con `node:test` y E2E de la app real con WebdriverIO |
 
 ## Convenciones obligatorias
 
@@ -89,8 +95,20 @@ node --check ruta/al/archivo.js            # cada JS modificado
 node tools/tasks/tasks.mjs list            # tareas abiertas
 bash tools/minimax/run-task.sh --check     # configuración de MiniMax
 bash tools/build.sh [linux|windows|android|all]   # build → releases/ (skill y comando /build)
+bash tools/test.sh [unit|e2e|all]          # pruebas (skill y comando /test)
 ```
 
-No hay tests automáticos todavía. Las vistas se prueban abriendo la app
-(`cargo tauri dev` en `src-tauri/`) o sirviendo la raíz con un servidor
-estático.
+## Pruebas
+
+`bash tools/test.sh` ejecuta las unitarias (`tests/unit/`, `node:test`,
+sin dependencias) y las E2E (`tests/e2e/`), que compilan un binario de
+pruebas sin anuncios en `src-tauri/target-e2e/` y lo manejan con
+WebdriverIO + `tauri-driver` dentro de un Xvfb invisible, con datos
+aislados en `tests/e2e/.tmp/`. Las dependencias npm de los E2E viven en
+`tests/e2e/package.json`, separadas de la app (que sigue sin npm).
+
+- Nunca `wdio` a pelo: abriría la ventana en el escritorio y usaría los
+  datos reales del usuario.
+- Una prueba solo vale si falla al romper el código que prueba.
+- Toda tarea que cambie comportamiento trae su prueba; ninguna prueba se
+  borra, se rebaja ni se salta para que pase.

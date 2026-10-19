@@ -1,0 +1,16 @@
+{
+  "name": "planner-e2e",
+  "private": true,
+  "description": "Pruebas E2E del Planificador: WebdriverIO + tauri-driver contra el binario real. Aislado aquí para que la app no tenga dependencias npm.",
+  "type": "module",
+  "scripts": {
+    "wdio": "wdio run wdio.conf.mjs"
+  },
+  "devDependencies": {
+    "@wdio/cli": "10.0.0",
+    "@wdio/globals": "10.0.0",
+    "@wdio/local-runner": "10.0.2",
+    "@wdio/mocha-framework": "10.0.0",
+    "@wdio/spec-reporter": "10.0.0"
+  }
+}

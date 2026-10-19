@@ -62,3 +62,10 @@ dist/
 # Cola de tareas: se versiona tasks.json; los registros de MiniMax no
 .tasks/logs/
 .claude/settings.local.json
+
+# Pruebas (tools/test.sh): dependencias y datos aislados de los E2E,
+# binario de pruebas y salidas completas
+tests/e2e/node_modules/
+tests/e2e/.tmp/
+src-tauri/target-e2e/
+logs/

@@ -18,9 +18,11 @@ estructura del proyecto y las convenciones obligatorias.
    reordenes código que no cambias.
 6. Repasa los criterios de aceptación uno a uno contra tu cambio. Si
    alguno no se cumple, corrígelo antes de seguir.
-7. Ejecuta las comprobaciones: `node --check` en cada `.js` tocado y
-   `cargo check` en `src-tauri/` si tocaste Rust.
-8. Escribe el resumen final (formato al final de este documento).
+7. Escribe o amplía las pruebas que cubren tu cambio (ver "Pruebas").
+8. Ejecuta las comprobaciones: `node --check` en cada `.js` tocado,
+   `cargo check` en `src-tauri/` si tocaste Rust, y **`bash tools/test.sh`**
+   (unitarias + E2E contra la app real). Todo debe salir en ✓.
+9. Escribe el resumen final (formato al final de este documento).
 
 ## Reglas
 
@@ -35,11 +37,42 @@ estructura del proyecto y las convenciones obligatorias.
 - Si la tarea es ambigua, elige la interpretación más conservadora y
   explícalo en el resumen final; no te detengas a preguntar.
 - Comprueba lo que puedas antes de terminar: `node --check` en cada JS
-  que toques y `cargo check` (desde `src-tauri/`) si tocas Rust.
+  que toques, `cargo check` (desde `src-tauri/`) si tocas Rust y
+  `bash tools/test.sh`.
+
+## Pruebas
+
+Hay dos tipos y las dos se ejecutan con `bash tools/test.sh`:
+
+- **Unitarias** (`tests/unit/*.test.mjs`, `node:test`): para la lógica
+  sin DOM (`back/`, `api.js`…). Si cambias esa lógica, añade o ajusta
+  aquí la prueba que lo demuestra. Rápidas: `bash tools/test.sh unit`.
+- **E2E** (`tests/e2e/specs/*.spec.mjs`, WebdriverIO): manejan la app
+  real compilada, como una persona (clics y teclado), con las utilidades
+  de `tests/e2e/helpers.mjs`. Si cambias un flujo de la interfaz, añade
+  o amplía un spec que lo recorra. Uno solo:
+  `bash tools/test.sh e2e --spec tests/e2e/specs/<archivo>`.
+
+Reglas (romper una es motivo de rechazo):
+
+- Una prueba solo cuenta si ejecuta el código real y **se pone en rojo
+  al romperlo**. Rompe tu código a propósito una vez, comprueba que la
+  prueba falla, deshazlo y cuéntalo en el resumen (qué rompiste y qué
+  salió). No valen pruebas que copien la lógica que prueban.
+- Si una prueba falla, el fallo está en tu cambio hasta que demuestres
+  lo contrario. Prohibido borrarla, rebajarla, marcarla con `.skip` u
+  `.only`, o tocar `tools/test.sh` y `tests/e2e/wdio.conf.mjs` para que
+  pase. Si crees que la prueba está mal, explícalo en el resumen.
+- **Nunca ejecutes `wdio` ni `npx wdio` directamente**: sin
+  `tools/test.sh` la ventana se abre en el escritorio del usuario y las
+  pruebas borrarían sus datos reales.
+- Lee los logs de `logs/` con `grep` o por rangos, no enteros.
 
 ## Resumen final
 
 Termina con un resumen breve en español:
 1. Archivos cambiados y por qué.
 2. Cómo se cumple cada criterio de aceptación.
-3. Qué has comprobado y qué no has podido comprobar.
+3. Pruebas: cuáles añadiste, qué rompiste para verlas en rojo y el
+   bloque "Resumen" literal de `bash tools/test.sh`.
+4. Qué has comprobado y qué no has podido comprobar.

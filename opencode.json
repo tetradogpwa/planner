@@ -22,7 +22,11 @@
           "*.env.*": "deny",
           "*CLAUDE.md": "deny",
           "*AGENTS.md": "deny",
-          "*opencode.json": "deny"
+          "*opencode.json": "deny",
+          "*tools/test.sh": "deny",
+          "*tests/e2e/wdio.conf.mjs": "deny",
+          "*tests/e2e/package.json": "deny",
+          "*tests/e2e/package-lock.json": "deny"
         },
         "bash": {
           "*": "allow",
