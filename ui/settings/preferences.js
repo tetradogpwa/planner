@@ -256,7 +256,19 @@ function nearestValidLuminance(hex, other, min, direction) {
       if (r >= min) lo = mid; else hi = mid;
     }
   }
-  return hslToHex({ ...hsl, l: (lo + hi) / 2 });
+  // Devolvemos el candidato del lado que cumple (hi para lighter, lo
+  // para darker) en vez del midpoint, y si al redondear a #rrggbb el
+  // contraste cae por debajo de `min` avanzamos hacia el extremo en
+  // pasos discretos de luminosidad hasta que el hex final cumpla.
+  let l = direction === 'lighter' ? hi : lo;
+  const step = 1 / 256; // un bit del canal (0..255 → 0..1)
+  for (let n = 0; n <= 256; n++) {
+    if (l < 0 || l > 1) return null;
+    const candidate = hslToHex({ ...hsl, l });
+    if (contrastRatio(candidate, other) >= min) return candidate;
+    l = direction === 'lighter' ? l + step : l - step;
+  }
+  return null;
 }
 
 /** Para un par (fg, bg) con contraste < min, devuelve hasta dos
