@@ -1,6 +1,6 @@
 # Declaración de accesibilidad
 
-**Última actualización:** 16 de octubre de 2026
+**Última actualización:** 19 de octubre de 2026
 
 Planificador Semanal se compromete a hacer su aplicación utilizable
 por el mayor número de personas posible, incluidas personas con
@@ -69,7 +69,66 @@ La Aplicación **no requiere** lector de pantalla para su uso
 principal, pero la combinación de teclado + lector de pantalla es
 el método recomendado para usuarios con discapacidad visual.
 
-## 5. Cómo reportar una barrera
+## 5. Atajos de teclado
+
+La aplicación se puede usar íntegramente con el teclado. Los atajos
+globales están disponibles desde cualquier vista (los que usan
+`Alt` funcionan también dentro de campos de texto).
+
+### Navegación entre vistas (Alt + número)
+
+| Combinación | Acción |
+|-------------|--------|
+| `Alt` + `1` | Ir a Gestión de tareas |
+| `Alt` + `2` | Ir a Semana actual |
+| `Alt` + `3` | Ir a Todas las semanas |
+| `Alt` + `4` | Ir a Gestión de datos |
+| `Alt` + `5` | Ir a Imprimir / PDF |
+| `Alt` + `6` | Ir a Apariencia |
+| `Alt` + `7` | Ir a Legal y privacidad |
+
+### Menú lateral
+
+| Combinación | Acción |
+|-------------|--------|
+| `Flecha arriba` / `Flecha abajo` | Mover el foco entre opciones |
+| `Inicio` / `Fin` | Primera / última opción |
+| `Enter` / `Espacio` | Abrir la opción enfocada |
+
+Además, hay un enlace **"Saltar al contenido"** que aparece al
+recibir foco y lleva directamente al área principal de la vista.
+
+### Pestañas de términos (al inicio)
+
+| Combinación | Acción |
+|-------------|--------|
+| `Flecha izquierda` / `Flecha derecha` | Cambiar entre pestañas |
+| `Inicio` / `Fin` | Primera / última pestaña |
+
+### Vista Semana
+
+| Combinación | Acción |
+|-------------|--------|
+| `Flecha arriba` / `Flecha abajo` | Mover el foco entre cabeceras de día |
+| `Enter` / `Espacio` | Abrir o cerrar el día enfocado |
+
+### Atajos de edición de tareas
+
+| Combinación | Acción |
+|-------------|--------|
+| `Alt` + `N` | Enfocar el nombre de la nueva tarea |
+
+### Ayuda
+
+| Combinación | Acción |
+|-------------|--------|
+| `?` | Abre esta ayuda (fuera de campos de texto) |
+| `Esc` | Cierra cualquier diálogo abierto |
+
+La ayuda también está disponible desde los botones **"Atajos de
+teclado"** en las vistas Apariencia y Legal y privacidad.
+
+## 6. Cómo reportar una barrera
 
 Si encuentras una barrera de accesibilidad o quieres solicitar el
 contenido en un formato alternativo, escríbenos a:
@@ -87,7 +146,7 @@ Por favor, incluye:
 4. Una breve descripción del problema y, si es posible, pasos para
    reproducirlo.
 
-## 6. Compromiso de mejora continua
+## 7. Compromiso de mejora continua
 
 El Desarrollador revisará esta declaración en cada release mayor y
 publicará los avances en el repositorio del proyecto.

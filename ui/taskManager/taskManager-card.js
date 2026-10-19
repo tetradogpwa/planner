@@ -48,9 +48,9 @@ export class TaskManagerCard {
       const row = document.createElement('div');
       row.className = 'task-row';
       row.innerHTML = `
-        <button class="btn-trash" title="Eliminar">🗑️</button>
-        <button class="btn-edit"  title="Editar">✏️</button>
-        <span class="task-name">${t.Name}</span>
+        <button class="btn-trash" title="Eliminar" aria-label="Eliminar la tarea «${this.#escape(t.Name)}»">🗑️</button>
+        <button class="btn-edit"  title="Editar"    aria-label="Editar la tarea «${this.#escape(t.Name)}»">✏️</button>
+        <span class="task-name">${this.#escape(t.Name)}</span>
         <span class="task-type">${this.#typeLabel(t)}</span>
       `;
 
@@ -58,9 +58,14 @@ export class TaskManagerCard {
       const panel = document.createElement('div');
       panel.className = 'edit-panel';
 
-      row.querySelector('.btn-trash').onclick = () => {
+      row.querySelector('.btn-trash').onclick = (ev) => {
+        // Tras el repintado el foco debe quedarse en el botón
+        // Eliminar de la fila que ahora ocupa la posición `i` (la
+        // siguiente tarea), o la anterior si era la última. Si la
+        // lista queda vacía, saltamos al interruptor "Gestionar".
         this.context.Tasks.splice(i, 1);
         this.renderList();
+        this.#focusAfterDelete(i);
       };
 
       row.querySelector('.btn-edit').onclick = () => {
@@ -70,6 +75,30 @@ export class TaskManagerCard {
       this.listRoot.appendChild(row);
       this.listRoot.appendChild(panel);
     });
+  }
+
+  /** Tras borrar la tarea en el índice `i`, devuelve el foco a la
+   *  misma posición tras el repintado (la fila que antes era la
+   *  siguiente). Si era la última, va a la anterior; si la lista
+   *  ha quedado vacía, salta al interruptor "Gestionar" para no
+   *  perder el recorrido. */
+  #focusAfterDelete(i) {
+    const buttons = this.listRoot.querySelectorAll('.btn-trash');
+    if (buttons.length === 0) {
+      const toggle = this.root.querySelector('#editToggle');
+      if (toggle) toggle.focus();
+      return;
+    }
+    const target = buttons[Math.min(i, buttons.length - 1)];
+    if (target) target.focus();
+  }
+
+  /** Escapa comillas / corchetes angulares para que un nombre con
+   *  caracteres especiales no rompa los atributos `aria-label`. */
+  #escape(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) => (
+      { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+    ));
   }
 
   // ── Panel inline de edición ───────────────────────────────────────────────
@@ -88,11 +117,22 @@ export class TaskManagerCard {
       panel.addEventListener('task-update', (e) => {
         this.context.Tasks[i] = e.detail;
         this.renderList();
+        // Devolvemos el foco al heading principal; tras un cambio
+        // seguido de repintado completo, el heading es el anclaje
+        // más estable (no dependemos de la fila, que se recrea).
+        const heading = this.root.querySelector('#view-tasks-heading');
+        if (heading) heading.focus();
       }, { once: true });
 
       panel.addEventListener('task-cancel', () => {
+        // Cancelar no cambia los datos; devolvemos el foco al botón
+        // Editar de la fila correspondiente para mantener el orden
+        // del recorrido.
         panel.classList.remove('open');
         panel.innerHTML = '';
+        const buttons = this.listRoot.querySelectorAll('.btn-edit');
+        const target  = buttons[i] ?? buttons[buttons.length - 1] ?? this.root.querySelector('#editToggle');
+        if (target) target.focus();
       }, { once: true });
     }
   }

@@ -66,3 +66,24 @@
   overflow-x: auto;
 }.legal-modal-body a { color: var(--link); }
 .legal-modal-body table { display: block; overflow-x: auto; }
+
+/* Botón para abrir el diálogo de atajos desde la vista Legal.
+   Sigue el resto de estilos (mismo radio y padding que los demás
+   botones de la app). */
+.legal-shortcuts-btn {
+  margin: 0 0.5rem 0 0 !important;
+  font: inherit;
+  font-size: calc(0.95rem * var(--fs-button));
+  color: var(--link);
+  background: transparent !important;
+  border: 1px solid var(--input-border) !important;
+  border-radius: 8px !important;
+  padding: 0.45rem 0.85rem !important;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.legal-shortcuts-btn:hover {
+  background: var(--hover-bg) !important;
+  border-color: var(--focus) !important;
+}

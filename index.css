@@ -165,6 +165,33 @@ body {
   border: 0;
 }
 
+/* Enlace "Saltar al contenido" oculto por defecto. Al recibir foco de
+   teclado (Tab desde la URL) se vuelve visible y queda encima del
+   contenido para que el usuario pueda saltar la barra superior y el
+   menú lateral. */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 9999;
+  padding: 0.5rem 0.9rem;
+  background: var(--surface);
+  color: var(--link);
+  border: 2px solid var(--focus);
+  border-radius: 8px;
+  font-size: calc(0.95rem * var(--fs-button));
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform 0.18s ease;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

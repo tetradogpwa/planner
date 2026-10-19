@@ -6,12 +6,19 @@
       y el contrato de licencia. Lee también cómo tratamos tus datos.
     </p>
 
-    <div class="terms-tabs" role="tablist">
-      <button class="terms-tab" role="tab" data-doc="TERMS">Términos de uso</button>
-      <button class="terms-tab" role="tab" data-doc="EULA">Licencia (EULA)</button>
-      <button class="terms-tab" role="tab" data-doc="PRIVACY">Privacidad</button>
+    <div class="terms-tabs" role="tablist" aria-label="Documentos legales">
+      <button class="terms-tab" role="tab" data-doc="TERMS"
+              id="terms-tab-TERMS" aria-controls="terms-panel"
+              aria-selected="true" tabindex="0">Términos de uso</button>
+      <button class="terms-tab" role="tab" data-doc="EULA"
+              id="terms-tab-EULA"  aria-controls="terms-panel"
+              aria-selected="false" tabindex="-1">Licencia (EULA)</button>
+      <button class="terms-tab" role="tab" data-doc="PRIVACY"
+              id="terms-tab-PRIVACY" aria-controls="terms-panel"
+              aria-selected="false" tabindex="-1">Privacidad</button>
     </div>
-    <article class="terms-doc" role="tabpanel" tabindex="0"></article>
+    <article class="terms-doc" role="tabpanel" tabindex="0"
+             id="terms-panel" aria-labelledby="terms-tab-TERMS"></article>
 
     <div class="terms-actions">
       <button class="terms-btn" data-action="accept">Acepto los términos y la licencia</button>

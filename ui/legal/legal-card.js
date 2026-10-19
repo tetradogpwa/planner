@@ -11,6 +11,9 @@
 //      muestra un mensaje claro y un enlace a la URL pública.
 // ────────────────────────────────────────────────────────────────────
 
+import { shortcuts } from '../shortcuts/shortcuts-card.js';
+import { trapFocus } from '../a11y.js';
+
 const DOCS = {
   PRIVACY:               { title: 'Política de privacidad',   file: './legal/PRIVACY.md' },
   TERMS:                 { title: 'Términos de uso',          file: './legal/TERMS.md' },
@@ -57,9 +60,19 @@ export class LegalCard {
     this.root.querySelectorAll('a[data-doc]').forEach(a => {
       a.addEventListener('click', async (e) => {
         e.preventDefault();
-        await this.openDoc(a.dataset.doc);
+        await this.openDoc(a, a.dataset.doc);
       });
     });
+
+    // Botón "Atajos de teclado" en la vista Legal: abre el diálogo
+    // modal común (ui/shortcuts). Mantiene foco en el botón al cerrar.
+    const shortcutsBtn = this.root.querySelector('#legal-shortcuts-btn');
+    if (shortcutsBtn) {
+      shortcutsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        shortcuts.open(shortcutsBtn);
+      });
+    }
 
     // Rellenar info de la app desde Tauri si está disponible.
     try {
@@ -72,13 +85,23 @@ export class LegalCard {
     } catch { /* sin Tauri; dejamos placeholders */ }
   }
 
-  async openDoc(key) {
+  async openDoc(triggerEl, key) {
     const doc = DOCS[key];
     if (!doc) return;
     this.modalTitle.textContent = doc.title;
     this.modalBody.innerHTML    = '<p>Cargando…</p>';
     this.modal.hidden = false;
     document.body.classList.add('legal-modal-open');
+
+    // Trampa de foco en el modal. Devolvemos el foco al enlace que
+    // lo abrió al cerrar. Reanclamos en cada apertura (Escape del
+    // cierre llama a releaseTrap y vacía _releaseTrap).
+    if (this._releaseTrap) this._releaseTrap();
+    this._releaseTrap = trapFocus(this.modal, { onEscape: () => this.closeModal() });
+    // Foco en el título del modal: lo hacemos enfocable por script
+    // sin que sea alcanzable con Tab.
+    if (!this.modalTitle.hasAttribute('tabindex')) this.modalTitle.setAttribute('tabindex', '-1');
+    this.modalTitle.focus({ preventScroll: true });
 
     try {
       const text = this.cache[key] ?? await (await fetch(doc.file)).text();
@@ -93,8 +116,12 @@ export class LegalCard {
   }
 
   closeModal() {
+    if (!this.modal || this.modal.hidden) return;
+    if (this._releaseTrap) { this._releaseTrap(); this._releaseTrap = null; }
     this.modal.hidden = true;
     document.body.classList.remove('legal-modal-open');
+    // trapFocus devuelve el foco al elemento previamente enfocado
+    // (el enlace que abrió el modal) al hacer release().
   }
 }
 

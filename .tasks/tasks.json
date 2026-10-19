@@ -510,11 +510,11 @@
     {
       "id": "T-007",
       "title": "Uso completo con teclado: atajos, foco y diálogos accesibles",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-10-19T04:38:29Z",
-      "updated": "2026-10-19T04:38:29Z",
-      "attempts": 0,
+      "updated": "2026-10-19T05:06:30Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-10-19T04:38:29Z",
@@ -542,12 +542,111 @@
         "Terms: ui/terms/terms-card.html líneas 9-14 (role=tablist/tab/tabpanel ya puestos); falta navegación por flechas, tabindex itinerante, aria-controls e id del panel. Week: ui/week/taskItem/taskItem-card.html usa <button class=\"day-header\" aria-expanded>; añade el manejo de flechas en week-card.js.",
         "No cambies alert()/confirm() existentes (son accesibles por teclado). No toques legal/TERMS.md ni EULA.md (cambiar su fecha vuelve a pedir los términos)."
       ],
-      "feedback": [],
-      "baseTree": null,
+      "feedback": [
+        {
+          "at": "2026-10-19T04:58:51Z",
+          "note": "index.js render('week'): sobra el <h2> 'Semana actual' añadido (la vista ya tiene h3.week-title y ahora hay dos títulos). Quítalo y deja que focusHeading enfoque h3.week-title (WeekCard ya le pone tabindex=-1); para eso hace falta el await de la corrección anterior. Cambia aria-labelledby de #view-week en index.html para que apunte al id del título de la semana o elimínalo."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "note": "index.js: se ha BORRADO el bloque 'Sidebar: desktop collapse' (sidebar, sidebarCollapseBtn, COLLAPSED_KEY y su listener). El botón #sidebarCollapseBtn ya no hace nada. Restáuralo tal cual estaba; no es parte de la tarea."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "note": "index.js render(): los case tasks/data/print/legal/settings hacen 'new X(...).init()' sin await, así que setView() llama a focusHeading() antes de que exista el HTML: el foco va a la <section>, no al encabezado, y Alt+N no encuentra #taskName. Usa 'await new X(...).init()' en todos los case (también en week)."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "note": "index.js: el keydown global de atajos se registra al cargar el módulo, antes de 'await requireTerms()', así que Alt+1…7 y '?' actúan sobre la pantalla de términos/consentimiento. Registra el listener (y crea el ShortcutsCard) después de startMonetization(), como pedían las notas."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "note": "index.js: el setView('tasks') del arranque mueve el foco al encabezado y el enlace 'Saltar al contenido' deja de ser lo primero al pulsar Tab. En la carga inicial no muevas el foco (p. ej. setView(name, { focus: false }))."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "note": "ui/legal/legal-card.js y ui/settings/settings-card.js crean 'new ShortcutsCard()' en cada clic: cada instancia vuelve a inyectar el modal en <body> (ids #shortcuts-modal duplicados y nodos acumulados). Exporta una única instancia compartida desde ui/shortcuts/shortcuts-card.js (p. ej. export const shortcuts = new ShortcutsCard()) y úsala en index.js, legal y settings; en open(), si ya está abierto, no vuelvas a llamar a trapFocus."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "note": "ui/week/taskItem/taskItem-card.js bindRovingKeyboard(): quita el case Enter/' ' — .day-header es un <button> y ya se activa con su click nativo; manejarlo a mano duplica el toggle o depende de que preventDefault cancele el click según el navegador."
+        }
+      ],
+      "baseTree": "804a965f0979818dcdfb09d4d1c56d3e78f5c397",
       "history": [
         {
           "at": "2026-10-19T04:38:29Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-19T04:46:22Z",
+          "event": "foto del árbol",
+          "note": "738fc4ca7b"
+        },
+        {
+          "at": "2026-10-19T04:46:22Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-19T04:54:58Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T04:58:51Z",
+          "event": "devuelta a MiniMax",
+          "note": "index.js render('week'): sobra el <h2> 'Semana actual' añadido (la vista ya tiene h3.week-title y ahora hay dos títulos). Quítalo y deja que focusHeading enfoque h3.week-title (WeekCard ya le pone tabindex=-1); para eso hace falta el await de la corrección anterior. Cambia aria-labelledby de #view-week en index.html para que apunte al id del título de la semana o elimínalo."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "event": "devuelta a MiniMax",
+          "note": "index.js: se ha BORRADO el bloque 'Sidebar: desktop collapse' (sidebar, sidebarCollapseBtn, COLLAPSED_KEY y su listener). El botón #sidebarCollapseBtn ya no hace nada. Restáuralo tal cual estaba; no es parte de la tarea."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "event": "devuelta a MiniMax",
+          "note": "index.js render(): los case tasks/data/print/legal/settings hacen 'new X(...).init()' sin await, así que setView() llama a focusHeading() antes de que exista el HTML: el foco va a la <section>, no al encabezado, y Alt+N no encuentra #taskName. Usa 'await new X(...).init()' en todos los case (también en week)."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "event": "devuelta a MiniMax",
+          "note": "index.js: el keydown global de atajos se registra al cargar el módulo, antes de 'await requireTerms()', así que Alt+1…7 y '?' actúan sobre la pantalla de términos/consentimiento. Registra el listener (y crea el ShortcutsCard) después de startMonetization(), como pedían las notas."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "event": "devuelta a MiniMax",
+          "note": "index.js: el setView('tasks') del arranque mueve el foco al encabezado y el enlace 'Saltar al contenido' deja de ser lo primero al pulsar Tab. En la carga inicial no muevas el foco (p. ej. setView(name, { focus: false }))."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/legal/legal-card.js y ui/settings/settings-card.js crean 'new ShortcutsCard()' en cada clic: cada instancia vuelve a inyectar el modal en <body> (ids #shortcuts-modal duplicados y nodos acumulados). Exporta una única instancia compartida desde ui/shortcuts/shortcuts-card.js (p. ej. export const shortcuts = new ShortcutsCard()) y úsala en index.js, legal y settings; en open(), si ya está abierto, no vuelvas a llamar a trapFocus."
+        },
+        {
+          "at": "2026-10-19T04:59:08Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/week/taskItem/taskItem-card.js bindRovingKeyboard(): quita el case Enter/' ' — .day-header es un <button> y ya se activa con su click nativo; manejarlo a mano duplica el toggle o depende de que preventDefault cancele el click según el navegador."
+        },
+        {
+          "at": "2026-10-19T04:59:47Z",
+          "event": "foto del árbol",
+          "note": "804a965f09"
+        },
+        {
+          "at": "2026-10-19T04:59:47Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-19T05:04:21Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T05:06:30Z",
+          "event": "estado → hecha",
+          "note": "Aplicadas las 7 correcciones del 2.º intento: await en render(), sin h2 duplicado en Semana, bloque de colapso del sidebar restaurado idéntico a HEAD, atajos registrados tras requireTerms/startMonetization, arranque sin mover el foco, instancia única de ShortcutsCard, sin Enter/Espacio manual en .day-header. node --check OK en todos los JS tocados; tokens de color y --fs-* correctos en shortcuts-card.css. No se probó la UI en navegador."
         }
       ]
     },

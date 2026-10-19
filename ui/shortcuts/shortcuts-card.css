@@ -1,0 +1,124 @@
+/* Diálogo modal de ayuda de atajos. Se pinta cubriendo la pantalla
+   con flex para centrar el contenido, y el panel interior limita el
+   alto para que no se salga en pantallas pequeñas o con letra grande. */
+.shortcuts-modal[hidden] { display: none; }
+.shortcuts-modal {
+  position: fixed; inset: 0;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: clamp(8px, 2vw, 1rem);
+}
+.shortcuts-content {
+  width: min(640px, 100%);
+  max-height: min(85vh, 720px);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  outline: none;
+}
+.shortcuts-content header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem clamp(12px, 3vw, 1.25rem);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.shortcuts-content h3 {
+  margin: 0;
+  font-size: calc(1.05rem * var(--fs-title));
+}
+.shortcuts-close {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: calc(1.25rem * var(--fs-button));
+  line-height: 1;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 8px !important;
+}
+.shortcuts-close:hover {
+  background: var(--hover-bg) !important;
+  color: var(--text);
+}
+.shortcuts-body {
+  overflow-y: auto;
+  padding: clamp(12px, 3vw, 1.25rem);
+  line-height: 1.55;
+  font-size: calc(0.9375rem * var(--fs-body));
+}
+.shortcuts-intro {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
+}
+.shortcuts-body section { margin-bottom: 1.25rem; }
+.shortcuts-body h4 {
+  margin: 0 0 0.5rem;
+  font-size: calc(0.95rem * var(--fs-label));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+/* Lista semántica: dt con la combinación de teclas, dd con la
+   descripción. En CSS Grid las dos columnas se apilan en pantallas
+   estrechas. */
+.shortcuts-list {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 0.4rem 1rem;
+  margin: 0;
+}
+.shortcuts-list dt {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: calc(0.85rem * var(--fs-meta));
+  white-space: nowrap;
+  align-self: center;
+}
+.shortcuts-list dd {
+  margin: 0;
+  align-self: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* Cajas tipo tecla: usan los tokens del tema. */
+.shortcuts-content kbd {
+  display: inline-block;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: calc(0.8rem * var(--fs-meta));
+  padding: 1px 6px;
+  margin: 0 1px;
+  background: var(--surface-alt);
+  color: var(--text);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 var(--border-strong);
+  white-space: nowrap;
+}
+.shortcuts-hint {
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface-alt);
+  border-left: 3px solid var(--primary);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: calc(0.875rem * var(--fs-meta));
+}
+@media (max-width: 28rem) {
+  .shortcuts-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem 0;
+  }
+  .shortcuts-list dd { padding-bottom: 0.25rem; border-bottom: 1px dashed var(--border); }
+  .shortcuts-list dt:has(+ dd) { padding-top: 0.5rem; }
+  .shortcuts-list dt:first-of-type { padding-top: 0; }
+}

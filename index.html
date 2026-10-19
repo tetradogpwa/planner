@@ -18,6 +18,11 @@
 
 <body class="booting">
 
+<!-- "Saltar al contenido" como primer elemento enfocable. Solo se
+     ve al recibir foco de teclado (no al tabular por enlaces de
+     lector de pantalla, porque va antes de los demás). -->
+<a class="skip-link" href="#main-content">Saltar al contenido</a>
+
 <header class="topbar">
   <button class="hamburger" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -81,14 +86,14 @@
 
   </nav>
 
-  <main class="content">
-    <section id="view-tasks"    class="view active"></section>
+  <main class="content" id="main-content" tabindex="-1">
+    <section id="view-tasks"    class="view active" aria-labelledby="view-tasks-heading"></section>
     <section id="view-week"     class="view"></section>
-    <section id="view-allWeeks" class="view"></section>
-    <section id="view-data"     class="view"></section>
-    <section id="view-print"    class="view"></section>
-    <section id="view-legal"    class="view"></section>
-    <section id="view-settings" class="view"></section>
+    <section id="view-allWeeks" class="view" aria-labelledby="view-allWeeks-heading"></section>
+    <section id="view-data"     class="view" aria-labelledby="view-data-heading"></section>
+    <section id="view-print"    class="view" aria-labelledby="view-print-heading"></section>
+    <section id="view-legal"    class="view" aria-labelledby="view-legal-heading"></section>
+    <section id="view-settings" class="view" aria-labelledby="view-settings-heading"></section>
   </main>
 </div>
 

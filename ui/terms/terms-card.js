@@ -79,6 +79,26 @@ export class TermsCard {
     this.tabs.forEach(tab =>
       tab.addEventListener('click', () => this.showDoc(tab.dataset.doc))
     );
+    // Navegación por teclado del tablist: flechas izquierda/derecha e
+    // Inicio/Fin cambian de pestaña y mueven el foco. Solo la pestaña
+    // seleccionada tiene tabindex=0 (las demás -1).
+    this.tablist = this.root.querySelector('[role="tablist"]');
+    this.tablist.addEventListener('keydown', (e) => {
+      const current = this.tabs.indexOf(document.activeElement);
+      if (current < 0) return;
+      let target = -1;
+      switch (e.key) {
+        case 'ArrowLeft':  target = (current - 1 + this.tabs.length) % this.tabs.length; break;
+        case 'ArrowRight': target = (current + 1) % this.tabs.length; break;
+        case 'Home':       target = 0; break;
+        case 'End':        target = this.tabs.length - 1; break;
+      }
+      if (target < 0) return;
+      e.preventDefault();
+      const tab = this.tabs[target];
+      tab.focus();
+      this.showDoc(tab.dataset.doc);
+    });
     this.root.querySelector('[data-action="accept"]')
       .addEventListener('click', () => this.accept());
     this.root.querySelector('[data-action="reject"]')
@@ -89,7 +109,17 @@ export class TermsCard {
   }
 
   async showDoc(key) {
-    this.tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.doc === key)));
+    // Tabindex itinerante: solo la pestaña activa es la siguiente en
+    // el recorrido con Tab (el patrón ARIA tablist).
+    this.tabs.forEach(t => {
+      const isSelected = t.dataset.doc === key;
+      t.setAttribute('aria-selected', String(isSelected));
+      t.setAttribute('tabindex', isSelected ? '0' : '-1');
+    });
+    // El panel siempre expone qué pestaña lo controla para que los
+    // lectores de pantalla anuncien el nombre al entrar.
+    const activeTab = this.tabs.find(t => t.dataset.doc === key);
+    if (activeTab) this.docEl.setAttribute('aria-labelledby', activeTab.id);
     try {
       this.cache[key] ??= renderMarkdown(await fetchText(DOCS[key]));
       this.docEl.innerHTML = this.cache[key];

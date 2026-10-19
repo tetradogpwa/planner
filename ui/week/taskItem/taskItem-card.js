@@ -13,13 +13,15 @@ export class TaskItemCard {
    * @param {number}      dayIndex  0=lun … 6=dom
    * @param {string}      dayLabel  'Lunes', 'Martes'…
    * @param {Date|null}   dayDate   fecha real del día (para detectar hoy)
+   * @param {string|null} parentId  id del contenedor padre para IDs únicos
    */
-  constructor(root, tasks, dayIndex, dayLabel, dayDate = null) {
+  constructor(root, tasks, dayIndex, dayLabel, dayDate = null, parentId = null) {
     this.root     = root;
     this.tasks    = tasks;
     this.dayIndex = dayIndex;
     this.dayLabel = dayLabel;
     this.dayDate  = dayDate;
+    this.parentId = parentId;
   }
 
   async init() {
@@ -31,6 +33,7 @@ export class TaskItemCard {
     this.cache();
     this.render();
     this.bindToggle();
+    this.bindRovingKeyboard();
   }
 
   cache() {
@@ -45,6 +48,14 @@ export class TaskItemCard {
   render() {
     // Nombre del día
     this.nameEl.textContent = this.dayLabel;
+
+    // IDs únicos para que aria-controls apunte al panel de tareas
+    // y el botón sea fácil de identificar (importante cuando hay
+    // varias semanas pintadas).
+    const suffix = this.parentId ? `${this.parentId}-d${this.dayIndex}` : `d${this.dayIndex}`;
+    this.header.id = `${suffix}-header`;
+    this.list.id   = `${suffix}-list`;
+    this.header.setAttribute('aria-controls', this.list.id);
 
     // Fecha formateada (dd/mm)
     if (this.dayDate) {
@@ -119,6 +130,36 @@ export class TaskItemCard {
       } else {
         this.open();
       }
+    });
+  }
+
+  /** Navegación por teclado entre cabeceras de día: flecha arriba /
+   *  abajo se mueve a la cabecera anterior / siguiente dentro del
+   *  mismo contenedor (.days-container). Home/End van al primero y al
+   *  último. Enter y Espacio NO los gestionamos aquí: `.day-header` es
+   *  un <button> y el navegador ya dispara el click (que abre o cierra
+   *  el día); manejarlo a mano duplicaría el toggle o dependería de
+   *  que `preventDefault` cancele el click según el navegador. Esta
+   *  parte se engancha al pulsar sobre la cabecera; el contenedor es
+   *  el responsable del listado de cabeceras. */
+  bindRovingKeyboard() {
+    this.header.addEventListener('keydown', (e) => {
+      const container = this.header.closest('.days-container');
+      if (!container) return;
+      const headers = Array.from(container.querySelectorAll('.day-header'));
+      const idx = headers.indexOf(this.header);
+      if (idx < 0) return;
+
+      let next = -1;
+      switch (e.key) {
+        case 'ArrowUp':   next = (idx - 1 + headers.length) % headers.length; break;
+        case 'ArrowDown': next = (idx + 1) % headers.length; break;
+        case 'Home':      next = 0; break;
+        case 'End':       next = headers.length - 1; break;
+        default: return;
+      }
+      e.preventDefault();
+      headers[next].focus();
     });
   }
 }

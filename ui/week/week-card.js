@@ -7,6 +7,10 @@ export class WeekCard {
     this.root  = root;
     this.week  = weekData;
     this.index = index;
+    // ID estable para que los aria-controls de las cabeceras de día
+    // apunten a IDs únicos cuando hay varias semanas pintadas (vista
+    // completa). Si el contenedor ya trae id, lo respetamos.
+    if (!this.root.id) this.root.id = `week-${this.index}`;
   }
 
   async init() {
@@ -31,6 +35,8 @@ export class WeekCard {
 
     const fmt = d => d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
     this.title.textContent = `Semana ${this.index + 1} · ${fmt(monday)} – ${fmt(sunday)}`;
+    this.title.id = `${this.root.id}-title`;
+    this.title.setAttribute('tabindex', '-1');
 
     this.daysContainer.innerHTML = '';
 
@@ -42,8 +48,10 @@ export class WeekCard {
 
       const label = DAY_NAMES[dayIndex];
 
-      // Pasamos también la fecha real del día para detectar "hoy"
-      new TaskItemCard(wrapper, tasksOfDay || [], dayIndex, label, dayDate).init();
+      // Pasamos también la fecha real del día para detectar "hoy" y
+      // el id del contenedor padre (la semana) para que los IDs únicos
+      // generados por taskItem no se pisen entre semanas.
+      new TaskItemCard(wrapper, tasksOfDay || [], dayIndex, label, dayDate, this.root.id).init();
       this.daysContainer.appendChild(wrapper);
     });
   }

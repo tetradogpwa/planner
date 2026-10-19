@@ -154,6 +154,22 @@ export class SettingsCard {
       this.syncSizes();
     });
 
+    // Diálogo de atajos de teclado. Disponible siempre (no depende
+    // del modo edición) para que también se pueda consultar antes de
+    // tocar nada en Apariencia. Se importa aquí (no en el import de
+    // cabecera) para no penalizar el arranque si el usuario no llega
+    // a abrir este diálogo. Como la carga es HTML+CSS perezosos, el
+    // coste hasta entonces es despreciable.
+    const shortcutsBtn = this.$('#settings-shortcuts-btn');
+    if (shortcutsBtn) {
+      shortcutsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        import('../shortcuts/shortcuts-card.js').then(m => {
+          m.shortcuts.open(shortcutsBtn);
+        });
+      });
+    }
+
     // Estado inicial de visibilidad (ver JSDoc de syncEditorVisibility).
     this.syncEditorVisibility();
   }
