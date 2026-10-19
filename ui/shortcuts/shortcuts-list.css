@@ -1,0 +1,88 @@
+/* Estilos compartidos de la lista de atajos de teclado. Se usan
+   desde el diálogo modal (ui/shortcuts/shortcuts-card.js) y desde la
+   vista Accesibilidad (ui/accessibility/accessibility-card.js), que
+   cargan el mismo HTML (ui/shortcuts/shortcuts-list.html).
+
+   Este archivo se inyecta SIEMPRE que cualquiera de los dos componentes
+   se monta (no solo al abrirse el diálogo por primera vez), para que
+   la lista se vea con estilos en ambos sitios aunque el usuario entre
+   en Accesibilidad sin haber pulsado '?' antes. */
+
+/* Párrafo introductorio. En el diálogo lleva una nota sobre Esc; en la
+   vista Accesibilidad se sustituye por otra intro propia en
+   accessibility-card.html. */
+.shortcuts-intro {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
+  font-size: calc(0.9375rem * var(--fs-body));
+}
+.shortcuts-body section,
+.accessibility-shortcuts section { margin-bottom: 1.25rem; }
+.shortcuts-body h4,
+.accessibility-shortcuts h4 {
+  margin: 0 0 0.5rem;
+  font-size: calc(0.95rem * var(--fs-label));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+/* Lista semántica: dt con la combinación de teclas, dd con la
+   descripción. En CSS Grid las dos columnas se apilan en pantallas
+   estrechas. */
+.shortcuts-list {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 0.4rem 1rem;
+  margin: 0;
+}
+.shortcuts-list dt {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: calc(0.85rem * var(--fs-meta));
+  white-space: nowrap;
+  align-self: center;
+}
+.shortcuts-list dd {
+  margin: 0;
+  align-self: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Cajas tipo tecla: usan los tokens del tema. El selector cubre el
+   diálogo y la vista Accesibilidad (los dos sitios donde aparece la
+   lista y los kbd del HTML compartido). */
+.shortcuts-list kbd,
+.accessibility-card kbd {
+  display: inline-block;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: calc(0.8rem * var(--fs-meta));
+  padding: 1px 6px;
+  margin: 0 1px;
+  background: var(--surface-alt);
+  color: var(--text);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 var(--border-strong);
+  white-space: nowrap;
+}
+
+.shortcuts-hint {
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface-alt);
+  border-left: 3px solid var(--primary);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: calc(0.875rem * var(--fs-meta));
+}
+
+@media (max-width: 28rem) {
+  .shortcuts-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem 0;
+  }
+  .shortcuts-list dd { padding-bottom: 0.25rem; border-bottom: 1px dashed var(--border); }
+  .shortcuts-list dt:has(+ dd) { padding-top: 0.5rem; }
+  .shortcuts-list dt:first-of-type { padding-top: 0; }
+}

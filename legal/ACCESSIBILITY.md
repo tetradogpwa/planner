@@ -86,6 +86,7 @@ globales están disponibles desde cualquier vista (los que usan
 | `Alt` + `5` | Ir a Imprimir / PDF |
 | `Alt` + `6` | Ir a Apariencia |
 | `Alt` + `7` | Ir a Legal y privacidad |
+| `Alt` + `8` | Ir a Accesibilidad |
 
 ### Menú lateral
 
@@ -125,8 +126,8 @@ recibir foco y lleva directamente al área principal de la vista.
 | `?` | Abre esta ayuda (fuera de campos de texto) |
 | `Esc` | Cierra cualquier diálogo abierto |
 
-La ayuda también está disponible desde el botón **"Atajos de
-teclado"** en la vista Legal y privacidad.
+La ayuda también está disponible desde el menú **"Accesibilidad"**
+de la barra lateral.
 
 ## 6. Cómo reportar una barrera
 

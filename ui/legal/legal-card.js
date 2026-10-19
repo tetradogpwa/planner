@@ -11,7 +11,6 @@
 //      muestra un mensaje claro y un enlace a la URL pública.
 // ────────────────────────────────────────────────────────────────────
 
-import { shortcuts } from '../shortcuts/shortcuts-card.js';
 import { trapFocus } from '../a11y.js';
 
 const DOCS = {
@@ -63,16 +62,6 @@ export class LegalCard {
         await this.openDoc(a, a.dataset.doc);
       });
     });
-
-    // Botón "Atajos de teclado" en la vista Legal: abre el diálogo
-    // modal común (ui/shortcuts). Mantiene foco en el botón al cerrar.
-    const shortcutsBtn = this.root.querySelector('#legal-shortcuts-btn');
-    if (shortcutsBtn) {
-      shortcutsBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        shortcuts.open(shortcutsBtn);
-      });
-    }
 
     // Rellenar info de la app desde Tauri si está disponible.
     try {

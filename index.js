@@ -6,6 +6,7 @@ import { PrintCard }       from './ui/print/print-card.js';
 import { WeekCard }        from './ui/week/week-card.js';
 import { LegalCard }       from './ui/legal/legal-card.js';
 import { SettingsCard }    from './ui/settings/settings-card.js';
+import { AccessibilityCard } from './ui/accessibility/accessibility-card.js';
 import { applyPreferences } from './ui/settings/preferences.js';
 import { ConsentCard }     from './ui/consent/consent-card.js';
 import { TermsCard, termsAccepted } from './ui/terms/terms-card.js';
@@ -58,15 +59,16 @@ removeAdsBtn.addEventListener('click', async () => {
 });
 
 // ── Vistas ───────────────────────────────────────────────
-const VIEW_KEYS = ['tasks', 'week', 'allWeeks', 'data', 'print', 'legal', 'settings'];
+const VIEW_KEYS = ['tasks', 'week', 'allWeeks', 'data', 'print', 'legal', 'settings', 'accessibility'];
 const views = {
-  tasks:    document.getElementById('view-tasks'),
-  week:     document.getElementById('view-week'),
-  allWeeks: document.getElementById('view-allWeeks'),
-  data:     document.getElementById('view-data'),
-  print:    document.getElementById('view-print'),
-  legal:    document.getElementById('view-legal'),
-  settings: document.getElementById('view-settings'),
+  tasks:        document.getElementById('view-tasks'),
+  week:         document.getElementById('view-week'),
+  allWeeks:     document.getElementById('view-allWeeks'),
+  data:         document.getElementById('view-data'),
+  print:        document.getElementById('view-print'),
+  legal:        document.getElementById('view-legal'),
+  settings:     document.getElementById('view-settings'),
+  accessibility: document.getElementById('view-accessibility'),
 };
 
 const navButtons = () => Array.from(document.querySelectorAll('.nav-item[data-view]'));
@@ -217,6 +219,10 @@ async function render(view) {
     case 'settings':
       await new SettingsCard(views.settings).init();
       break;
+
+    case 'accessibility':
+      await new AccessibilityCard(views.accessibility).init();
+      break;
   }
 }
 
@@ -299,6 +305,7 @@ document.addEventListener('keydown', (e) => {
       '5': 'print',
       '6': 'settings',
       '7': 'legal',
+      '8': 'accessibility',
     };
     if (map[e.key]) {
       e.preventDefault();

@@ -1,0 +1,35 @@
+/* Vista "Accesibilidad": la lista de combinaciones de teclado como
+   contenido de la página (no en un diálogo). Los estilos concretos de
+   la lista (`.shortcuts-list`, `kbd`, `.shortcuts-intro`, `.shortcuts-hint`)
+   viven en ui/shortcuts/shortcuts-card.css para no duplicarlos: este
+   archivo solo maqueta la tarjeta y la disposición. */
+
+.accessibility-card { padding: 0; }
+.accessibility-card h2 {
+  font-size: calc(1.5rem * var(--fs-title));
+  margin: 0 0 0.5rem;
+}
+.accessibility-intro {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
+  font-size: calc(1rem * var(--fs-body));
+}
+.accessibility-shortcuts {
+  /* El HTML inyectado (ui/shortcuts/shortcuts-list.html) ya trae su
+     propio espaciado; aquí solo acotamos el ancho del contenido y
+     evitamos scroll lateral con letra al 200 % en móvil. */
+  max-width: 100%;
+  min-width: 0;
+}
+.accessibility-link {
+  margin: 1.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: calc(0.95rem * var(--fs-body));
+}
+.accessibility-link a {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.2em;
+}
+.accessibility-link a:hover { background: var(--soft); }

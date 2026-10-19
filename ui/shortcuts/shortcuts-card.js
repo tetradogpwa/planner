@@ -18,19 +18,28 @@ export class ShortcutsCard {
     this._isOpen    = false;
   }
 
-  /** Carga el HTML y CSS perezosamente (la primera vez que se abre). */
+  /** Carga el HTML y CSS perezosamente (la primera vez que se abre).
+   *  El cuerpo de la lista de atajos se carga aparte (./shortcuts-list.html)
+   *  y sus estilos de ui/shortcuts/shortcuts-list.css para no duplicar
+   *  HTML: el mismo HTML y CSS los inyecta la vista Accesibilidad
+   *  (ui/accessibility/accessibility-card.js). */
   async ensureMounted() {
     if (this.root && document.body.contains(this.root)) return;
-    const [html, css] = await Promise.all([
+    const [html, css, listHtml, listCss] = await Promise.all([
       fetch('./ui/shortcuts/shortcuts-card.html').then(r => r.text()),
       fetch('./ui/shortcuts/shortcuts-card.css').then(r => r.text()),
+      fetch('./ui/shortcuts/shortcuts-list.html').then(r => r.text()),
+      fetch('./ui/shortcuts/shortcuts-list.css').then(r => r.text()),
     ]);
     const wrap = document.createElement('div');
-    wrap.innerHTML = `<style>${css}</style>${html}`;
+    wrap.innerHTML = `<style>${css}${listCss}</style>${html}`;
     document.body.appendChild(wrap);
-    this.root       = wrap.querySelector('#shortcuts-modal');
-    this.content    = wrap.querySelector('.shortcuts-content');
-    this.closeBtn   = wrap.querySelector('#shortcuts-close');
+    this.root     = wrap.querySelector('#shortcuts-modal');
+    this.content  = wrap.querySelector('.shortcuts-content');
+    this.closeBtn = wrap.querySelector('#shortcuts-close');
+    this.body     = wrap.querySelector('#shortcuts-body');
+    // Detrás de la intro propia del diálogo (shortcuts-card.html).
+    this.body.insertAdjacentHTML('beforeend', listHtml);
 
     this.closeBtn.addEventListener('click', () => this.close());
     // Clic fuera del panel también cierra, igual que el modal legal.

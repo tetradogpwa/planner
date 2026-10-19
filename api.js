@@ -32,7 +32,7 @@ import { ToJson }    from './back/serializer.js';
 import { GetNWeeks } from './back/calendar.js';
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-const VIEWS = ['tasks', 'week', 'allWeeks', 'data', 'print', 'legal', 'settings'];
+const VIEWS = ['tasks', 'week', 'allWeeks', 'data', 'print', 'legal', 'settings', 'accessibility'];
 
 /** Fecha en formato YYYY-MM-DD usando la zona horaria LOCAL (no UTC,
  *  como haría `Date.toISOString().slice(0,10)`). Lo comparten getStartDate

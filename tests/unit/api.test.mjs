@@ -293,3 +293,29 @@ test('setStartDate: Date válido no muta el objeto recibido', () => {
   assert.equal(original.getMinutes(), 30);
   assert.equal(PlannerApi.getStartDate(), '2026-10-19');
 });
+
+// ── listViews / navigate: vistas conocidas y desconocida ───────────────
+
+test('listViews incluye las 8 vistas, incluida "accessibility"', () => {
+  const views = PlannerApi.listViews();
+  assert.ok(Array.isArray(views));
+  assert.ok(views.includes('tasks', 'week', 'allWeeks', 'data',
+                          'print', 'legal', 'settings', 'accessibility'));
+});
+
+test('navigate("accessibility") lanza planner:navigate con esa vista', () => {
+  const events = [];
+  const navHandler = (e) => events.push(e.detail);
+  window.addEventListener('planner:navigate', navHandler);
+  try {
+    PlannerApi.navigate('accessibility');
+    assert.equal(events.length, 1);
+    assert.equal(events[0].view, 'accessibility');
+  } finally {
+    window.removeEventListener('planner:navigate', navHandler);
+  }
+});
+
+test('navigate: vista desconocida lanza "Vista inválida"', () => {
+  assert.throws(() => PlannerApi.navigate('no-existe'), /Vista inválida/);
+});
