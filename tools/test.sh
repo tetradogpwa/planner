@@ -124,6 +124,11 @@ run_e2e() {
   export XDG_CONFIG_HOME="$E2E_TMP/config"
   export XDG_CACHE_HOME="$E2E_TMP/cache"
   mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME"
+  # Lo que exportan las pruebas (JSON, PDF) va a .tmp/descargas, no a
+  # la raíz del repo ni a la carpeta Descargas del usuario.
+  E2E_DESCARGAS="$E2E_TMP/descargas"
+  mkdir -p "$E2E_DESCARGAS"
+  echo "XDG_DOWNLOAD_DIR=\"$E2E_DESCARGAS\"" > "$XDG_CONFIG_HOME/user-dirs.dirs"
 
   export PLANNER_E2E_BIN="$E2E_BIN"
   export PLANNER_E2E_DATOS="$XDG_DATA_HOME"

@@ -130,6 +130,88 @@ export async function irATareas() {
   );
 }
 
+/** Navega a la vista "Gestión de datos" (clic real sobre el botón del
+ *  menú lateral, como lo haría una persona). Espera a que la tarjeta
+ *  esté en pantalla (#dataStatus es uno de sus elementos). */
+export async function irAGestionDatos() {
+  await $('button.nav-item[data-view="data"]').click();
+  await browser.waitUntil(
+    async () => await browser.execute(
+      () => document.getElementById('view-data').classList.contains('active')
+        && !!document.getElementById('dataStatus')
+    ),
+    { timeout: 5_000, timeoutMsg: 'La vista Gestión de datos no se abrió' },
+  );
+}
+
+/** Navega a la vista "Imprimir / PDF" (clic real sobre el botón del
+ *  menú lateral). Espera a que #printStatus esté enganchado. */
+export async function irAImprimir() {
+  await $('button.nav-item[data-view="print"]').click();
+  await browser.waitUntil(
+    async () => await browser.execute(
+      () => document.getElementById('view-print').classList.contains('active')
+        && !!document.getElementById('printStatus')
+    ),
+    { timeout: 5_000, timeoutMsg: 'La vista Imprimir / PDF no se abrió' },
+  );
+}
+
+/** Espera a que el textContent de un selector que hace de #status
+ *  (role="status") coincida con la cadena esperada. Se usa tanto para
+ *  #dataStatus como para #printStatus. */
+export async function esperarStatus(selector, esperado, timeout = 10_000) {
+  await browser.waitUntil(
+    async () => {
+      const txt = await $(selector).getText();
+      return txt.trim() === esperado;
+    },
+    { timeout, timeoutMsg: `El status ${selector} no llegó a "${esperado}"` },
+  );
+}
+
+/** Dispara la carga de un archivo en un <input type="file"> desde
+ *  WebKitWebDriver, que no admite setValue sobre inputs de archivo.
+ *  Crea el File en la página con un Blob y dispara el evento "change"
+ *  con un DataTransfer que lleva el archivo: así se ejecuta el
+ *  manejador real del input (FileReader incluido), igual que si el
+ *  usuario hubiera seleccionado el archivo en el diálogo del sistema.
+ *  Devuelve 'setValue' si WebdriverIO pudo hacerlo de forma nativa o
+ *  'dataTransfer' si tuvimos que recurrir al polyfill del DOM. */
+export async function cargarArchivoEnInput(selector, rutaAbsoluta) {
+  let useDataTransfer = false;
+  try {
+    await $(selector).setValue(rutaAbsoluta);
+  } catch (_) {
+    useDataTransfer = true;
+  }
+  if (!useDataTransfer) return 'setValue';
+
+  // Leemos el contenido del fixture desde el sistema de archivos del
+  // proceso de Node del spec y lo inyectamos en la página como un Blob.
+  // La página crea el File y dispara el 'change' exactamente como si el
+  // usuario hubiera elegido el archivo.
+  const contenido = await readFixtureFromSpec(rutaAbsoluta);
+  await browser.execute(({ selector, contenido, nombre }) => {
+    const input = document.querySelector(selector);
+    if (!input) throw new Error(`No existe ${selector}`);
+    const file = new File([contenido], nombre, { type: 'application/json' });
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, { selector, contenido, nombre: rutaAbsoluta.split('/').pop() });
+  return 'dataTransfer';
+}
+
+/** Lee un archivo del sistema de archivos del proceso de Node del spec
+ *  (donde corre WebdriverIO). Se separa de cargarArchivoEnInput para que
+ *  el contenido pueda prepararse una sola vez por spec si hace falta. */
+export async function readFixtureFromSpec(rutaAbsoluta) {
+  const fs = await import('node:fs/promises');
+  return fs.readFile(rutaAbsoluta, 'utf8');
+}
+
 /** Devuelve, para cada celda de la vista Semana (0 lunes … 6 domingo),
  *  los textos de las insignias que contiene (.task-badge). Las
  *  insignias se pintan en mayúsculas con CSS; los textos aquí son los

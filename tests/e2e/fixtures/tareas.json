@@ -1,0 +1,5 @@
+[
+  { "className": "DailyTask",    "name": "Beber agua",     "total": 1, "daysFrom": 0, "nDays": 1 },
+  { "className": "DaysOfWeekTask", "name": "Gimnasio",      "total": 1, "daysFrom": 0, "flags": 21 },
+  { "className": "NDaysTask",    "name": "Regar plantas",  "total": 1, "daysFrom": 0, "nDays": 3 }
+]
