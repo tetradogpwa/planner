@@ -73,13 +73,19 @@
   /* Dimensiones en rem: crecen con el tamaño de letra. */
   --sidebar-w:           min(calc(14rem * var(--fs-nav)), 40vw);
   /* Tamaño del icono del menú lateral. Por defecto 64×64 px (4rem). Se
-     puede sobrescribir en el editor de tema personalizado.
-     --sidebar-w-collapsed: ancho del icono + padding horizontal del
-     .sidebar-nav (1rem = 2×0.5rem) + un respiro de 0.5rem para que
-     el icono no se recorte y quepan la barra activa (3 px) y el
-     anillo de foco de teclado con margen a cada lado. */
-  --nav-icon-size:       4rem;
-  --sidebar-w-collapsed: calc(var(--nav-icon-size) + 1.5rem);
+     puede sobrescribir en el editor de tema personalizado (solo
+     afecta al menú contraído en pantallas táctiles; en escritorio con
+     ratón el contraído usa --nav-icon-size-collapsed para ser igual que
+     el expandido).
+     --sidebar-w-collapsed: ancho del icono + 1rem (padding horizontal
+     del .sidebar-nav = 2×0.5rem) + 0.5rem para que el icono no se
+     recorte y quepan la barra activa (3 px) y el anillo de foco de
+     teclado con margen a cada lado. En escritorio con ratón se
+     redefine dentro de @media (hover: hover) and (pointer: fine) para
+     ajustarse al icono pequeño del expandido. */
+  --nav-icon-size:             4rem;
+  --nav-icon-size-collapsed:   var(--nav-icon-size);
+  --sidebar-w-collapsed: calc(var(--nav-icon-size-collapsed) + 1.5rem);
   --topbar-h:            3.5rem;
 }
 
@@ -368,21 +374,26 @@ body.sidebar-open .hamburger span:nth-child(3) {
   .sidebar.collapsed .sidebar-divider { display: none; }
   /* Padding vertical mínimo para que los iconos queden juntos (criterio
      de la tarea) y sin padding horizontal: el ancho del menú contraído
-     ya se calcula desde --nav-icon-size + padding del .sidebar-nav. */
+     ya se calcula desde --nav-icon-size-collapsed + padding del
+     .sidebar-nav. El padding 0.15rem se anula en escritorio con ratón
+     (más abajo) para igualar el alto al del expandido. */
   .sidebar.collapsed .nav-item     { justify-content: center; padding: 0.15rem 0; }
   .sidebar.collapsed .sidebar-collapse-btn { justify-content: center; padding: 0.15rem 0; }
   .sidebar.collapsed .collapse-icon { transform: rotate(180deg); }
   /* Icono: 64×64 px (o el valor que el usuario haya definido en el
-     tema personalizado) solo cuando el menú está colapsado. */
+     tema personalizado) solo cuando el menú está colapsado Y la
+     pantalla es táctil. En escritorio con ratón, .sidebar.collapsed
+     .nav-icon se sobreescribe a la caja del icono expandido (más
+     abajo). */
   .sidebar.collapsed .nav-icon {
-    width:  var(--nav-icon-size);
-    height: var(--nav-icon-size);
-    font-size: var(--nav-icon-size);
+    width:  var(--nav-icon-size-collapsed);
+    height: var(--nav-icon-size-collapsed);
+    font-size: var(--nav-icon-size-collapsed);
   }
   .sidebar.collapsed .collapse-icon {
-    width:  var(--nav-icon-size);
-    height: var(--nav-icon-size);
-    font-size: calc(var(--nav-icon-size) * 0.5);
+    width:  var(--nav-icon-size-collapsed);
+    height: var(--nav-icon-size-collapsed);
+    font-size: calc(var(--nav-icon-size-collapsed) * 0.5);
   }
 
   /* Ajustar contenido cuando sidebar expandida/colapsada */
@@ -390,15 +401,65 @@ body.sidebar-open .hamburger span:nth-child(3) {
   .sidebar.collapsed ~ .content, .layout:has(.sidebar.collapsed) .content {
     margin-left: var(--sidebar-w-collapsed);
   }
+
+  /* En escritorio con ratón el menú contraído se reduce al tamaño del
+     icono expandido (criterio de la tarea): así el botón del contraído
+     mide igual que el del expandido. El ajuste solo aplica cuando hay
+     puntero fino y hover (no en táctil).
+
+     Sobreescribimos --nav-icon-size-collapsed y --sidebar-w-collapsed
+     en :root dentro de este media. La versión de :root de --sidebar-w-
+     collapsed se calcula en tiempo de parseo y captura el valor de
+     --nav-icon-size-collapsed en :root (64 px), por eso redefinirla
+     solo en .sidebar no llega al cálculo del ancho del sidebar; hay
+     que pisarla aquí mismo. */
+  @media (hover: hover) and (pointer: fine) {
+    :root {
+      /* Tamaño del icono expandido: letra calc(1.1rem * var(--fs-nav))
+         en una caja de 1.4em = 1.54rem. Mantenemos fs-nav por la regla
+         de CLAUDE.md sobre usar la variable de la parte. */
+      --nav-icon-size-collapsed: calc(1.54rem * var(--fs-nav));
+      /* Ancho del sidebar contraído: icono (1.54rem × fs-nav) +
+         padding horizontal del .nav-item (2 × 0.75rem) + padding
+         horizontal del .sidebar-nav (2 × 0.5rem). El icono escala con
+         --fs-nav; los paddings no, así que solo esa parte se multiplica
+         por fs-nav, evitando anidar calc() que WebKitGTK no evalúa
+         bien. */
+      --sidebar-w-collapsed: calc(
+        (1.54rem * var(--fs-nav)) + 1.5rem + 1rem
+      );
+    }
+    /* Icono del item: misma letra y misma caja que el expandido. */
+    .sidebar.collapsed .nav-icon {
+      width:  1.4em;
+      height: 1.4em;
+      font-size: calc(1.1rem * var(--fs-nav));
+    }
+    /* Icono del botón de colapso: misma caja que en expandido
+       (1.4rem, igual que .collapse-icon por defecto). */
+    .sidebar.collapsed .collapse-icon {
+      width:  1.4rem;
+      height: 1.4rem;
+      font-size: calc(0.8rem * var(--fs-nav));
+    }
+    .sidebar.collapsed .nav-item     { padding: 0.7rem 0.75rem; }
+    /* Mismo padding que un .nav-item: en expandido el botón trae
+       padding-left: 1.25rem heredado de la regla base para alinear la
+       etiqueta con el icono de los nav-item, pero en colapsado la
+       etiqueta está oculta y ese 1.25rem descentra el icono (que va
+       centrado con justify-content). */
+    .sidebar.collapsed .sidebar-collapse-btn { padding: 0.7rem 0.75rem; }
+  }
 }
 
 /* En pantallas con poca altura (laptops 13"–15" sin pantalla externa)
    los iconos de 64 px no caben ni con el padding mínimo, así que
    quitamos todo el padding vertical del item colapsado: el icono ya
-   marca el alto del botón. Sigue cumpliendo el límite de 8 px entre
-   bordes de iconos porque sin padding y con gap:2 px solo queda el
-   propio gap. */
-@media (max-height: 720px) {
+   marca el alto del botón. Solo aplica al caso táctil; en escritorio
+   con ratón el icono ya es del tamaño expandido y el item lleva su
+   padding (0.7rem). La negación `not (...)` exige Media Queries
+   Level 4 (soportado por WebKitGTK y Chromium recientes). */
+@media (min-width: 768px) and (max-height: 720px) and (not ((hover: hover) and (pointer: fine))) {
   .sidebar.collapsed .nav-item           { padding: 0; }
   .sidebar.collapsed .sidebar-collapse-btn { padding: 0; }
 }

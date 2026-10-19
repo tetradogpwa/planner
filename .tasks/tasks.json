@@ -1,5 +1,5 @@
 {
-  "next": 20,
+  "next": 21,
   "tasks": [
     {
       "id": "T-001",
@@ -983,11 +983,11 @@
     {
       "id": "T-010",
       "title": "Menú contraído en escritorio: botones del mismo tamaño que expandido",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": "T-001",
       "created": "2026-10-19T04:40:44Z",
-      "updated": "2026-10-19T04:40:44Z",
-      "attempts": 0,
+      "updated": "2026-10-19T07:54:18Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-10-19T04:40:44Z",
@@ -1005,16 +1005,100 @@
       ],
       "notes": [
         "index.css: variables en :root ~líneas 74-82 (--nav-icon-size: 4rem; --sidebar-w-collapsed: calc(var(--nav-icon-size) + 1.5rem)). Reglas del contraído en '@media (min-width: 768px)' ~líneas 313-366: .sidebar.collapsed .nav-item {padding: 0.15rem 0}, .sidebar.collapsed .nav-icon y .collapse-icon con var(--nav-icon-size). '@media (max-height: 720px)' ~línea 374 quita el padding del item contraído. Estilos base: .sidebar-nav (padding 0.75rem 0.5rem, gap 2px) ~línea 380, .nav-item (padding 0.7rem 0.75rem) ~390, .nav-icon (font-size calc(1.1rem * var(--fs-nav)), 1.4em) ~430.",
-        "Enfoque sugerido: introducir una variable --nav-icon-size-collapsed que por defecto valga var(--nav-icon-size) y, dentro de '@media (min-width: 768px) and (hover: hover) and (pointer: fine)', sobrescribirla a calc(1.54rem * var(--fs-nav)) (=1.4 × 1.1rem). Usar esa variable en las reglas del contraído y en --sidebar-w-collapsed (icono + 2×0.75rem padding del item + 2×0.5rem del .sidebar-nav). En escritorio con ratón restaurar el padding vertical del item contraído a 0.7rem (y que el max-height:720px solo afecte al caso táctil). Ojo: preferences.js (~línea 545) fija --nav-icon-size en el tema personalizado; no lo cambies, solo la etiqueta en ui/settings/settings-card.html línea 88."
+        "Enfoque sugerido: introducir una variable --nav-icon-size-collapsed que por defecto valga var(--nav-icon-size) y, dentro de '@media (min-width: 768px) and (hover: hover) and (pointer: fine)', sobrescribirla a calc(1.54rem * var(--fs-nav)) (=1.4 × 1.1rem). Usar esa variable en las reglas del contraído y en --sidebar-w-collapsed (icono + 2×0.75rem padding del item + 2×0.5rem del .sidebar-nav). En escritorio con ratón restaurar el padding vertical del item contraído a 0.7rem (y que el max-height:720px solo afecte al caso táctil). Ojo: preferences.js (~línea 545) fija --nav-icon-size en el tema personalizado; no lo cambies, solo la etiqueta en ui/settings/settings-card.html línea 88.",
+        "Supervisor: falta ejecutar bash tools/test.sh, comprobar que la prueba nueva se pone en rojo al romper el CSS y revisar visualmente temas claro/oscuro."
       ],
-      "feedback": [],
-      "baseTree": null,
+      "feedback": [
+        {
+          "at": "2026-10-19T07:19:23Z",
+          "note": "index.css:86 --sidebar-w-collapsed se resuelve en :root con el --nav-icon-size-collapsed de :root (64 px): la sobrescritura en .sidebar (línea ~412) no llega a ese cálculo, así que en escritorio con ratón el menú contraído sigue midiendo 64px+1.5rem (88 px) y .content igual. Redefine --sidebar-w-collapsed dentro del @media (hover: hover) and (pointer: fine) en el mismo selector donde se usa (o sobrescribe ambas variables en :root dentro de ese media), con la fórmula icono + 2×0.75rem (padding del item) + 2×0.5rem (padding de .sidebar-nav)."
+        },
+        {
+          "at": "2026-10-19T07:19:23Z",
+          "note": "index.css:387-389 en escritorio con ratón el .nav-icon contraído queda con font-size 1.54rem×fs-nav (el emoji crece y se sale de su caja); el criterio pide letra calc(1.1rem * var(--fs-nav)) y caja 1.4em, igual que expandido. Dentro del media de ratón deja font-size: calc(1.1rem * var(--fs-nav)) y width/height 1.4em en .sidebar.collapsed .nav-icon (y revisa .collapse-icon igual frente a su tamaño expandido)."
+        },
+        {
+          "at": "2026-10-19T07:19:23Z",
+          "note": "index.css:415-418 padding-left: 1.25rem en .sidebar.collapsed .sidebar-collapse-btn no está justificado y descentra el botón; usa el mismo padding que en expandido o explica por qué en un comentario."
+        },
+        {
+          "at": "2026-10-19T07:19:23Z",
+          "note": "tests/e2e/specs/09-sidebar-colapsado.spec.mjs: la prueba de ancho (w<200 y márgenes ≥4 px) pasa con el fallo actual de 88 px. Exige que el ancho del sidebar contraído sea ≈ ancho del icono + 1.5rem + 1rem (±1 px, en px vía getComputedStyle(document.documentElement).fontSize) y que el font-size calculado del .nav-icon sea igual contraído y expandido. Añade además un caso con --fs-nav al 200 % (document.documentElement.style.setProperty('--fs-nav','2')) que compruebe que crece en proporción y que el icono no se recorta, y restaura el valor al final."
+        }
+      ],
+      "baseTree": "34e3657b562e359411131eec9e9ac3a2d8690ff6",
       "history": [
         {
           "at": "2026-10-19T04:40:44Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-19T07:11:24Z",
+          "event": "foto del árbol",
+          "note": "6921d722b6"
+        },
+        {
+          "at": "2026-10-19T07:11:24Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-19T07:16:48Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T07:19:23Z",
+          "event": "devuelta a MiniMax",
+          "note": "index.css:86 --sidebar-w-collapsed se resuelve en :root con el --nav-icon-size-collapsed de :root (64 px): la sobrescritura en .sidebar (línea ~412) no llega a ese cálculo, así que en escritorio con ratón el menú contraído sigue midiendo 64px+1.5rem (88 px) y .content igual. Redefine --sidebar-w-collapsed dentro del @media (hover: hover) and (pointer: fine) en el mismo selector donde se usa (o sobrescribe ambas variables en :root dentro de ese media), con la fórmula icono + 2×0.75rem (padding del item) + 2×0.5rem (padding de .sidebar-nav)."
+        },
+        {
+          "at": "2026-10-19T07:19:23Z",
+          "event": "devuelta a MiniMax",
+          "note": "index.css:387-389 en escritorio con ratón el .nav-icon contraído queda con font-size 1.54rem×fs-nav (el emoji crece y se sale de su caja); el criterio pide letra calc(1.1rem * var(--fs-nav)) y caja 1.4em, igual que expandido. Dentro del media de ratón deja font-size: calc(1.1rem * var(--fs-nav)) y width/height 1.4em en .sidebar.collapsed .nav-icon (y revisa .collapse-icon igual frente a su tamaño expandido)."
+        },
+        {
+          "at": "2026-10-19T07:19:23Z",
+          "event": "devuelta a MiniMax",
+          "note": "index.css:415-418 padding-left: 1.25rem en .sidebar.collapsed .sidebar-collapse-btn no está justificado y descentra el botón; usa el mismo padding que en expandido o explica por qué en un comentario."
+        },
+        {
+          "at": "2026-10-19T07:19:23Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/e2e/specs/09-sidebar-colapsado.spec.mjs: la prueba de ancho (w<200 y márgenes ≥4 px) pasa con el fallo actual de 88 px. Exige que el ancho del sidebar contraído sea ≈ ancho del icono + 1.5rem + 1rem (±1 px, en px vía getComputedStyle(document.documentElement).fontSize) y que el font-size calculado del .nav-icon sea igual contraído y expandido. Añade además un caso con --fs-nav al 200 % (document.documentElement.style.setProperty('--fs-nav','2')) que compruebe que crece en proporción y que el icono no se recorta, y restaura el valor al final."
+        },
+        {
+          "at": "2026-10-19T07:19:23Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T07:19:32Z",
+          "event": "foto del árbol",
+          "note": "34e3657b56"
+        },
+        {
+          "at": "2026-10-19T07:19:32Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-010-20261019-091932.log"
+        },
+        {
+          "at": "2026-10-19T07:42:47Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T07:53:04Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T07:54:18Z",
+          "event": "estado → hecha",
+          "note": "Revisado: correcciones resueltas; bash tools/test.sh en ✓ con Xvfb (unit 69/69, e2e 5/5); spec 09 en rojo al devolver el padding 0.15rem del item contraído. En Wayland (weston sin pantalla) fallan 3 de la spec 09 por el entorno: lo cubre T-020."
         }
-      ]
+      ],
+      "firstTree": "6921d722b6ce858cdbd30692ffd0e45833d40fc0"
     },
     {
       "id": "T-011",
@@ -1425,6 +1509,49 @@
           "at": "2026-10-19T06:08:00Z",
           "event": "devuelta a MiniMax",
           "note": "ui/shortcuts/shortcuts-list.html línea 1: la introducción ('La tecla ? abre esta ayuda desde cualquier pantalla; Esc la cierra') es del diálogo y no encaja en la vista, donde Esc no cierra nada. Sácala del archivo compartido y déjala solo en shortcuts-card.html, antes del contenedor de la lista; la vista ya tiene su propia introducción."
+        }
+      ]
+    },
+    {
+      "id": "T-020",
+      "title": "E2E en Wayland invisible: toda la suite en verde",
+      "status": "pendiente",
+      "relatedTo": "T-010",
+      "created": "2026-10-19T07:47:32Z",
+      "updated": "2026-10-19T07:54:18Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T07:47:32Z",
+          "text": "ya lo he instalado (weston), puede ahora minimax hacer test bien? haz un task para que lo haga"
+        }
+      ],
+      "criteria": [
+        "bash tools/test.sh (unit + e2e, por defecto en weston sin pantalla) sale en ✓ con todas las specs",
+        "PLANNER_E2E_DISPLAY=x11 bash tools/test.sh e2e también sale en ✓",
+        "Ninguna prueba se borra, se salta, se marca .skip/.only ni se rebaja (tolerancias, timeouts desmesurados): cada una sigue fallando si se rompe lo que prueba",
+        "Durante la ejecución no aparece ninguna ventana en el escritorio del usuario",
+        "Si la causa está en la app (CSS/JS), el arreglo cumple las convenciones de accesibilidad de CLAUDE.md"
+      ],
+      "notes": [
+        "tools/test.sh ya ejecuta los E2E por defecto en un weston --backend=headless --renderer=pixman con socket propio (GDK_BACKEND=wayland); PLANNER_E2E_DISPLAY=x11 vuelve al Xvfb. Log de weston en tests/e2e/.tmp/weston.log.",
+        "Medido 2026-10-19 en Wayland: 24/27 en ✓; fallan 3 de tests/e2e/specs/09-sidebar-colapsado.spec.mjs: 'el icono del menú contraído mide lo mismo…' y 'el ancho del sidebar contraído…' (el sidebar contraído no baja de 80 px: 'transición CSS sin terminar') y 'con --fs-nav al 200 %' (diferencia 17 px). En Xvfb solo falla 'el ancho del sidebar contraído ≈ icono + 1.5rem + 1rem' (3.875 px), que es asunto de T-010.",
+        "Hipótesis a comprobar primero (no está medida): el weston sin pantalla no tiene ratón, así que WebKit da matchMedia('(hover: hover) and (pointer: fine)') = false y no se aplica el bloque de escritorio con ratón de index.css (~línea 416). Mídelo con browser.execute en la spec antes de tocar nada.",
+        "Depende de T-010 (en revisión): hazla después de que T-010 esté aprobada, sobre su CSS y su spec 09.",
+        "MiniMax no puede editar tools/test.sh ni tests/e2e/wdio.conf.mjs (opencode.json). Si la solución exige cambiar cómo se arranca weston (p. ej. un dispositivo de ratón virtual), no lo rodees: explica en la entrega el cambio exacto y el supervisor lo aplica.",
+        "Supervisor (revisión T-010): con T-010 aprobada, en Xvfb la suite pasa entera; en weston siguen fallando las 3 mismas pruebas de la spec 09 (sidebar contraído ≥ 80 px; diferencia de 17 px con --fs-nav=2)."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T07:47:32Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T07:54:18Z",
+          "event": "modificada",
+          "note": "nota"
         }
       ]
     }
