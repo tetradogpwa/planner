@@ -29,6 +29,7 @@ const WEB_ASSETS: &[&str] = &[
     "index.js",
     "index.css",
     "context.js",
+    "api.js",
     "monetization.js",
     "theme-boot.js",
     "manifest.json",

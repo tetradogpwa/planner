@@ -95,6 +95,11 @@
     <section id="view-legal"    class="view" aria-labelledby="view-legal-heading"></section>
     <section id="view-settings" class="view" aria-labelledby="view-settings-heading"></section>
   </main>
+
+  <!-- Región aria-live para anuncios de la API (cambios hechos por
+       un script, p. ej. PlannerApi.addTask). Los lectores de pantalla
+       leerán lo que pongamos aquí tras cada `planner:changed`. -->
+  <div id="plannerStatus" role="status" aria-live="polite" class="sr-only"></div>
 </div>
 
 <!-- Pantallas previas a la app: términos (ui/terms/) y anuncios (ui/consent/) -->

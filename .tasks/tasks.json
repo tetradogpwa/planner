@@ -1,5 +1,5 @@
 {
-  "next": 19,
+  "next": 20,
   "tasks": [
     {
       "id": "T-001",
@@ -653,11 +653,11 @@
     {
       "id": "T-008",
       "title": "API interna del planificador (base para MCP)",
-      "status": "en_revision",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-10-19T04:38:59Z",
-      "updated": "2026-10-19T05:28:38Z",
-      "attempts": 1,
+      "updated": "2026-10-19T05:59:04Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-10-19T04:38:59Z",
@@ -677,8 +677,29 @@
         "Estado en context.js (Context.Tasks es un Proxy que persiste en localStorage al mutar; Context.StartDate con setter). Las tarjetas mutan directamente: taskManager-card.js:35 (push), :62 (splice); dataManager-card.js:38. Construcción por tipo y validación hoy duplicada en ui/taskManager/addTask/addTask-card.js (~líneas 130-165) y editTask/editTask-card.js (~180-220): extráela a api.js. Calendario: back/calendar.js GetNWeeks(from, n, avoid, tasks). Navegación: setView() en index.js (~línea 66) — expórtala o escucha un evento 'planner:navigate'.",
         "No expone nada al exterior todavía: esta tarea solo crea la capa. La usará T-009 (servidor MCP). Expón también window.PlannerApi para depurar desde consola."
       ],
-      "feedback": [],
-      "baseTree": "78689bbe14a9620d43d53a50f083de0a458fd6ab",
+      "feedback": [
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "note": "api.js parseCycle (~línea 64): rechaza cualquier semana vacía, pero el formulario siempre ha permitido semanas de descanso (solo exige que ALGUNA semana tenga días: addTask-card.js 'some(f => f !== 0)'). Hoy PlannerApi.addTask({name:'T', repeat:'cycle', cycle:[[0], []]}) lanza 'Marca al menos un día en el ciclo' y el formulario tampoco deja crearlo: es una regresión. Acepta semanas vacías y lanza ese error solo si TODAS están vacías; 'Añade al menos una semana al ciclo' si el array está vacío."
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "note": "api.js buildWeekJson (~línea 160): d.toISOString().slice(0,10) convierte a UTC; con TZ=Europe/Madrid getWeek(0) con inicio 2026-10-19 da '2026-10-18' para el lunes. Formatea la fecha local (año-mes-día con padStart, como getStartDate) en una función común y úsala en los dos sitios."
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "note": "api.js setStartDate: '2026-02-31' se acepta y queda como 2026-03-03. Comprueba que el Date construido tiene el mismo año, mes y día que la cadena; con un Date de entrada, rechaza Invalid Date y normaliza a las 00:00 (copia, sin mutar el objeto recibido)."
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "note": "addTask-card.js y editTask-card.js #buildSpec: siguen repitiendo las validaciones de api.js ('Selecciona al menos un día', las dos del ciclo). Quítalas: #buildSpec devuelve siempre el spec y buildTaskFromSpec lanza el error, que ya se muestra con alert(err.message). Así el mensaje sale de un único sitio (criterio 'misma validación de api.js')."
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "note": "Faltan pruebas (regla nueva, ver 'Pruebas' en tus instrucciones). 1) tests/unit/api.test.mjs: antes del import dinámico de api.js define un localStorage mínimo con Map y globalThis.window = new EventTarget(); cubre addTask de los 5 tipos, cada mensaje de error, la forma JSON de listTasks/getTask (sin clases), updateTask y deleteTask (índice inválido incluido), que cada cambio emite 'planner:changed' con su status, getWeek(0) con las fechas locales correctas, el ciclo con semana de descanso y setStartDate con fechas inválidas. 2) tests/e2e/specs/07-api.spec.mjs: con browser.execute llama a PlannerApi.addTask, deleteTask y navigate('week') y comprueba que la lista visible se actualiza sin recargar, que #plannerStatus dice 'Tarea «X» añadida' y que cambia la vista. Cada prueba vista en rojo rompiendo el código, y bash tools/test.sh en ✓ (fija TZ=Europe/Madrid)."
+        }
+      ],
+      "baseTree": "6186b78cd12e04ebb6295841e87821af2e3fe71e",
       "history": [
         {
           "at": "2026-10-19T04:38:59Z",
@@ -698,6 +719,56 @@
           "at": "2026-10-19T05:28:38Z",
           "event": "estado → en_revision",
           "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "event": "devuelta a MiniMax",
+          "note": "api.js parseCycle (~línea 64): rechaza cualquier semana vacía, pero el formulario siempre ha permitido semanas de descanso (solo exige que ALGUNA semana tenga días: addTask-card.js 'some(f => f !== 0)'). Hoy PlannerApi.addTask({name:'T', repeat:'cycle', cycle:[[0], []]}) lanza 'Marca al menos un día en el ciclo' y el formulario tampoco deja crearlo: es una regresión. Acepta semanas vacías y lanza ese error solo si TODAS están vacías; 'Añade al menos una semana al ciclo' si el array está vacío."
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "event": "devuelta a MiniMax",
+          "note": "api.js buildWeekJson (~línea 160): d.toISOString().slice(0,10) convierte a UTC; con TZ=Europe/Madrid getWeek(0) con inicio 2026-10-19 da '2026-10-18' para el lunes. Formatea la fecha local (año-mes-día con padStart, como getStartDate) en una función común y úsala en los dos sitios."
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "event": "devuelta a MiniMax",
+          "note": "api.js setStartDate: '2026-02-31' se acepta y queda como 2026-03-03. Comprueba que el Date construido tiene el mismo año, mes y día que la cadena; con un Date de entrada, rechaza Invalid Date y normaliza a las 00:00 (copia, sin mutar el objeto recibido)."
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "event": "devuelta a MiniMax",
+          "note": "addTask-card.js y editTask-card.js #buildSpec: siguen repitiendo las validaciones de api.js ('Selecciona al menos un día', las dos del ciclo). Quítalas: #buildSpec devuelve siempre el spec y buildTaskFromSpec lanza el error, que ya se muestra con alert(err.message). Así el mensaje sale de un único sitio (criterio 'misma validación de api.js')."
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "event": "devuelta a MiniMax",
+          "note": "Faltan pruebas (regla nueva, ver 'Pruebas' en tus instrucciones). 1) tests/unit/api.test.mjs: antes del import dinámico de api.js define un localStorage mínimo con Map y globalThis.window = new EventTarget(); cubre addTask de los 5 tipos, cada mensaje de error, la forma JSON de listTasks/getTask (sin clases), updateTask y deleteTask (índice inválido incluido), que cada cambio emite 'planner:changed' con su status, getWeek(0) con las fechas locales correctas, el ciclo con semana de descanso y setStartDate con fechas inválidas. 2) tests/e2e/specs/07-api.spec.mjs: con browser.execute llama a PlannerApi.addTask, deleteTask y navigate('week') y comprueba que la lista visible se actualiza sin recargar, que #plannerStatus dice 'Tarea «X» añadida' y que cambia la vista. Cada prueba vista en rojo rompiendo el código, y bash tools/test.sh en ✓ (fija TZ=Europe/Madrid)."
+        },
+        {
+          "at": "2026-10-19T05:47:40Z",
+          "event": "foto del árbol",
+          "note": "6186b78cd1"
+        },
+        {
+          "at": "2026-10-19T05:47:40Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-008-20261019-074739.log"
+        },
+        {
+          "at": "2026-10-19T05:56:56Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T05:57:57Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T05:59:04Z",
+          "event": "estado → hecha",
+          "note": "2.º intento: corregidos ciclo con semana de descanso, fechas locales en getWeek y fechas imposibles en setStartDate; validación solo en api.js. Pruebas: tests/unit/api.test.mjs (29) y tests/e2e/specs/07-api.spec.mjs (4). bash tools/test.sh ✓ (unit 43/43, e2e 2/2 specs) ejecutado por Claude; rotura del repintado de planner:changed en index.js → 07-api en rojo. cargo check OK."
         }
       ]
     },
@@ -1057,7 +1128,7 @@
       "status": "pendiente",
       "relatedTo": null,
       "created": "2026-10-19T05:42:05Z",
-      "updated": "2026-10-19T05:42:05Z",
+      "updated": "2026-10-19T05:46:30Z",
       "attempts": 0,
       "requests": [
         {
@@ -1074,11 +1145,13 @@
         "En la vista Semana, Flecha abajo/arriba mueve el foco entre las cabeceras de día.",
         "Solo se añaden o cambian archivos en tests/ (pruebas, fixtures y tests/e2e/helpers.mjs); no se toca código de la app.",
         "Cada prueba nueva se ha visto en rojo rompiendo a propósito el código que cubre y deshaciendo después el cambio; el resumen dice qué se rompió y qué prueba falló.",
-        "bash tools/test.sh sale en ✓, salvo pruebas que revelen un fallo real de la app: esas se dejan en rojo (sin tocar la app ni rebajar la prueba) y se describen en el resumen para que Claude registre la corrección."
+        "bash tools/test.sh sale en ✓, salvo pruebas que revelen un fallo real de la app: esas se dejan en rojo (sin tocar la app ni rebajar la prueba) y se describen en el resumen para que Claude registre la corrección.",
+        "Los atajos de vista cubren todos los que existan cuando se haga la tarea (Alt+1…Alt+8 si T-019 está hecha)."
       ],
       "notes": [
         "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
-        "Teclas: import { Key } from 'webdriverio' y browser.keys([Key.Alt, '2']), browser.keys([Key.Tab]), browser.keys([Key.Shift, Key.Tab]). Foco: browser.execute(() => document.activeElement?.id || document.activeElement?.className). Referencias: index.js (setView, atajos al final, navegación del lateral), ui/a11y.js (trapFocus, focusHeading), ui/shortcuts/shortcuts-card.js, ui/legal/legal-card.js, ui/terms/terms-card.js, ui/week/taskItem/taskItem-card.js (bindRovingKeyboard)."
+        "Teclas: import { Key } from 'webdriverio' y browser.keys([Key.Alt, '2']), browser.keys([Key.Tab]), browser.keys([Key.Shift, Key.Tab]). Foco: browser.execute(() => document.activeElement?.id || document.activeElement?.className). Referencias: index.js (setView, atajos al final, navegación del lateral), ui/a11y.js (trapFocus, focusHeading), ui/shortcuts/shortcuts-card.js, ui/legal/legal-card.js, ui/terms/terms-card.js, ui/week/taskItem/taskItem-card.js (bindRovingKeyboard).",
+        "Ajuste por T-019 (si T-019 ya está hecha cuando hagas esta): la ayuda de atajos ya no se abre desde Legal sino desde '?'; los atajos de vista son Alt+1…Alt+8 (Alt+8 = Accesibilidad). El modal legal se sigue probando desde un enlace de documento de Legal."
       ],
       "feedback": [],
       "baseTree": null,
@@ -1086,6 +1159,56 @@
         {
           "at": "2026-10-19T05:42:05Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-19T05:46:30Z",
+          "event": "modificada",
+          "note": "criterio, nota"
+        }
+      ]
+    },
+    {
+      "id": "T-019",
+      "title": "Nueva vista 'Accesibilidad' en el menú con los atajos de teclado",
+      "status": "pendiente",
+      "relatedTo": "T-011",
+      "created": "2026-10-19T05:46:30Z",
+      "updated": "2026-10-19T05:47:34Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T05:46:30Z",
+          "text": "Pon accesibilidad como menú y pon los atajos allí."
+        }
+      ],
+      "criteria": [
+        "El menú lateral tiene una opción 'Accesibilidad' (icono decorativo con aria-hidden) justo después de 'Legal y privacidad' que abre una vista nueva #view-accessibility; funciona igual que las demás: aria-current='page', foco en su encabezado al abrirla, flechas/Inicio/Fin del menú y menú contraído.",
+        "La vista muestra, como contenido de la página (no en un diálogo), la lista completa de atajos de teclado con los mismos apartados que la ayuda actual.",
+        "La lista de atajos existe en un solo sitio: la vista y la ayuda que abre '?' la cargan del mismo archivo, sin copiar el HTML.",
+        "Nuevo atajo Alt+8 abre Accesibilidad; Alt+1…Alt+7 no cambian. La lista de atajos (vista y ayuda) y legal/ACCESSIBILITY.md lo incluyen.",
+        "La sección 'Accesibilidad' y su botón 'Atajos de teclado' desaparecen de la vista Legal (HTML, CSS y JS, sin restos). '?' sigue abriendo la ayuda como diálogo; los textos que decían 'desde Legal y privacidad' dicen ahora 'desde el menú Accesibilidad'.",
+        "Pruebas: spec nueva tests/e2e/specs/06-accesibilidad.spec.mjs que abre la vista desde el menú y con Alt+8, comprueba encabezado enfocado, aria-current y que la lista contiene los atajos Alt+1…Alt+8 y '?'; y que Legal ya no tiene el botón. Vista en rojo al romper el código y bash tools/test.sh en ✓.",
+        "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de color, rem con --fs-*, contraste AA en tema claro y oscuro, foco visible).",
+        "No se sale de la pantalla con letra al 200 % en móvil (la lista de atajos en la vista incluida)."
+      ],
+      "notes": [
+        "Menú: index.html ~líneas 40-80 (.nav-item[data-view]); secciones en <main> ~línea 90 (añade <section id=\"view-accessibility\" class=\"view\" aria-labelledby=\"view-accessibility-heading\">). index.js: objeto views (~línea 61), render(view) (switch con await new X(...).init()) y el mapa de atajos Alt+1…7 al final. Vista nueva como tarjeta: ui/accessibility/accessibility-card.{js,html,css} con el patrón de CLAUDE.md.",
+        "La lista vive hoy dentro de ui/shortcuts/shortcuts-card.html (bloque .shortcuts-body). Sácala a un archivo propio (p. ej. ui/shortcuts/shortcuts-list.html) que carguen tanto ShortcutsCard (diálogo) como la vista nueva; los estilos de la lista (.shortcuts-list, kbd) deben servir en los dos sitios.",
+        "Quitar de Legal: ui/legal/legal-card.html (h3 Accesibilidad y su <p>, ~líneas 31-38), .legal-shortcuts-btn en legal-card.css (~73-90) y el bloque de #legal-shortcuts-btn en legal-card.js (~69-75) con su import de shortcuts si queda sin uso. No toques legal/TERMS.md ni EULA.md.",
+        "Depende de T-008 (en revisión), que también cambia index.html e index.js: no se lanza hasta que T-008 esté aprobada y con commit.",
+        "Añade 'accessibility' a VIEWS en api.js (navigate/listViews) cuando exista la vista."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T05:46:30Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T05:47:34Z",
+          "event": "modificada",
+          "note": "nota"
         }
       ]
     }

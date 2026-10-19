@@ -1,0 +1,295 @@
+// Pruebas de la capa de API (api.js). Sin DOM: simulamos un
+// localStorage mínimo y un window EventTarget para que api.js
+// pueda ejecutarse bajo node:test.
+//
+// api.js importa context.js, cuyo bloque estático lee localStorage;
+// por eso lo preparamos antes del import dinámico. Para fijar las
+// fechas que devuelven getWeek / getStartDate usamos TZ=Europe/Madrid
+// en tools/test.sh.
+
+import { test, beforeEach } from 'node:test';
+import assert from 'node:assert/strict';
+
+// ── Stubs de navegador ──────────────────────────────────────────────────
+
+/** localStorage mínimo basado en Map: suficiente para context.js
+ *  (setItem / getItem con strings) y para el observador Proxy. */
+class MemoryStorage {
+  constructor() { this.m = new Map(); }
+  getItem(k)    { return this.m.has(k) ? this.m.get(k) : null; }
+  setItem(k, v) { this.m.set(k, String(v)); }
+  removeItem(k) { this.m.delete(k); }
+  clear()       { this.m.clear(); }
+  key(i)        { return [...this.m.keys()][i] ?? null; }
+  get length()  { return this.m.size; }
+}
+
+// `EventTarget` ya implementa addEventListener / removeEventListener /
+// dispatchEvent como necesitamos. Para los `new CustomEvent(...)` de
+// api.js aportamos uno que extienda la Event interna de Node (su
+// EventTarget exige un instance-of Event, no un objeto plano).
+globalThis.window      = new EventTarget();
+globalThis.CustomEvent = class CustomEvent extends Event {
+  constructor(type, init = {}) {
+    super(type, init);
+    Object.assign(this, init);
+  }
+};
+
+// Antes del import: localStorage con un startDate estable. context.js
+// lo lee en su bloque estático al cargarse por primera vez.
+const storage = new MemoryStorage();
+globalThis.localStorage = storage;
+storage.setItem('Context_START_DATE', String(new Date(2026, 9, 19).getTime()));
+
+// Importamos api.js (carga context.js como efecto secundario).
+const { PlannerApi, buildTaskFromSpec } = await import('../../api.js');
+
+// ── Helpers ─────────────────────────────────────────────────────────────
+
+beforeEach(() => {
+  // Vacía las tareas entre pruebas. deleteTask emite eventos; los
+  // tests que los observan añaden su propio listener en cada caso.
+  while (PlannerApi.listTasks().length) PlannerApi.deleteTask(0);
+});
+
+/** Devuelve la lista de eventos 'planner:changed' capturados durante
+ *  una función, con su detalle. */
+function captureEvents(fn) {
+  const events = [];
+  const handler = (e) => events.push(e.detail);
+  window.addEventListener('planner:changed', handler);
+  try { fn(); } finally { window.removeEventListener('planner:changed', handler); }
+  return events;
+}
+
+// ── buildTaskFromSpec (mensajes de error en español) ────────────────────
+
+test('buildTaskFromSpec: nombre vacío lanza "Nombre requerido"', () => {
+  assert.throws(() => buildTaskFromSpec({ repeat: 'daily' }), /Nombre requerido/);
+  assert.throws(() => buildTaskFromSpec({ name: '   ', repeat: 'daily' }), /Nombre requerido/);
+});
+
+test('buildTaskFromSpec: tipo desconocido', () => {
+  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'semanal' }), /Tipo de repetición inválido/);
+});
+
+test('buildTaskFromSpec: daysOfWeek sin días lanza "Selecciona al menos un día"', () => {
+  assert.throws(
+    () => buildTaskFromSpec({ name: 'X', repeat: 'daysOfWeek', days: [] }),
+    /Selecciona al menos un día/,
+  );
+  assert.throws(
+    () => buildTaskFromSpec({ name: 'X', repeat: 'daysOfWeek' }),
+    /Selecciona al menos un día/,
+  );
+});
+
+test('buildTaskFromSpec: nDays < 2 lanza "nDays inválido"', () => {
+  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'nDays', nDays: 1 }), /nDays inválido/);
+});
+
+test('buildTaskFromSpec: cycle sin semanas lanza "Añade al menos una semana al ciclo"', () => {
+  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'cycle', cycle: [] }),
+    /Añade al menos una semana al ciclo/);
+});
+
+test('buildTaskFromSpec: cycle con todas las semanas vacías lanza "Marca al menos un día"', () => {
+  assert.throws(
+    () => buildTaskFromSpec({ name: 'X', repeat: 'cycle', cycle: [[], [], []] }),
+    /Marca al menos un día en el ciclo/,
+  );
+});
+
+test('buildTaskFromSpec: cycle con una semana de descanso y otra con días vale', () => {
+  // Regresión: la versión anterior rechazaba semanas vacías.
+  const task = buildTaskFromSpec({ name: 'T', repeat: 'cycle', cycle: [[0], []] });
+  assert.equal(task.constructor.name, 'CiclesDaysOfWeekTask');
+});
+
+test('buildTaskFromSpec: total / daysFrom inválidos', () => {
+  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'daily', total: 0 }),    /Total inválido/);
+  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'daily', daysFrom: -1 }), /daysFrom inválido/);
+});
+
+test('buildTaskFromSpec: spec no es objeto', () => {
+  assert.throws(() => buildTaskFromSpec(null),   /inválida/);
+  assert.throws(() => buildTaskFromSpec('hola'), /inválida/);
+});
+
+// ── addTask: 5 tipos ────────────────────────────────────────────────────
+
+test('addTask: none (OneTimeTask)', () => {
+  const out = PlannerApi.addTask({ name: 'Una', repeat: 'none' });
+  assert.equal(out.index, 0);
+  assert.equal(out.repeat, 'none');
+  assert.equal(out.name, 'Una');
+});
+
+test('addTask: daily', () => {
+  const out = PlannerApi.addTask({ name: 'Agua', repeat: 'daily', total: 3 });
+  assert.equal(out.repeat, 'daily');
+  assert.equal(out.total, 3);
+});
+
+test('addTask: nDays', () => {
+  const out = PlannerApi.addTask({ name: 'Regar', repeat: 'nDays', nDays: 5 });
+  assert.equal(out.repeat, 'nDays');
+  assert.equal(out.nDays, 5);
+});
+
+test('addTask: daysOfWeek', () => {
+  const out = PlannerApi.addTask({ name: 'Gym', repeat: 'daysOfWeek', days: [0, 2] });
+  assert.equal(out.repeat, 'daysOfWeek');
+  assert.deepEqual(out.days, [0, 2]);
+});
+
+test('addTask: cycle (incluida semana de descanso)', () => {
+  const out = PlannerApi.addTask({ name: 'Turnos', repeat: 'cycle', cycle: [[0], []] });
+  assert.equal(out.repeat, 'cycle');
+  assert.deepEqual(out.cycle, [[0], []]);
+});
+
+// ── listTasks / getTask: forma JSON sin clases ni Proxy ────────────────
+
+test('listTasks y getTask devuelven solo datos planos', () => {
+  PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  PlannerApi.addTask({ name: 'B', repeat: 'daysOfWeek', days: [0] });
+  PlannerApi.addTask({ name: 'C', repeat: 'cycle', cycle: [[1], [2]] });
+
+  const list = PlannerApi.listTasks();
+  assert.equal(list.length, 3);
+  list.forEach((t, i) => {
+    assert.equal(t.index, i);
+    // Sin clases, sin Proxy: solo los campos planos que documentamos.
+    assert.equal(typeof t.name, 'string');
+    assert.ok(['none','daily','nDays','daysOfWeek','cycle'].includes(t.repeat));
+    assert.equal(typeof t.total, 'number');
+    assert.equal(typeof t.daysFrom, 'number');
+  });
+
+  // Round-trip por JSON.stringify sin perder información.
+  const round = JSON.parse(JSON.stringify(list));
+  assert.equal(round.length, 3);
+  assert.equal(round[2].cycle[1][0], 2);
+
+  assert.deepEqual(PlannerApi.getTask(1), list[1]);
+  assert.equal(PlannerApi.getTask(99), null);
+  assert.equal(PlannerApi.getTask(-1), null);
+});
+
+// ── updateTask / deleteTask (incluido índice inválido) ─────────────────
+
+test('updateTask: sustituye la tarea y devuelve el JSON nuevo', () => {
+  PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  const out = PlannerApi.updateTask(0, { name: 'A2', repeat: 'daysOfWeek', days: [0] });
+  assert.equal(out.name, 'A2');
+  assert.equal(out.repeat, 'daysOfWeek');
+  assert.equal(PlannerApi.getTask(0).name, 'A2');
+});
+
+test('updateTask: índice inválido lanza', () => {
+  PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  assert.throws(() => PlannerApi.updateTask(5,  { name: 'X', repeat: 'daily' }), /Índice de tarea inválido/);
+  assert.throws(() => PlannerApi.updateTask(-1, { name: 'X', repeat: 'daily' }), /Índice de tarea inválido/);
+  assert.throws(() => PlannerApi.updateTask('a', { name: 'X', repeat: 'daily' }), /Índice de tarea inválido/);
+});
+
+test('deleteTask: borra y devuelve el nombre', () => {
+  PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  PlannerApi.addTask({ name: 'B', repeat: 'daily' });
+  const removed = PlannerApi.deleteTask(0);
+  assert.equal(removed, 'A');
+  assert.equal(PlannerApi.listTasks().length, 1);
+  assert.equal(PlannerApi.getTask(0).name, 'B');
+});
+
+test('deleteTask: índice inválido lanza', () => {
+  PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  assert.throws(() => PlannerApi.deleteTask(7), /Índice de tarea inválido/);
+});
+
+// ── Eventos 'planner:changed' con status ────────────────────────────────
+
+test('addTask emite planner:changed con "Tarea «X» añadida"', () => {
+  const events = captureEvents(() => {
+    PlannerApi.addTask({ name: 'Hola', repeat: 'daily' });
+  });
+  assert.equal(events.length, 1);
+  assert.equal(events[0].action, 'add');
+  assert.equal(events[0].status, 'Tarea «Hola» añadida');
+  assert.equal(events[0].name, 'Hola');
+  assert.equal(events[0].index, 0);
+});
+
+test('updateTask / deleteTask emiten su evento y status', () => {
+  PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  const evs = captureEvents(() => {
+    PlannerApi.updateTask(0, { name: 'A2', repeat: 'daily' });
+    PlannerApi.deleteTask(0);
+  });
+  assert.equal(evs.length, 2);
+  assert.equal(evs[0].action, 'update');
+  assert.equal(evs[0].status, 'Tarea «A2» actualizada');
+  assert.equal(evs[1].action, 'delete');
+  assert.equal(evs[1].status, 'Tarea «A2» eliminada');
+});
+
+// ── getWeek(0) con fechas locales correctas ─────────────────────────────
+
+test('getWeek(0) devuelve 7 días con fecha local (no UTC)', () => {
+  const week = PlannerApi.getWeek(0);
+  assert.equal(week.length, 7);
+  // Empezamos el lunes 2026-10-19: la primera fecha debe ser ESE día,
+  // no el 2026-10-18 que daría toISOString con TZ=Europe/Madrid.
+  assert.equal(week[0].date, '2026-10-19');
+  assert.equal(week[0].weekday, 'Lun');
+  assert.equal(week[6].date, '2026-10-25');
+  assert.equal(week[6].weekday, 'Dom');
+});
+
+test('getWeek(0) lista las tareas que tocan cada día', () => {
+  // Diaria → todos los días. Días de la semana [0,2] → lunes y miércoles.
+  PlannerApi.addTask({ name: 'Agua',     repeat: 'daily' });
+  PlannerApi.addTask({ name: 'Gimnasio', repeat: 'daysOfWeek', days: [0, 2] });
+  const week = PlannerApi.getWeek(0);
+  // Lunes (i=0): ambas. Miércoles (i=2): Agua + Gimnasio. Resto: solo Agua.
+  assert.deepEqual(week[0].tasks, ['Agua', 'Gimnasio']);
+  assert.deepEqual(week[2].tasks, ['Agua', 'Gimnasio']);
+  assert.deepEqual(week[1].tasks, ['Agua']);
+  assert.deepEqual(week[6].tasks, ['Agua']);
+});
+
+test('getWeek: offset no entero lanza', () => {
+  assert.throws(() => PlannerApi.getWeek('a'), /Offset inválido/);
+});
+
+// ── setStartDate: fechas inválidas ─────────────────────────────────────
+
+test('setStartDate: cadena YYYY-MM-DD válida se acepta y se normaliza a 00:00', () => {
+  PlannerApi.setStartDate('2026-11-02');
+  assert.equal(PlannerApi.getStartDate(), '2026-11-02');
+});
+
+test('setStartDate: "2026-02-31" se rechaza (no se traga el desbordamiento)', () => {
+  assert.throws(() => PlannerApi.setStartDate('2026-02-31'), /Fecha inválida/);
+});
+
+test('setStartDate: cadena mal formada se rechaza', () => {
+  assert.throws(() => PlannerApi.setStartDate('31-02-2026'), /Fecha inválida/);
+  assert.throws(() => PlannerApi.setStartDate(''),            /Fecha inválida/);
+  assert.throws(() => PlannerApi.setStartDate(12345),         /Fecha inválida/);
+});
+
+test('setStartDate: Date inválido se rechaza', () => {
+  assert.throws(() => PlannerApi.setStartDate(new Date('no-es-fecha')), /Fecha inválida/);
+});
+
+test('setStartDate: Date válido no muta el objeto recibido', () => {
+  const original = new Date(2026, 9, 19, 14, 30, 0);
+  PlannerApi.setStartDate(original);
+  // El original mantiene su hora; la fecha interna se queda a 00:00.
+  assert.equal(original.getHours(), 14);
+  assert.equal(original.getMinutes(), 30);
+  assert.equal(PlannerApi.getStartDate(), '2026-10-19');
+});

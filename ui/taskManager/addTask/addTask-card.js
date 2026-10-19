@@ -1,10 +1,4 @@
-import {
-  createDailyTask,
-  createNDaysTask,
-  createOneTimeTask,
-  createDaysOfWeekTask,
-  createCycleDaysOfWeekTask,
-} from '../../../back/taskFactory.js';
+import { buildTaskFromSpec } from '../../../api.js';
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -132,41 +126,50 @@ export class AddTaskCard {
   createTask() {
     const name  = this.name.value.trim();
     const total = parseInt(this.times.value) || 1;
-    if (!name) return alert('Nombre requerido');
 
-    const task = this.#buildTask(name, total, 0);
-    if (!task) return;
+    // Construye el spec que espera PlannerApi / buildTaskFromSpec. La
+    // validación y construcción por tipo de repetición viven en api.js:
+    // si algo no cuadra, buildTaskFromSpec lanza el error con el
+    // mensaje en español y lo mostramos al usuario.
+    const spec = this.#buildSpec(name, total, 0);
+
+    let task;
+    try {
+      task = buildTaskFromSpec(spec);
+    } catch (err) {
+      return alert(err.message);
+    }
 
     this.root.dispatchEvent(new CustomEvent('task-create', { detail: task, bubbles: true }));
     this.reset();
   }
 
-  #buildTask(name, total, daysFrom) {
+  /** Convierte el estado del formulario al spec JSON que valida api.js.
+   *  La validación de días/semanas vive allí (mensajes en español);
+   *  aquí solo mapeamos los campos del formulario. */
+  #buildSpec(name, total, daysFrom) {
     switch (this.repeatType) {
       case 'no-repeat':
-        return createOneTimeTask(createDailyTask(name, total, daysFrom), total, daysFrom);
+        return { name, total, daysFrom, repeat: 'none' };
       case 'daily':
-        return createDailyTask(name, total, daysFrom);
+        return { name, total, daysFrom, repeat: 'daily' };
       case 'interval': {
         const n = parseInt(this.extra.querySelector('#interval')?.value) || 3;
-        return createNDaysTask(name, n, total, daysFrom);
+        return { name, total, daysFrom, repeat: 'nDays', nDays: n };
       }
       case 'days': {
         const days = [...this.extra.querySelectorAll('input[type="checkbox"]:checked')]
           .map(x => parseInt(x.dataset.day));
-        if (!days.length) { alert('Selecciona al menos un día'); return null; }
-        return createDaysOfWeekTask(name, days, total, daysFrom);
+        return { name, total, daysFrom, repeat: 'daysOfWeek', days };
       }
       case 'cycle': {
-        if (!this.cycleWeeks.length) { alert('Añade al menos una semana al ciclo'); return null; }
-        if (!this.cycleWeeks.some(f => f !== 0)) { alert('Marca al menos un día en el ciclo'); return null; }
-        const cycleWeekDays = this.cycleWeeks.map(flags =>
+        const cycle = this.cycleWeeks.map(flags =>
           [0,1,2,3,4,5,6].filter(i => (flags & (1 << i)) !== 0)
         );
-        return createCycleDaysOfWeekTask(name, cycleWeekDays, total, daysFrom);
+        return { name, total, daysFrom, repeat: 'cycle', cycle };
       }
-      default: return null;
     }
+    return null;
   }
 
   reset() {

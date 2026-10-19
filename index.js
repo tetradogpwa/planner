@@ -12,6 +12,7 @@ import { TermsCard, termsAccepted } from './ui/terms/terms-card.js';
 import { initMonetization, needsConsent, hasAds } from './monetization.js';
 import { shortcuts }       from './ui/shortcuts/shortcuts-card.js';
 import { isEditable, focusHeading, bindRovingTabindex } from './ui/a11y.js';
+import './api.js';   // monta window.PlannerApi
 
 // ── Service Worker ────────────────────────────────────────
 // En Tauri el Service Worker no aporta nada (los recursos ya están
@@ -219,6 +220,41 @@ async function render(view) {
 }
 
 applyPreferences();   // activa también el seguimiento del tema del sistema
+
+// ── API pública (PlannerApi) ───────────────────────────────────────────
+// Tras cada cambio hecho por la API, `planner:changed` repinta la
+// vista activa y anuncia el resultado en una región role="status". La
+// navegación (`planner:navigate`) cambia de vista. La capa de API vive
+// en api.js; aquí solo conectamos los eventos al render y a la UI.
+const plannerStatusEl = document.getElementById('plannerStatus');
+
+function currentViewName() {
+  const btn = navButtons().find(b => b.getAttribute('aria-current') === 'page');
+  return btn?.dataset.view ?? 'tasks';
+}
+
+window.addEventListener('planner:changed', (e) => {
+  const { action, status } = e.detail ?? {};
+  // Repintamos la vista activa para que la UI refleje los cambios
+  // hechos por la API (addTask, updateTask, deleteTask, setStartDate…).
+  const view = currentViewName();
+  // Solo repintamos las vistas que muestran tareas; las demás (legal,
+  // settings, data, print) no cambian con la API en esta tarea y
+  // re-inicializarlas movería el foco o haría trabajo inútil.
+  if (view === 'tasks' || view === 'week' || view === 'allWeeks') {
+    render(view);
+  }
+  // Mensaje a la región role="status" para lectores de pantalla.
+  if (plannerStatusEl && status) plannerStatusEl.textContent = status;
+});
+
+window.addEventListener('planner:navigate', (e) => {
+  const view = e.detail?.view;
+  if (!view) return;
+  // setView ya actualiza aria-current, tabindex y mueve el foco al
+  // encabezado de la nueva vista.
+  setView(view);
+});
 await requireTerms();
 await startMonetization();
 updateRemoveAdsButton();

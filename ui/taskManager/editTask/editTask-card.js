@@ -1,10 +1,4 @@
-import {
-  createDailyTask,
-  createNDaysTask,
-  createOneTimeTask,
-  createDaysOfWeekTask,
-  createCycleDaysOfWeekTask,
-} from '../../../back/taskFactory.js';
+import { buildTaskFromSpec } from '../../../api.js';
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -183,46 +177,49 @@ export class EditTaskCard {
     const name     = this.nameEl.value.trim();
     const total    = parseInt(this.timesEl.value) || 1;
     const daysFrom = this.task.DaysFrom ?? 0;   // conservar el offset original
-    if (!name) return alert('Nombre requerido');
 
-    let task = null;
+    const spec = this.#buildSpec(name, total, daysFrom);
 
+    let task;
+    try {
+      task = buildTaskFromSpec(spec);
+    } catch (err) {
+      return alert(err.message);
+    }
+
+    this.root.dispatchEvent(new CustomEvent('task-update', { detail: task, bubbles: true }));
+  }
+
+  /** Convierte el estado del formulario al spec JSON que valida api.js
+   *  (mapeo paralelo al de AddTaskCard). Las validaciones de días y
+   *  semanas viven allí (mensajes en español). */
+  #buildSpec(name, total, daysFrom) {
     switch (this.repeatType) {
       case 'no-repeat':
-        task = createOneTimeTask(createDailyTask(name, total, daysFrom), total, daysFrom);
-        break;
+        return { name, total, daysFrom, repeat: 'none' };
 
       case 'daily':
-        task = createDailyTask(name, total, daysFrom);
-        break;
+        return { name, total, daysFrom, repeat: 'daily' };
 
       case 'interval': {
         const n = parseInt(this.extra.querySelector('#editInterval')?.value) || 3;
-        task = createNDaysTask(name, n, total, daysFrom);
-        break;
+        return { name, total, daysFrom, repeat: 'nDays', nDays: n };
       }
 
       case 'days': {
         const days = [...this.extra.querySelectorAll('input[type="checkbox"]:checked')]
           .map(x => parseInt(x.dataset.day));
-        if (!days.length) return alert('Selecciona al menos un día');
-        task = createDaysOfWeekTask(name, days, total, daysFrom);
-        break;
+        return { name, total, daysFrom, repeat: 'daysOfWeek', days };
       }
 
       case 'cycle': {
-        if (!this.cycleWeeks.length)          return alert('Añade al menos una semana al ciclo');
-        if (!this.cycleWeeks.some(f => f !== 0)) return alert('Marca al menos un día en el ciclo');
-        const cycleWeekDays = this.cycleWeeks.map(flags =>
+        const cycle = this.cycleWeeks.map(flags =>
           [0,1,2,3,4,5,6].filter(i => (flags & (1 << i)) !== 0)
         );
-        task = createCycleDaysOfWeekTask(name, cycleWeekDays, total, daysFrom);
-        break;
+        return { name, total, daysFrom, repeat: 'cycle', cycle };
       }
     }
-
-    if (!task) return;
-    this.root.dispatchEvent(new CustomEvent('task-update', { detail: task, bubbles: true }));
+    return null;
   }
 
   #cancel() {
