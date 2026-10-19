@@ -125,8 +125,8 @@ recibir foco y lleva directamente al área principal de la vista.
 | `?` | Abre esta ayuda (fuera de campos de texto) |
 | `Esc` | Cierra cualquier diálogo abierto |
 
-La ayuda también está disponible desde los botones **"Atajos de
-teclado"** en las vistas Apariencia y Legal y privacidad.
+La ayuda también está disponible desde el botón **"Atajos de
+teclado"** en la vista Legal y privacidad.
 
 ## 6. Cómo reportar una barrera
 
