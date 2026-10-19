@@ -1,5 +1,5 @@
 {
-  "next": 6,
+  "next": 11,
   "tasks": [
     {
       "id": "T-001",
@@ -443,6 +443,223 @@
           "at": "2026-10-19T04:22:30Z",
           "event": "estado → hecha",
           "note": "Aprobada. Revisado diff de preferences.js, settings-card.js y .html: destinos 'saved:<id>' validados por esquema en getPreferences (normalizeAutoTarget), resolveAutoTarget usado en schemeFor/colorsForTheme/cssVarsFor (incluye --nav-icon-size) y resolvedTheme devuelve esquema; opciones con createElement+textContent (escape); repintado de selects tras guardar/sobrescribir/eliminar vía renderSavedThemes; setPreferences({}) recalcula al borrar/sobrescribir en modo auto. node --check OK. Arreglo del supervisor en settings-card.css (.auto-mapping-row): label min-width 12rem→0 + overflow-wrap y select min-width:0 + max-width:min(22rem,100%) para no desbordar a 200 % en 390 px con nombres largos. No probado en navegador."
+        }
+      ]
+    },
+    {
+      "id": "T-006",
+      "title": "Script de build único: AppImage por defecto; APK, AppImage y EXE con --all",
+      "status": "hecha",
+      "relatedTo": null,
+      "created": "2026-10-19T04:27:40Z",
+      "updated": "2026-10-19T04:34:38Z",
+      "attempts": 1,
+      "requests": [
+        {
+          "at": "2026-10-19T04:27:40Z",
+          "text": "Quiero que me hagas un script para que se genere apk, appimage y exe (con el flag --all; sin este, solo appimage)."
+        }
+      ],
+      "criteria": [
+        "Existe tools/build.sh (ejecutable, bash, set -euo pipefail, comentarios y mensajes en español) que se lanza desde cualquier carpeta (hace cd a la raíz del repo).",
+        "Sin argumentos genera solo el AppImage de Linux en release (cargo tauri build --bundles appimage).",
+        "Con --all genera además el APK de Android (cargo tauri android build --apk) y el instalador .exe de Windows (NSIS) por compilación cruzada desde Linux: cargo tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis.",
+        "Acepta --debug (compila en debug todos los objetivos) y --help (muestra el uso). Un argumento desconocido muestra el uso y sale con código 2.",
+        "Antes de compilar cada objetivo comprueba sus requisitos y, si falta alguno, dice exactamente qué instalar y cómo: Linux (cargo-tauri); Windows (cargo-xwin, makensis, lld/lld-link, llvm-rc o llvm, target rustup x86_64-pc-windows-msvc); Android (ANDROID_HOME y NDK_HOME o NDK en el SDK, java 17+, targets rustup de Android, src-tauri/gen/android inicializado con cargo tauri android init).",
+        "Con --all, si un objetivo falla (requisitos o compilación) continúa con los demás y al final muestra un resumen por objetivo (✓ / ✗ con motivo) y sale con código distinto de 0 si alguno falló.",
+        "Al terminar copia los artefactos generados (*.AppImage, *.apk, *-setup.exe) a una carpeta releases/ en la raíz y los lista con su tamaño; releases/ se añade a .gitignore.",
+        "Carga .env si existe (set -a; source .env; set +a) para que build.rs y la firma de Android reciban las variables, sin imprimir nunca sus valores.",
+        "No modifica tauri.conf.json, Cargo.toml ni los scripts build-*.sh/ps1 existentes; README-TAURI.md documenta el nuevo script (uso, flags y requisitos de la compilación cruzada a Windows).",
+        "bash -n tools/build.sh pasa, y ./tools/build.sh --help funciona."
+      ],
+      "notes": [
+        "Scripts actuales: tools/build-linux.sh (appimage+deb), tools/build-android.sh (apk/aab, ya carga .env) y tools/build-windows.ps1 (solo en Windows). El nuevo es independiente; puedes inspirarte en ellos. tauri.conf.json tiene bundle.targets [appimage, nsis]: por eso hay que pasar --bundles explícito.",
+        "Rutas de salida: Linux → src-tauri/target/<modo>/bundle/appimage/*.AppImage; Windows cruzado → src-tauri/target/x86_64-pc-windows-msvc/<modo>/bundle/nsis/*-setup.exe; Android → src-tauri/gen/android/app/build/outputs/apk/**/*.apk (usa find, la subcarpeta depende de la ABI/universal).",
+        "Compilación cruzada a Windows según la guía oficial de Tauri 2 (Windows installer / cross-platform): cargo install --locked cargo-xwin; rustup target add x86_64-pc-windows-msvc; en Debian: sudo apt install nsis lld llvm. En esta máquina ahora faltan cargo-xwin, makensis, lld y llvm-rc, y no hay SDK de Android ni src-tauri/gen/android: el script debe detectarlo y explicarlo, no hace falta que compile aquí. No instales nada tú (ni apt ni cargo install).",
+        "No ejecutes una compilación completa (tarda mucho): basta con bash -n y --help, y probar que la detección de requisitos que faltan imprime el mensaje correcto (por ejemplo ./tools/build.sh --all con un PATH reducido no es necesario; con revisar la lógica vale)."
+      ],
+      "feedback": [],
+      "baseTree": "07ce2cade2c172984dd3754c37a1f8ff59479701",
+      "history": [
+        {
+          "at": "2026-10-19T04:27:40Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T04:27:42Z",
+          "event": "foto del árbol",
+          "note": "07ce2cade2"
+        },
+        {
+          "at": "2026-10-19T04:27:42Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-006-20261019-062742.log"
+        },
+        {
+          "at": "2026-10-19T04:30:57Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T04:34:38Z",
+          "event": "estado → hecha",
+          "note": "Aprobada. Script tools/build.sh: 358 líneas, ejecutable, bash -n pasa, --help funciona, detecta requisitos faltantes e imprime instrucciones exactas (probado con PATH reducido: reporta cargo-tauri, cargo-xwin, makensis, lld, llvm-rc, ANDROID_HOME, NDK_HOME, ANDROID_SDK_ROOT, java 17+, src-tauri/gen/android). --all continúa tras fallos y muestra resumen. Artefactos a releases/ (en .gitignore). README-TAURI.md documentado con uso, flags y requisitos. Cargo.toml solo cambio de newline."
+        }
+      ]
+    },
+    {
+      "id": "T-007",
+      "title": "Uso completo con teclado: atajos, foco y diálogos accesibles",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-10-19T04:38:29Z",
+      "updated": "2026-10-19T04:38:29Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T04:38:29Z",
+          "text": "Por accesibilidad, que se pueda usar la app con el teclado."
+        }
+      ],
+      "criteria": [
+        "Hay un enlace 'Saltar al contenido' como primer elemento enfocable; visible al recibir foco y lleva el foco a <main>.",
+        "Al cambiar de vista, el foco pasa al encabezado de la vista nueva (tabindex=-1) y el botón activo del menú tiene aria-current=\"page\".",
+        "En el menú lateral, Flecha arriba/abajo, Inicio y Fin mueven el foco entre opciones; Enter/Espacio la activan.",
+        "Atajos globales: Alt+1…Alt+7 abren Tareas, Semana, Vista completa, Datos, PDF, Apariencia y Legal; Alt+N lleva el foco al campo nombre de nueva tarea; '?' (fuera de campos de texto) abre la ayuda de atajos. Ningún atajo se dispara mientras se escribe en un input/textarea/select (salvo los Alt+).",
+        "La ayuda de atajos es un diálogo (role=dialog, aria-modal, título) que atrapa el foco, se cierra con Escape y devuelve el foco al elemento que lo abrió; también se abre desde un botón 'Atajos de teclado' en Apariencia o Legal.",
+        "El modal de documentos legales atrapa el foco con Tab/Shift+Tab, enfoca su título al abrir y devuelve el foco al enlace que lo abrió al cerrar.",
+        "Las pestañas de términos (ui/terms) siguen el patrón tablist: Flecha izquierda/derecha e Inicio/Fin cambian de pestaña, solo la seleccionada tiene tabindex=0 y cada tab tiene aria-controls al panel.",
+        "En la vista Semana, Flecha arriba/abajo mueve el foco entre las cabeceras de día.",
+        "Recorrido completo solo con teclado, sin ratón: aceptar términos, crear tarea de cada tipo de repetición (incluido el ciclo: añadir/quitar semanas y marcar días), editarla, borrarla, cambiar tema, exportar JSON y PDF. El foco nunca se pierde en <body> tras borrar o cerrar algo (va al elemento siguiente o al encabezado).",
+        "legal/ACCESSIBILITY.md lista los atajos de teclado.",
+        "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de color, rem con --fs-*, contraste AA en tema claro y oscuro, foco visible).",
+        "No se sale de la pantalla con letra al 200 % en móvil (incluida la ayuda de atajos)."
+      ],
+      "notes": [
+        "Navegación en index.js: setView(name) (~línea 66), botones .nav-item[data-view] en index.html (líneas 36-70), <main class=\"content\"> línea 84 con <section id=\"view-*\">. Ya hay listener global de Escape para cerrar el sidebar móvil (index.js ~línea 108): integra los atajos en un módulo nuevo, por ejemplo ui/shortcuts/shortcuts-card.{js,html,css} siguiendo el patrón de tarjeta, y llámalo desde index.js después de requireTerms()/startMonetization() (los atajos no deben actuar sobre las pantallas de términos y consentimiento).",
+        "Encabezados por vista: taskManager-card.html h3 'Tareas', week-card.html h3.week-title, dataManager h3, print h3, settings h2.settings-title, legal h2; allWeeks se pinta en index.js render() con un <h2>. Enfoca el primer h2/h3 de la sección tras render (render es async: espera a init()).",
+        "Modal legal: ui/legal/legal-card.js mount() (~línea 44) ya cierra con Escape y clic fuera; falta trampa de foco y devolver foco. Reutiliza una función común trapFocus(container) (p. ej. en ui/a11y.js) para el modal legal y la ayuda de atajos.",
+        "Terms: ui/terms/terms-card.html líneas 9-14 (role=tablist/tab/tabpanel ya puestos); falta navegación por flechas, tabindex itinerante, aria-controls e id del panel. Week: ui/week/taskItem/taskItem-card.html usa <button class=\"day-header\" aria-expanded>; añade el manejo de flechas en week-card.js.",
+        "No cambies alert()/confirm() existentes (son accesibles por teclado). No toques legal/TERMS.md ni EULA.md (cambiar su fecha vuelve a pedir los términos)."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T04:38:29Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-008",
+      "title": "API interna del planificador (base para MCP)",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-10-19T04:38:59Z",
+      "updated": "2026-10-19T04:38:59Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T04:38:59Z",
+          "text": "Que se pueda usar la app mediante MCP (que un asistente de IA la maneje). Paso 1: una API en el frontend con las operaciones de la app."
+        }
+      ],
+      "criteria": [
+        "Existe api.js en la raíz (añadido a WEB_ASSETS en src-tauri/build.rs) que exporta un objeto PlannerApi con: listTasks(), getTask(index), addTask(spec), updateTask(index, spec), deleteTask(index), getWeek(offset), getStartDate(), setStartDate(isoDate), navigate(view), exportJson(), listViews().",
+        "spec es JSON plano y validado: { name, total?, daysFrom?, repeat: 'none'|'daily'|'nDays'|'daysOfWeek'|'cycle', nDays?, days?: [0-6], cycle?: [[0-6]...] }; datos inválidos lanzan Error con mensaje en español (mismos mensajes que los formularios: 'Nombre requerido', 'Selecciona al menos un día'…).",
+        "Las funciones devuelven solo datos serializables a JSON (sin clases ni Proxy): listTasks devuelve [{ index, name, repeat, total, daysFrom, nDays?, days?, cycle? }]; getWeek devuelve los 7 días con fecha ISO y nombres de tareas.",
+        "Tras cada cambio hecho por la API, la vista abierta se vuelve a pintar (evento 'planner:changed' en window que escucha index.js) y se anuncia en una región role=status (p. ej. 'Tarea «X» añadida').",
+        "addTask y updateTask usan back/taskFactory.js; los formularios addTask y editTask pasan a usar la misma validación de api.js (sin duplicar la lógica de construcción por tipo de repetición).",
+        "Comprobado desde la consola del navegador: crear una tarea de cada tipo con PlannerApi, editarla, verla en getWeek(0) y borrarla; la UI se actualiza sola y localStorage queda coherente.",
+        "node --check en todos los JS modificados."
+      ],
+      "notes": [
+        "Estado en context.js (Context.Tasks es un Proxy que persiste en localStorage al mutar; Context.StartDate con setter). Las tarjetas mutan directamente: taskManager-card.js:35 (push), :62 (splice); dataManager-card.js:38. Construcción por tipo y validación hoy duplicada en ui/taskManager/addTask/addTask-card.js (~líneas 130-165) y editTask/editTask-card.js (~180-220): extráela a api.js. Calendario: back/calendar.js GetNWeeks(from, n, avoid, tasks). Navegación: setView() en index.js (~línea 66) — expórtala o escucha un evento 'planner:navigate'.",
+        "No expone nada al exterior todavía: esta tarea solo crea la capa. La usará T-009 (servidor MCP). Expón también window.PlannerApi para depurar desde consola."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T04:38:59Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-009",
+      "title": "Servidor MCP local para que un asistente use la app (escritorio)",
+      "status": "pendiente",
+      "relatedTo": "T-008",
+      "created": "2026-10-19T04:38:59Z",
+      "updated": "2026-10-19T04:38:59Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T04:38:59Z",
+          "text": "Por accesibilidad, que se pueda usar la app mediante MCP."
+        }
+      ],
+      "criteria": [
+        "En escritorio (Linux y Windows) la app puede levantar un servidor MCP (transporte Streamable HTTP) escuchando SOLO en 127.0.0.1, desactivado por defecto.",
+        "En Ajustes hay una sección 'Control por asistente (MCP)' con un interruptor para activarlo, el puerto, un token aleatorio (regenerable, copiable) y el comando de ejemplo para conectarlo: claude mcp add --transport http planner http://127.0.0.1:PUERTO/mcp --header \"Authorization: Bearer TOKEN\". En Android la sección explica que no está disponible.",
+        "Peticiones sin token correcto reciben 401; con el servidor desactivado el puerto está cerrado. El estado activado/puerto/token persiste entre reinicios.",
+        "Herramientas MCP con descripciones en español y esquema JSON de entrada: listar_tareas, ver_tarea, crear_tarea, editar_tarea, borrar_tarea, ver_semana, cambiar_fecha_inicio, abrir_vista, exportar_json. Cada una llama a la función equivalente de PlannerApi (T-008) y devuelve su resultado como JSON.",
+        "borrar_tarea está marcada con destructiveHint; las de lectura con readOnlyHint.",
+        "Si la app no ha pasado términos/consentimiento o el frontend no responde en 10 s, la herramienta devuelve un error MCP claro en vez de colgarse.",
+        "Probado con un cliente MCP real (claude mcp add … y luego pedir 'añade la tarea Regar cada 3 días' y 'qué tengo esta semana'): la tarea aparece en la UI al momento.",
+        "cargo check sin errores en src-tauri; build Android sigue compilando (el servidor solo se compila con cfg(desktop)).",
+        "legal/PRIVACY.md y legal/ACCESSIBILITY.md explican el control por MCP (solo local, desactivado por defecto, con token). NO se toca la fecha de TERMS.md ni EULA.md.",
+        "La sección de Ajustes cumple las convenciones de accesibilidad de CLAUDE.md y no se sale con letra al 200 % en móvil."
+      ],
+      "notes": [
+        "Arquitectura propuesta: los datos viven en localStorage del webview, así que el servidor (Rust) no los lee: reenvía cada llamada al frontend. 1) En src-tauri/src/mcp.rs, servidor HTTP con el crate rmcp (SDK oficial de MCP en Rust, feature de streamable HTTP server sobre axum/tokio) arrancado/parado con comandos Tauri mcp_start(port, token) y mcp_stop(). 2) Cada tool call: emitir evento Tauri 'mcp:call' {id, tool, args} a la ventana main y esperar con un oneshot (HashMap<id, Sender>) la respuesta que el frontend envía con el comando mcp_reply(id, ok, result). 3) En el frontend, un módulo (p. ej. mcp-bridge.js en raíz, añadido a WEB_ASSETS) escucha 'mcp:call' con window.__TAURI__.event.listen, llama a PlannerApi y responde con invoke('mcp_reply'). Solo se registra tras requireTerms/startMonetization en index.js.",
+        "Registrar comandos en generate_handler! de src-tauri/src/lib.rs y añadir los permisos necesarios en src-tauri/capabilities/default.json (no en mobile.json). Dependencias Rust en Cargo.toml bajo [target.'cfg(not(any(target_os = \"android\", target_os = \"ios\")))'.dependencies]. Token: 32 bytes aleatorios en hex generados en el frontend (crypto.getRandomValues), guardado en localStorage junto con activado y puerto (por defecto 41237); al arrancar la app, si está activado, llama a mcp_start.",
+        "Depende de T-008 (PlannerApi). No hagas esta tarea hasta que T-008 esté hecha."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T04:38:59Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-010",
+      "title": "Menú contraído en escritorio: botones del mismo tamaño que expandido",
+      "status": "pendiente",
+      "relatedTo": "T-001",
+      "created": "2026-10-19T04:40:44Z",
+      "updated": "2026-10-19T04:40:44Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T04:40:44Z",
+          "text": "Necesito que en la versión contraída del menú los botones sean de un tamaño más pequeño en entornos de escritorio (que se mantenga el mismo que trae expandido), ya que la idea es que sea grande para poder tocarlo sin problemas con el dedo."
+        }
+      ],
+      "criteria": [
+        "En escritorio con ratón (media query (hover: hover) and (pointer: fine)), con el menú contraído, cada .nav-icon mide lo mismo que en el menú expandido (calc(1.1rem * var(--fs-nav)) de letra, caja de 1.4em) y cada .nav-item tiene el mismo alto que en el expandido (mismo padding vertical 0.7rem). Medido con getBoundingClientRect: diferencia ≤ 1 px.",
+        "En escritorio con ratón, el ancho del menú contraído se ajusta al icono pequeño (icono + padding horizontal del item + padding de .sidebar-nav, sin recortar el icono, la barra de opción activa ni el anillo de foco) y .content usa ese mismo margen izquierdo.",
+        "En pantallas táctiles (pointer: coarse) de 768 px o más, el menú contraído sigue igual que ahora: iconos de --nav-icon-size (64 px por defecto o el valor del tema).",
+        "Con --fs-nav al 200 % en escritorio el menú contraído crece en proporción y sigue sin recortar iconos.",
+        "En Ajustes, el texto del control 'Tamaño de los iconos del menú lateral' aclara que se aplica al menú contraído en pantallas táctiles (p. ej. 'Tamaño de los iconos del menú contraído en pantallas táctiles').",
+        "El menú expandido y la versión móvil (<768 px) no cambian.",
+        "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de color, rem con --fs-*, foco visible)."
+      ],
+      "notes": [
+        "index.css: variables en :root ~líneas 74-82 (--nav-icon-size: 4rem; --sidebar-w-collapsed: calc(var(--nav-icon-size) + 1.5rem)). Reglas del contraído en '@media (min-width: 768px)' ~líneas 313-366: .sidebar.collapsed .nav-item {padding: 0.15rem 0}, .sidebar.collapsed .nav-icon y .collapse-icon con var(--nav-icon-size). '@media (max-height: 720px)' ~línea 374 quita el padding del item contraído. Estilos base: .sidebar-nav (padding 0.75rem 0.5rem, gap 2px) ~línea 380, .nav-item (padding 0.7rem 0.75rem) ~390, .nav-icon (font-size calc(1.1rem * var(--fs-nav)), 1.4em) ~430.",
+        "Enfoque sugerido: introducir una variable --nav-icon-size-collapsed que por defecto valga var(--nav-icon-size) y, dentro de '@media (min-width: 768px) and (hover: hover) and (pointer: fine)', sobrescribirla a calc(1.54rem * var(--fs-nav)) (=1.4 × 1.1rem). Usar esa variable en las reglas del contraído y en --sidebar-w-collapsed (icono + 2×0.75rem padding del item + 2×0.5rem del .sidebar-nav). En escritorio con ratón restaurar el padding vertical del item contraído a 0.7rem (y que el max-height:720px solo afecte al caso táctil). Ojo: preferences.js (~línea 545) fija --nav-icon-size en el tema personalizado; no lo cambies, solo la etiqueta en ui/settings/settings-card.html línea 88."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T04:40:44Z",
+          "event": "creada"
         }
       ]
     }

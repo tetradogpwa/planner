@@ -16,6 +16,11 @@ los comentarios y la documentación van en **español**.
   `tools/minimax/run-task.sh`. Sus permisos están en `opencode.json`
   (agente `planner-worker`) y sus reglas extra en
   `tools/minimax/worker-prompt.md`.
+- El usuario también puede hablar con MiniMax directamente en OpenCode
+  ("haz la siguiente tarea" o `/siguiente [T-00X]`). OpenCode solo lee
+  `AGENTS.md`, que le indica usar `tasks.mjs empezar` (foto, estado
+  `en_curso` e instrucciones) y `tasks.mjs terminar T-00X` (pasa a
+  `en_revision`). Revísalas igual que las lanzadas con `run-task.sh`.
 - Cola de tareas: `.tasks/tasks.json`, gestionada solo con
   `node tools/tasks/tasks.mjs` (ejecútalo sin argumentos para ver la ayuda).
   Una petición que modifica una tarea **no terminada** se añade a esa tarea

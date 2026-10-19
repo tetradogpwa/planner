@@ -1,8 +1,9 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "default_agent": "planner-worker",
   "agent": {
     "planner-worker": {
-      "description": "Desarrollador (MiniMax) de las tareas del Planificador; lo lanza tools/minimax/run-task.sh y lo supervisa Claude",
+      "description": "Desarrollador (MiniMax) de las tareas del Planificador; toma las tareas de la cola (.tasks) y lo supervisa Claude",
       "mode": "primary",
       "model": "minimax/MiniMax-M3",
       "permission": {
@@ -37,7 +38,12 @@
           "rm -rf*": "deny",
           "node tools/tasks/*": "deny",
           "bash tools/minimax/*": "deny",
-          "*run-task.sh*": "deny"
+          "*run-task.sh*": "deny",
+          "node tools/tasks/tasks.mjs list*": "allow",
+          "node tools/tasks/tasks.mjs show*": "allow",
+          "node tools/tasks/tasks.mjs next*": "allow",
+          "node tools/tasks/tasks.mjs empezar*": "allow",
+          "node tools/tasks/tasks.mjs terminar*": "allow"
         },
         "skill": "deny",
         "question": "deny",

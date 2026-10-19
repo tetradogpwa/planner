@@ -19,6 +19,9 @@
 //   diff     T-001 [--stat]    cambios desde la foto (excluye .tasks/)
 //   prompt   T-001             instrucciones para MiniMax
 //   busy                       sale con código 1 si hay una tarea en curso
+//   empezar  [T-001]           MiniMax toma la tarea (o la siguiente pendiente):
+//                              foto, estado en_curso e instrucciones completas
+//   terminar T-001             MiniMax la entrega: estado en_revision
 //
 // Estados: pendiente → en_curso → en_revision → hecha  (o cancelada)
 // ────────────────────────────────────────────────────────────────────
@@ -31,6 +34,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const STORE_DIR = join(ROOT, '.tasks');
 const STORE = join(STORE_DIR, 'tasks.json');
+
+const WORKER_RULES = join(ROOT, 'tools', 'minimax', 'worker-prompt.md');
 
 const STATES = ['pendiente', 'en_curso', 'en_revision', 'hecha', 'cancelada'];
 const OPEN = ['pendiente', 'en_curso', 'en_revision'];
@@ -297,7 +302,47 @@ switch (cmd) {
     break;
   }
 
+  // Para cuando el usuario habla con MiniMax directamente en OpenCode
+  // ("haz la siguiente tarea"): hace lo mismo que run-task.sh antes y
+  // después de lanzarlo, para que el supervisor pueda revisar el diff.
+  case 'empezar': {
+    const running = db.tasks.find(t => t.status === 'en_curso');
+    if (running && (!rest[0] || running.id !== String(rest[0]).toUpperCase())) {
+      console.log(`Ya hay una tarea en curso: ${running.id}. Termínala antes de empezar otra:\n`);
+      console.log(workerPrompt(running));
+      process.exit(1);
+    }
+    const task = rest[0] ? find(db, rest[0]) : db.tasks.find(t => t.status === 'pendiente');
+    if (!task) { console.log('No hay tareas pendientes. No hay nada que hacer.'); process.exit(1); }
+    if (task.status !== 'pendiente' && task.status !== 'en_curso') {
+      fail(`${task.id} está ${STATE_LABEL[task.status].toLowerCase()}; solo se empiezan tareas pendientes.`);
+    }
+    if (task.status === 'pendiente') {
+      task.baseTree = workingTree(task.id);
+      log(task, 'foto del árbol', task.baseTree.slice(0, 10));
+      task.status = 'en_curso';
+      task.attempts++;
+      log(task, 'estado → en_curso', 'MiniMax la empieza desde OpenCode');
+      save(db);
+    }
+    console.log(readFileSync(WORKER_RULES, 'utf8'));
+    console.log('---\n');
+    console.log(workerPrompt(task));
+    console.log(`\nAl terminar ejecuta: node tools/tasks/tasks.mjs terminar ${task.id}`);
+    break;
+  }
+
+  case 'terminar': {
+    const task = find(db, rest[0]);
+    if (task.status !== 'en_curso') fail(`${task.id} no está en curso (está ${STATE_LABEL[task.status].toLowerCase()}).`);
+    task.status = 'en_revision';
+    log(task, 'estado → en_revision', 'MiniMax ha terminado (sesión de OpenCode)');
+    save(db);
+    console.log(`${task.id} entregada. Pide a Claude que la revise.`);
+    break;
+  }
+
   default:
-    console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 25).join('\n').replace(/^\/\/ ?/gm, ''));
+    console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 28).join('\n').replace(/^\/\/ ?/gm, ''));
     process.exit(cmd ? 2 : 0);
 }
