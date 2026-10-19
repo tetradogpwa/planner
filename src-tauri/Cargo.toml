@@ -1,0 +1,44 @@
+[package]
+name = "planner"
+version = "0.1.0"
+description = "Planificador Semanal — tareas, hábitos y exportación a PDF"
+authors = ["Gabriel Cat Developer"]
+edition = "2021"
+rust-version = "1.77"
+
+# Resuelve el problema de "multiple `Cargo.toml`s in the workspace" en
+# algunos IDEs cuando se usa un solo crate en src-tauri/.
+[lib]
+name = "planner_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+# Binario principal (en Android Tauri usa lib directamente).
+[[bin]]
+name = "planner"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+dotenvy = "0.15"                # build.rs incrusta las claves de anuncios desde .env
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"        # necesario para abrir enlaces externos (política de privacidad, etc.)
+tauri-plugin-dialog = "2"       # diálogos nativos para importar/exportar JSON
+tauri-plugin-fs = "2"           # acceso a filesystem para backup JSON
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+tauri-plugin-admob = { path = "plugins/tauri-plugin-admob" }   # AdMob nativo (solo actúa en Android)
+
+[features]
+# Esta feature la usa Tauri internamente; definirla aquí evita warnings.
+custom-protocol = ["tauri/custom-protocol"]
+
+# Optimización de release: tamaño más pequeño.
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

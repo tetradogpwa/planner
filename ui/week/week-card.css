@@ -2,14 +2,14 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1.25rem;
+  padding: clamp(12px, 3vw, 1.5rem);
   display: grid;
   gap: 0.6rem;
 }
 
 .week-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: calc(1rem * var(--fs-title));
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -17,6 +17,10 @@
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.5rem;
 }
+
+/* Con letra grande, ningún hijo debe forzar un ancho mayor que la tarjeta. */
+.week-card > *,
+.week-card .days-container > * { min-width: 0; }
 
 /* Ya no usamos grid de 7 columnas: los días se apilan */
 .days-container {

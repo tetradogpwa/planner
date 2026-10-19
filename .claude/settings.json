@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node tools/tasks/tasks.mjs *)",
+      "Bash(bash tools/minimax/run-task.sh *)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/tools/tasks/hook-recordatorio.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

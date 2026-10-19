@@ -49,7 +49,7 @@ export class AddTaskCard {
     if (this.repeatType === 'interval') {
       this.extra.innerHTML = `
         <div class="extra-interval">
-          <span>Repetir cada</span>
+          <label for="interval">Repetir cada</label>
           <input type="number" id="interval" value="3" min="2">
           <span>días</span>
         </div>`;
@@ -58,7 +58,7 @@ export class AddTaskCard {
     if (this.repeatType === 'days') {
       this.extra.innerHTML = `
         <div class="form-group">
-          <label>Días activos</label>
+          <span class="form-group-label">Días activos</span>
           <div class="days-grid">${this.#dayCheckboxes('dw')}</div>
         </div>`;
     }

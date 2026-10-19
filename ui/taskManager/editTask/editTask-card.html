@@ -1,22 +1,22 @@
 <div class="edit-task-card">
   <div class="edit-task-header">
-    <span class="edit-task-title">✏️ Editar tarea</span>
-    <button class="btn-close-edit" id="cancelEditBtn" title="Cancelar">✕</button>
+    <span class="edit-task-title"><span aria-hidden="true">✏️</span> Editar tarea</span>
+    <button class="btn-close-edit" id="cancelEditBtn" title="Cancelar" aria-label="Cancelar edición">✕</button>
   </div>
 
   <div class="form-row">
     <div class="form-group">
-      <label>Nombre</label>
+      <label for="editTaskName">Nombre</label>
       <input type="text" id="editTaskName" placeholder="Ej: Gym">
     </div>
     <div class="form-group form-group--small">
-      <label>Veces/día</label>
+      <label for="editTimesPerDay">Veces/día</label>
       <input type="number" id="editTimesPerDay" value="1" min="1">
     </div>
   </div>
 
-  <div class="form-group">
-    <label>Tipo de repetición</label>
+  <div class="form-group" role="radiogroup" aria-labelledby="editRepeatLabel">
+    <span class="form-group-label" id="editRepeatLabel">Tipo de repetición</span>
     <div class="repeat-options">
       <label class="repeat-option">
         <input type="radio" name="edit-repeat" value="no-repeat">

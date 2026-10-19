@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Planificador Semanal",
+  "version": "0.1.0",
+  "identifier": "gabriel.cat.developer.planner",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": null,
+    "beforeBuildCommand": "",
+    "beforeDevCommand": ""
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Planificador Semanal",
+        "label": "main",
+        "width": 1100,
+        "height": 760,
+        "minWidth": 380,
+        "minHeight": 480,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "zoomHotkeysEnabled": true,
+        "url": "index.html"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' tauri: https://www.google.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://*.googletagservices.com; img-src 'self' data: tauri: asset: https:; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://*.googletagservices.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com; connect-src 'self' tauri: ipc: https://*.google.com https://*.googlesyndication.com https://*.doubleclick.net"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "publisher": "Gabriel Cat Developer",
+    "category": "Productivity",
+    "shortDescription": "Planificador local de tareas y hábitos",
+    "longDescription": "Planificador semanal con tareas recurrentes, ciclos personalizados y exportación a PDF. Funciona 100% local; sin servidor ni cuentas.",
+    "copyright": "© 2026 Gabriel Cat Developer",
+    "homepage": "https://gabriel-cat-developer.example",
+    "targets": ["appimage", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      
+      "../legal/PRIVACY.md": "legal/PRIVACY.md",
+      "../legal/TERMS.md": "legal/TERMS.md",
+      "../legal/EULA.md": "legal/EULA.md",
+      "../legal/COOKIES.md": "legal/COOKIES.md",
+      "../legal/REFUNDS.md": "legal/REFUNDS.md",
+      "../legal/ACCESSIBILITY.md": "legal/ACCESSIBILITY.md",
+      "../legal/ACCEPTABLE_USE.md": "legal/ACCEPTABLE_USE.md",
+      "../legal/ADS_DISCLOSURE.md": "legal/ADS_DISCLOSURE.md",
+      "../legal/CONTACT.md": "legal/CONTACT.md",
+      "../legal/THIRD_PARTY_LICENSES.md": "legal/THIRD_PARTY_LICENSES.md"
+    },
+    "android": {
+      "minSdkVersion": 24,
+      "versionCode": 1
+    },
+    "windows": {
+      "certificateThumbprint": "[TU_THUMBPRINT_CERTIFICADO_NSIS]",
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
+      "tsp": false,
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    },
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0"]
+      }
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
+  }
+}

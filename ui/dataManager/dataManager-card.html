@@ -2,7 +2,7 @@
   <h3>💾 Gestión de datos</h3>
 
   <div class="export-row">
-    <div class="export-label">Importar tareas</div>
+    <label class="export-label" for="importJsonInput">Importar tareas</label>
     <input type="file" id="importJsonInput" accept=".json"/>
   </div>
 
@@ -13,8 +13,8 @@
 
   <div class="export-row">
     <div class="export-label">Borrar todo</div>
-    <button id="clearAllBtn" class="btn-primary" style="background:var(--danger)">🗑️ Borrar</button>
+    <button id="clearAllBtn" class="btn-primary btn-danger">🗑️ Borrar</button>
   </div>
 
-  <pre id="dataStatus"></pre>
+  <pre id="dataStatus" role="status"></pre>
 </div>

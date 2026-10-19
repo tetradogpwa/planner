@@ -8,7 +8,7 @@
 }
 
 .day-cell:hover {
-  border-color: #4b5563;
+  border-color: var(--border-strong);
 }
 
 /* Día de hoy */
@@ -17,7 +17,7 @@
 }
 
 .day-cell.is-today .day-header {
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--soft);
 }
 
 /* ── Cabecera clicable ── */
@@ -26,7 +26,8 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.55rem 0.85rem;
+  flex-wrap: wrap;
+  padding: 0.55rem clamp(12px, 3vw, 1.5rem);
   background: transparent;
   border: none;
   border-radius: 0;
@@ -39,19 +40,20 @@
 }
 
 .day-header:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--hover-bg);
   opacity: 1;
 }
 
 .day-header-left {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 0.5rem;
   min-width: 0;
 }
 
 .day-name {
-  font-size: 0.75rem;
+  font-size: calc(0.8125rem * var(--fs-label));
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -64,7 +66,7 @@
 }
 
 .day-date {
-  font-size: 0.68rem;
+  font-size: calc(0.8125rem * var(--fs-meta));
   color: var(--muted);
   white-space: nowrap;
 }
@@ -73,14 +75,14 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Contador de tareas */
 .task-count-badge {
-  font-size: 0.65rem;
+  font-size: calc(0.75rem * var(--fs-meta));
   font-weight: 700;
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--soft-strong);
   color: var(--primary-light);
   padding: 1px 7px;
   border-radius: 999px;
@@ -94,14 +96,14 @@
 
 /* Sin tareas */
 .task-count-badge.empty {
-  background: rgba(255,255,255,0.05);
+  background: var(--hover-bg);
   color: var(--muted);
   display: inline-block;
 }
 
 /* Chevron */
 .chevron {
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--fs-meta));
   color: var(--muted);
   transition: transform 0.25s ease;
   display: inline-block;
@@ -137,19 +139,19 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  padding: 0.5rem 0.7rem;
+  padding: 0.5rem clamp(12px, 3vw, 1.5rem);
 }
 
 .empty-day {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: calc(0.8125rem * var(--fs-meta));
   padding: 0.35rem 0;
   font-style: italic;
 }
 
 /* ── Badges ── */
 .task-badge {
-  font-size: 0.72rem;
+  font-size: calc(0.8125rem * var(--fs-task));
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 5px;
@@ -162,19 +164,19 @@
 }
 
 .badge-odd {
-  background: rgba(99, 102, 241, 0.18);
-  color: #a5b4fc;
-  border-left-color: #6366f1;
+  background: var(--badge-odd-bg);
+  color: var(--badge-odd-fg);
+  border-left-color: var(--badge-odd-bd);
 }
 
 .badge-even {
-  background: rgba(14, 165, 233, 0.18);
-  color: #7dd3fc;
-  border-left-color: #0ea5e9;
+  background: var(--badge-even-bg);
+  color: var(--badge-even-fg);
+  border-left-color: var(--badge-even-bd);
 }
 
 .badge-slot {
-  background: rgba(245, 158, 11, 0.18);
-  color: #fcd34d;
-  border-left-color: #f59e0b;
+  background: var(--badge-slot-bg);
+  color: var(--badge-slot-fg);
+  border-left-color: var(--badge-slot-bd);
 }

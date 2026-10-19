@@ -1,0 +1,39 @@
+.consent-gate {
+  position: fixed; inset: 0;
+  z-index: 10000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px;
+  background: var(--bg);
+}
+.consent-box {
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: clamp(12px, 3vw, 1.5rem);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 40px var(--shadow);
+}
+.consent-box h2 { margin: 0 0 1rem; font-size: calc(1.25rem * var(--fs-title)); outline: none; }
+.consent-box p  { margin: 0 0 0.75rem; line-height: 1.5; color: var(--text-secondary); }
+.consent-actions {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+/* Todas las opciones con el mismo peso visual (RGPD: sin dark patterns). */
+.consent-btn {
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-size: calc(1rem * var(--fs-button));
+  color: var(--text);
+  background: var(--panel2);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  margin: 0;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.consent-btn:hover,
+.consent-btn:focus-visible { background: var(--soft-strong); opacity: 1; }

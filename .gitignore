@@ -1,2 +1,61 @@
+# Pruebas / exports auxiliares
 testData.json
-*.txt
+proyecto.txt
+proyecto_sin_blancos.txt
+proyecto_1linea.txt
+
+# ────────────────────────────────────────────────────────────────────
+# Tauri
+# ────────────────────────────────────────────────────────────────────
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/.cargo/
+src-tauri/Cargo.lock.bak
+
+# Distribución Tauri
+*.app
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.msi
+*.msix
+# Binarios nativos (no los fuentes)
+*.exe
+
+# Android
+src-tauri/gen/android/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# iOS (no objetivo, pero por si acaso)
+src-tauri/gen/ios/
+
+# ────────────────────────────────────────────────────────────────────
+# Entorno / secretos — NUNCA subir
+# ────────────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+
+# ────────────────────────────────────────────────────────────────────
+# Editores / sistema
+# ────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+# Frontend copiado por src-tauri/build.rs (frontendDist de Tauri)
+dist/
+
+# Cola de tareas: se versiona tasks.json; los registros de MiniMax no
+.tasks/logs/
+.claude/settings.local.json

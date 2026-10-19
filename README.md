@@ -2,6 +2,10 @@
 
 Un planificador inteligente con repeticiones de tareas, ciclos personalizados y exportación a PDF. Completamente funcional sin necesidad de backend.
 
+> **¿Buscas la versión instalable (.exe, .AppImage, .apk)?**
+> Esta es la PWA. La versión empaquetada con Tauri 2 está en el mismo
+> repositorio: consulta [`README-TAURI.md`](./README-TAURI.md).
+
 ## 🎯 Características
 
 ### ✨ Tipos de Repetición
@@ -30,6 +34,20 @@ Un planificador inteligente con repeticiones de tareas, ciclos personalizados y 
 - Modo oscuro optimizado
 
 ## 🚀 Instalación
+
+### Como app nativa (recomendado)
+
+Si quieres un `.exe`, `.AppImage` o `.apk`, usa la versión Tauri:
+
+```bash
+./tools/build-linux.sh      # Linux AppImage + .deb
+./tools/build-android.sh    # Android APK
+# build-windows.ps1         # Windows NSIS (en Windows)
+```
+
+Ver `README-TAURI.md` para el detalle.
+
+### Como PWA (este directorio)
 
 1. Coloca todos los archivos en tu servidor web o carpeta local:
 ```

@@ -1,0 +1,541 @@
+.settings-card {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 40rem;
+}
+
+/* Cabecera con el título a la izquierda y el toggle a la derecha. */
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+.settings-header .settings-title { margin: 0; }
+
+/* Red de seguridad: el atributo HTML `hidden` debe ganarle a cualquier
+   `display: grid/flex` que declaremos en este archivo. Si no, los
+   selectores con clase tienen la misma especificidad que `[hidden]`
+   del UA stylesheet y, al ir después en el cascade, lo sobrescriben
+   dejando el bloque visible aún con `hidden`. */
+[hidden] { display: none !important; }
+.settings-title { margin: 0; font-size: calc(1.25rem * var(--fs-title)); }
+
+.settings-group {
+  margin: 0;
+  padding: clamp(12px, 3vw, 1.5rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.settings-group legend {
+  font-size: calc(1rem * var(--fs-label));
+  padding: 0 0.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.settings-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.settings-option {
+  font-size: calc(1rem * var(--fs-chip));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--input-border);
+  border-radius: 999px;
+  color: var(--text);
+  cursor: pointer;
+}
+.settings-option small { color: var(--text-secondary); font-size: calc(0.875rem * var(--fs-meta)); }
+.settings-option input {
+  width: 1.1rem; height: 1.1rem;
+  margin: 0;
+  accent-color: var(--primary);
+}
+.settings-option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--soft-strong);
+}
+.settings-option:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Temas guardados por el usuario dentro del mismo fieldset «Tema»
+   (después de los oficiales). El contenedor es «display: contents»
+   para que cada fila sea un flex item del .settings-options y los
+   radios se recorran con flechas como los oficiales. La fila
+   contiene la píldora (label.settings-option) y, en modo edición,
+   el botón Eliminar como hermano. Si el nombre es largo, parte
+   línea y, si no cabe, el botón baja a una segunda línea dentro de
+   la fila. */
+.saved-theme-list { display: contents; }
+.saved-theme-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+.saved-theme-name {
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  min-width: 0;
+}
+.saved-theme-delete {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-soft);
+  font-size: calc(0.8125rem * var(--fs-meta));
+  padding: 0.3rem 0.7rem;
+  min-height: 0;
+  border-radius: 999px;
+}
+.saved-theme-delete:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+.saved-theme-delete:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.settings-preview {
+  padding: clamp(12px, 3vw, 1.5rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.settings-preview h3 { margin: 0 0 0.5rem; font-size: calc(1rem * var(--fs-label)); color: var(--text-secondary); }
+.settings-preview p  { margin: 0 0 0.75rem; }
+.settings-preview-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+/* Badges de muestra: mismos tokens que en la vista semanal. */
+.settings-preview .task-badge {
+  font-size: calc(0.8125rem * var(--fs-task));
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-left: 3px solid transparent;
+}
+.settings-preview .badge-odd  { background: var(--badge-odd-bg);  color: var(--badge-odd-fg);  border-left-color: var(--badge-odd-bd); }
+.settings-preview .badge-even { background: var(--badge-even-bg); color: var(--badge-even-fg); border-left-color: var(--badge-even-bd); }
+.settings-preview .badge-slot { background: var(--badge-slot-bg); color: var(--badge-slot-fg); border-left-color: var(--badge-slot-bd); }
+
+/* ── Subtítulos, ayudas y botones del editor ── */
+.settings-subtitle {
+  margin: 0;
+  font-size: calc(1rem * var(--fs-label));
+  font-weight: 700;
+  color: var(--text);
+}
+.settings-help {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  max-width: 60ch;
+}
+.settings-status { margin: 0.4rem 0 0; color: var(--text-secondary); font-size: calc(0.875rem * var(--fs-meta)); min-height: 1.2em; }
+.settings-btn {
+  margin: 0;
+  padding: 0.55rem 1rem;
+  min-height: 2.75rem;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+}
+.settings-btn:hover { background: var(--hover-bg); opacity: 1; }
+
+/* ── Toggle de modo edición (mismo patrón que Gestión de tareas) ── */
+.custom-edit-toggle:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: calc(0.875rem * var(--fs-meta));
+  color: var(--text-secondary);
+}
+
+/* Bloques que solo se ven en modo edición (formulario "Crear un
+   tema nuevo"). Los botones Eliminar de cada tema guardado se
+   muestran/ocultan dentro de la fila correspondiente desde
+   renderSavedThemes(), no aquí. Se ocultan desde JS con el
+   atributo `hidden`; el UA stylesheet (`[hidden]` arriba, con
+   `!important`) y la forma `:not([hidden])` aquí se combinan para
+   que el atributo siempre gane a este `display: grid`. */
+.custom-edit-only:not([hidden]) { display: grid; gap: 0.4rem; }
+.switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: calc(0.875rem * var(--fs-meta));
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 2.5rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch .slider {
+  position: absolute;
+  inset: 0;
+  background: var(--input-border);
+  border-radius: 999px;
+  transition: background 0.18s;
+}
+.switch .slider::before {
+  content: '';
+  position: absolute;
+  width: 1.05rem;
+  height: 1.05rem;
+  left: 0.18rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border-radius: 50%;
+  transition: transform 0.18s;
+}
+.switch input:checked + .slider { background: var(--primary); }
+.switch input:checked + .slider::before { transform: translate(1.1rem, -50%); }
+.switch input:focus-visible + .slider {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ── Tema propio ── */
+.custom-theme { display: grid; gap: 1.25rem; }
+/* El atributo HTML `hidden` debe ganarle al `display` que pongamos
+   nosotros en cada bloque; si no, las clases con `display: grid/flex`
+   del CSS tienen la misma especificidad que `[hidden]` del user-agent
+   stylesheet y, al ir después en el cascade, lo sobrescriben. Por eso
+   usamos `:not([hidden])` para aplicar el `display` solo cuando NO está
+   oculto, y dejamos que el UA stylesheet se encargue del caso oculto. */
+.custom-theme:not([hidden])   { display: grid; gap: 1.25rem; }
+.custom-base                 { display: grid; gap: 0.4rem; }
+.custom-base label { font-weight: 600; }
+.custom-base-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.custom-base-row select { flex: 1 1 12rem; min-height: 2.75rem; }
+/* El <optgroup> "Tus temas guardados" del selector Empezar desde. */
+.custom-base-row select optgroup {
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--surface-alt);
+}
+.custom-base-row select optgroup option {
+  font-weight: 400;
+  color: var(--text);
+}
+
+/* Mapeo del modo automático (claro/oscuro del sistema → tema). */
+.auto-mapping:not([hidden]) {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border);
+}
+.auto-mapping-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.auto-mapping-row label {
+  font-weight: 600;
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.auto-mapping-row select {
+  flex: 1 1 10rem;
+  min-height: 2.5rem;
+  min-width: 0;
+  max-width: min(22rem, 100%);
+}
+
+/* Tamaño de los iconos del menú (solo se ve en tema personalizado). */
+.custom-icon-size { display: grid; gap: 0.4rem; }
+.custom-icon-size label { font-weight: 600; }
+.custom-icon-size-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+.custom-icon-size input[type="range"] { flex: 1 1 12rem; accent-color: var(--primary); min-height: 2.5rem; margin: 0; }
+.custom-icon-size output {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  min-width: 4.5rem;
+  text-align: right;
+}
+
+/* Acciones: restaurar y guardar */
+.custom-actions {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-alt);
+}
+.custom-actions .settings-btn { min-height: 2.75rem; }
+.settings-btn-block { width: 100%; }
+.settings-btn-danger { color: var(--danger); border-color: var(--danger); }
+.settings-btn-danger:hover { background: var(--danger-soft); }
+
+.custom-save { display: grid; gap: 0.4rem; }
+.custom-save label { font-weight: 600; }
+.custom-save-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Selector de esquema (Claro / Oscuro) al guardar el tema. */
+.custom-save-scheme {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  align-items: center;
+}
+.custom-save-scheme .settings-option {
+  padding: 0.35rem 0.7rem;
+  min-height: 2.5rem;
+  font-size: calc(0.8125rem * var(--fs-meta));
+}
+.custom-save-scheme .settings-option input {
+  width: 1rem; height: 1rem;
+}
+
+/* Etiqueta accesible que no se muestra visualmente. */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+.custom-name-input {
+  flex: 1 1 12rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: calc(1rem * var(--fs-input));
+}
+.custom-name-input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+  border-color: var(--focus);
+}
+
+@keyframes settings-flash {
+  0%   { background: var(--soft-strong); }
+  100% { background: transparent; }
+}
+.settings-btn.is-flashing { animation: settings-flash 0.35s ease-out; }
+
+.color-groups { display: grid; gap: 1rem; }
+.color-group {
+  margin: 0;
+  padding: 0.75rem clamp(12px, 3vw, 1rem);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.color-group legend {
+  padding: 0 0.4rem;
+  font-weight: 700;
+  font-size: calc(0.875rem * var(--fs-label));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+.color-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+.color-row label { min-width: 0; }
+.color-row input[type="color"] {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 2px;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  cursor: pointer;
+}
+.hex-input {
+  width: 7.5rem;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  text-transform: lowercase;
+}
+.hex-input[aria-invalid="true"] { border-color: var(--danger); outline-color: var(--danger); }
+@media (max-width: 30rem) {
+  .color-row { grid-template-columns: auto minmax(0, 1fr); }
+  .color-row label { grid-column: 1 / -1; }
+  .hex-input { width: 100%; }
+}
+
+/* ── Comprobación de contraste ── */
+.contrast-panel { display: grid; gap: 0.5rem; }
+.contrast-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.contrast-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "swatch label ratio"
+    "swatch verdict verdict"
+    "fixes   fixes   fixes";
+  gap: 0.1rem 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 8px;
+}
+.contrast-item.is-ok  { border-left-color: var(--input-border); }
+.contrast-item.is-bad { border-left-color: var(--danger); background: var(--danger-soft); }
+.contrast-swatch {
+  grid-area: swatch;
+  width: 2.5rem; height: 2.5rem;
+  display: grid; place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-weight: 700;
+}
+.contrast-label { grid-area: label; }
+.contrast-ratio {
+  grid-area: ratio;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: calc(0.875rem * var(--fs-meta));
+}
+.contrast-verdict { grid-area: verdict; font-size: calc(0.875rem * var(--fs-meta)); color: var(--text-secondary); }
+.contrast-item.is-bad .contrast-verdict { color: var(--danger); font-weight: 600; }
+
+/* ── Sugerencias automáticas de corrección ── */
+.contrast-fixes {
+  grid-area: fixes;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+.contrast-fix {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+  color: var(--text);
+  font-size: calc(0.8125rem * var(--fs-meta));
+  cursor: pointer;
+  min-height: 2.5rem;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.contrast-fix:hover {
+  background: var(--hover-bg);
+  border-color: var(--focus);
+}
+.contrast-fix:active { transform: scale(0.98); }
+.contrast-fix:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+.contrast-fix-preview {
+  width: 2.25rem;
+  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.contrast-fix-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  text-align: left;
+  min-width: 0;
+}
+.contrast-fix-action { font-weight: 600; }
+.contrast-fix-value {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: calc(0.75rem * var(--fs-meta));
+  color: var(--text-secondary);
+}
+
+/* ── Tamaño por partes ── */
+.size-rows { display: grid; gap: 1rem; margin: 1rem 0; }
+.size-row {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.size-row-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; }
+.size-row-head label { font-weight: 600; }
+.size-row-head output {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.size-row input[type="range"] {
+  width: 100%;
+  min-height: 2.75rem;
+  margin: 0;
+  accent-color: var(--primary);
+}
+.size-sample {
+  color: var(--text);
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.size-sample.is-upper { text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-secondary); }
+
+/* ── Vista previa: botones y enlace de muestra ── */
+.settings-preview-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.9rem; }
+.preview-btn {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-size: calc(1rem * var(--fs-button));
+  font-weight: 600;
+  background: var(--btn-bg);
+  color: var(--on-btn);
+}
+.preview-btn-danger { background: var(--danger-btn); }
+.preview-link { color: var(--link); text-decoration: underline; font-size: calc(1rem * var(--fs-body)); }

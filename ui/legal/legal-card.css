@@ -1,0 +1,68 @@
+.legal-card { padding: 0; }
+.legal-card h2 { font-size: calc(1.5rem * var(--fs-title)); }
+.legal-card h3 { margin-top: 1.5rem; font-size: calc(1.17rem * var(--fs-label)); }
+.legal-modal-content header h3 { font-size: calc(1.17rem * var(--fs-title)); }
+.legal-links { list-style: none; padding-left: 0; }
+.legal-links li { margin: 0.35rem 0; }
+.legal-links a {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.2em;
+}
+.legal-links a:hover { background: var(--soft); }
+.legal-about dt { font-weight: 600; color: var(--muted); }
+.legal-about dd { margin: 0 0 0.5rem 0; font-family: ui-monospace, monospace; font-size: calc(0.875rem * var(--fs-meta)); overflow-wrap: anywhere; }
+
+.legal-modal[hidden] { display: none; }
+.legal-modal {
+  position: fixed; inset: 0;
+  background: var(--overlay);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.legal-modal-content {
+  width: min(900px, 95vw);
+  max-height: 85vh;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px var(--shadow);
+  display: flex; flex-direction: column;
+}
+.legal-modal-content header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem clamp(12px, 3vw, 1.5rem);
+  border-bottom: 1px solid var(--border);
+}
+.legal-modal-content header h3 { margin: 0; }
+.legal-modal-close {
+  background: transparent; border: 0; cursor: pointer;
+  font-size: calc(1.5rem * var(--fs-button)); line-height: 1;
+  color: var(--muted);
+  margin: 0;
+  min-width: 2.75rem; min-height: 2.75rem;
+}
+.legal-modal-close:hover { background: var(--hover-bg); opacity: 1; }
+.legal-modal-body {
+  overflow-y: auto;
+  padding: clamp(12px, 3vw, 1.5rem);
+  line-height: 1.55;
+}
+.legal-modal-body { hyphens: auto; font-size: calc(1rem * var(--fs-doc)); }
+.legal-modal-body h1 { font-size: calc(1.4rem * var(--fs-doc)); margin-top: 0.5rem; }
+.legal-modal-body h2 { font-size: calc(1.2rem * var(--fs-doc)); margin-top: 1.25rem; }
+.legal-modal-body h3 { font-size: calc(1.05rem * var(--fs-doc)); }
+.legal-modal-body table { border-collapse: collapse; margin: 1rem 0; }
+.legal-modal-body th, .legal-modal-body td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+.legal-modal-body pre {
+  background: var(--pre-bg);
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}.legal-modal-body a { color: var(--link); }
+.legal-modal-body table { display: block; overflow-x: auto; }

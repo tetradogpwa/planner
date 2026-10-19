@@ -5,9 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Planificador Semanal Profesional</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="./theme-boot.js"></script>
+  <script src="./vendor/html2pdf.bundle.min.js" defer></script>
   <link rel="stylesheet" href="index.css">
-  <meta name="theme-color" content="#6366f1">
+  <meta name="theme-color" content="#111827">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Planificador">
@@ -15,7 +16,7 @@
 <link rel="apple-touch-icon" href="icon-192x192.png">
 </head>
 
-<body>
+<body class="booting">
 
 <header class="topbar">
   <button class="hamburger" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">
@@ -33,33 +34,48 @@
 
     <div class="sidebar-nav">
       <button class="nav-item active" data-view="tasks">
-        <span class="nav-icon">🧩</span>
+        <span class="nav-icon" aria-hidden="true">🧩</span>
         <span class="nav-label">Gestión tareas</span>
       </button>
       <button class="nav-item" data-view="week">
-        <span class="nav-icon">📆</span>
+        <span class="nav-icon" aria-hidden="true">📆</span>
         <span class="nav-label">Semana actual</span>
       </button>
       <button class="nav-item" data-view="allWeeks">
-        <span class="nav-icon">📊</span>
+        <span class="nav-icon" aria-hidden="true">📊</span>
         <span class="nav-label">Todas semanas</span>
       </button>
 
       <hr class="sidebar-divider"/>
 
       <button class="nav-item" data-view="data">
-        <span class="nav-icon">💾</span>
+        <span class="nav-icon" aria-hidden="true">💾</span>
         <span class="nav-label">Gestión datos</span>
       </button>
       <button class="nav-item" data-view="print">
-        <span class="nav-icon">🖨️</span>
+        <span class="nav-icon" aria-hidden="true">🖨️</span>
         <span class="nav-label">Imprimir / PDF</span>
+      </button>
+
+      <hr class="sidebar-divider"/>
+
+      <button class="nav-item" data-view="settings">
+        <span class="nav-icon" aria-hidden="true">🎨</span>
+        <span class="nav-label">Apariencia</span>
+      </button>
+      <button class="nav-item" id="removeAdsBtn" hidden>
+        <span class="nav-icon" aria-hidden="true">🚫</span>
+        <span class="nav-label">Quitar anuncios</span>
+      </button>
+      <button class="nav-item" data-view="legal">
+        <span class="nav-icon" aria-hidden="true">📜</span>
+        <span class="nav-label">Legal y privacidad</span>
       </button>
     </div>
 
     <!-- Botón de colapso (solo desktop) -->
     <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Contraer menú">
-      <span class="collapse-icon">◀</span>
+      <span class="collapse-icon" aria-hidden="true">◀</span>
       <span class="nav-label">Contraer</span>
     </button>
 
@@ -71,8 +87,14 @@
     <section id="view-allWeeks" class="view"></section>
     <section id="view-data"     class="view"></section>
     <section id="view-print"    class="view"></section>
+    <section id="view-legal"    class="view"></section>
+    <section id="view-settings" class="view"></section>
   </main>
 </div>
+
+<!-- Pantallas previas a la app: términos (ui/terms/) y anuncios (ui/consent/) -->
+<div id="terms-gate" class="gate-root"></div>
+<div id="consent-gate" class="gate-root"></div>
 
 <script type="module" src="./index.js"></script>
 </body>

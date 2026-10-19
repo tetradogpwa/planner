@@ -1,0 +1,59 @@
+<div class="consent-gate" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+  <div class="consent-box">
+
+    <section data-step="ask">
+      <h2 id="consent-title" tabindex="-1">Planificador Semanal es gratis gracias a la publicidad</h2>
+      <p>
+        Para usar la versión gratuita necesitamos tu permiso para mostrar
+        anuncios de Google. Google usa identificadores del dispositivo y
+        cookies para servirlos y medir su rendimiento.
+      </p>
+      <p>
+        Si no quieres anuncios, puedes usar la versión de pago, sin
+        publicidad. Podrás cambiar de opinión en cualquier momento desde
+        «Quitar anuncios» en el menú.
+      </p>
+      <div class="consent-actions">
+        <button class="consent-btn" data-consent="personalized">Aceptar anuncios personalizados</button>
+        <button class="consent-btn" data-consent="non_personalized">Aceptar solo anuncios no personalizados</button>
+        <button class="consent-btn" data-consent="reject">Rechazar</button>
+      </div>
+    </section>
+
+    <section data-step="paywall" hidden>
+      <h2 tabindex="-1">Versión sin anuncios</h2>
+      <p>
+        La versión gratuita se financia con anuncios y sin tu consentimiento
+        no podemos mostrarlos. Puedes seguir usando Planificador Semanal con
+        la versión de pago, sin publicidad.
+      </p>
+      <p class="consent-no-url" hidden>
+        La versión de pago todavía no está disponible en esta plataforma.
+      </p>
+      <div class="consent-actions">
+        <button class="consent-btn" data-action="buy">Ir a la versión de pago</button>
+        <button class="consent-btn" data-action="ask">Prefiero ver anuncios</button>
+      </div>
+    </section>
+
+    <section data-step="upgrade" hidden>
+      <h2 tabindex="-1">Quitar anuncios</h2>
+      <p>
+        Con la versión de pago usas Planificador Semanal sin publicidad.
+      </p>
+      <p class="consent-no-url" hidden>
+        La versión de pago todavía no está disponible en esta plataforma.
+      </p>
+      <p>
+        También puedes retirar tu consentimiento: dejarás de ver anuncios y
+        volverás a elegir entre la versión gratuita con anuncios o la de pago.
+      </p>
+      <div class="consent-actions">
+        <button class="consent-btn" data-action="buy">Ir a la versión de pago</button>
+        <button class="consent-btn" data-action="withdraw">Retirar mi consentimiento</button>
+        <button class="consent-btn" data-action="close">Seguir con anuncios</button>
+      </div>
+    </section>
+
+  </div>
+</div>

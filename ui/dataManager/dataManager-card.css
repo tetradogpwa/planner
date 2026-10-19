@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 0.75rem;
   width: 100%;
-  padding: 1.25rem;
+  padding: clamp(12px, 3vw, 1.5rem);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -11,7 +11,7 @@
 
 .export-card h3 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: calc(1.1rem * var(--fs-title));
   font-weight: 700;
 }
 
@@ -20,14 +20,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.85rem 1rem;
+  padding: clamp(12px, 3vw, 1.5rem);
   background: var(--surface-alt);
   border-radius: 10px;
   border: 1px solid var(--border);
 }
 
 .export-label {
-  font-size: 0.82rem;
+  font-size: calc(0.875rem * var(--fs-label));
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -36,7 +36,7 @@
 
 /* Input file ocupa todo el ancho */
 input[type="file"] {
-  font-size: 0.82rem;
+  font-size: calc(0.9375rem * var(--fs-input));
   width: 100%;
   min-width: 0;
   color: var(--text);
@@ -46,28 +46,31 @@ input[type="file"] {
 .btn-primary {
   display: block;
   width: 100%;
-  background: var(--primary);
-  color: white;
+  background: var(--btn-bg);
+  color: var(--on-btn);
   border: none;
   padding: 0.6rem 1rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: calc(0.9375rem * var(--fs-button));
   text-align: center;
   margin: 0;
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
+  background: var(--btn-bg-hover);
   opacity: 1;
 }
+
+.btn-primary.btn-danger         { background: var(--danger-btn); }
+.btn-primary.btn-danger:hover   { background: var(--danger-btn); opacity: .9; }
 
 #dataStatus {
   background: transparent;
   border: none;
   padding: 0.1rem 0;
-  font-size: 0.82rem;
+  font-size: calc(0.875rem * var(--fs-meta));
   color: var(--primary-light);
   min-height: 1.2rem;
 }

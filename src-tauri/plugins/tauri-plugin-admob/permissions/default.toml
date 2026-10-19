@@ -1,0 +1,10 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = "Permite inicializar AdMob y mostrar/ocultar banner e intersticiales."
+permissions = [
+  "allow-initialize",
+  "allow-show-banner",
+  "allow-hide-banner",
+  "allow-show-interstitial",
+]

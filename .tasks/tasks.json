@@ -1,0 +1,450 @@
+{
+  "next": 6,
+  "tasks": [
+    {
+      "id": "T-001",
+      "title": "Menú contraído: iconos juntos, sin recortes y sin scroll",
+      "status": "hecha",
+      "relatedTo": null,
+      "created": "2026-10-19T03:16:05Z",
+      "updated": "2026-10-19T03:33:10Z",
+      "attempts": 1,
+      "requests": [
+        {
+          "at": "2026-10-19T03:16:05Z",
+          "text": "Cuando se contrae el menú quiero que los iconos se vean más unidos (por defecto en los temas son 64x64 px pero se puede modificar)."
+        }
+      ],
+      "criteria": [
+        "Con el menú contraído y iconos de 64 px, la distancia vertical entre el borde inferior de un .nav-icon y el superior del siguiente es como máximo 8 px (medido con getBoundingClientRect).",
+        "Cada .nav-item contraído mide como máximo --nav-icon-size + 12 px de alto.",
+        "A 1280×900 con iconos de 64 px caben todos los elementos del menú contraído sin barra de desplazamiento.",
+        "El icono no se recorta por ningún lado: quedan al menos 4 px de margen a cada lado dentro del menú contraído.",
+        "Funciona igual con --nav-icon-size de 32 px y de 128 px (tema personalizado): iconos juntos, sin recortes y el ancho del menú contraído se adapta al tamaño.",
+        "Los lectores de pantalla siguen anunciando el nombre de cada opción del menú contraído, y al pasar el ratón se ve el nombre (atributo title con el texto de la etiqueta).",
+        "El indicador de opción activa (fondo y barra lateral) y el anillo de foco de teclado siguen visibles y ajustados al icono.",
+        "El menú expandido y la versión móvil (<768 px) se ven igual que ahora, salvo la eliminación del margen heredado de los botones.",
+        "Cumple las convenciones de CLAUDE.md: solo tokens de color, sin colores fijos, foco visible."
+      ],
+      "notes": [
+        "Medido en escritorio 1280×900, tema oscuro, menú contraído: cada .nav-item mide entre 233 y 368 px de alto con un icono de 64 px; entre el borde inferior de un icono y el superior del siguiente hay 201–247 px; la lista (.sidebar-nav) necesita scroll.",
+        "Causa principal: en index.css, '.sidebar.collapsed .nav-label' (~línea 320) deja la etiqueta con width:0 y opacity:0 pero dentro del flujo; el texto se parte en una línea por letra y estira el botón. Hay que sacarla del flujo de forma que siga siendo accesible (patrón de la clase .sr-only que ya existe en index.css: position:absolute + clip) o con display:none más aria-label en el botón.",
+        "Causa secundaria: los .nav-item son <button> y heredan 'margin: .25rem 0' de la regla global 'button' de index.css (~línea 499); en el menú (expandido y contraído) el espacio debe venir solo del gap de .sidebar-nav.",
+        "El icono también se recorta por la izquierda: --sidebar-w-collapsed = calc(var(--nav-icon-size) + 1.25rem) = 84 px, pero el icono (64) + padding horizontal del .nav-item contraído (0.5rem×2) + padding de .sidebar-nav (0.5rem×2) = 96 px. Ajusta paddings y/o la fórmula del ancho para que quepa con margen.",
+        "El tamaño viene de --nav-icon-size (index.css: 4rem por defecto, es decir 64 px); en el tema personalizado lo fija ui/settings/preferences.js entre NAV_ICON_MIN=32 y NAV_ICON_MAX=128 px. No cambies ese mecanismo ni el valor por defecto.",
+        "Hay una regla @media (max-height: 720px) que reduce el padding del item contraído (~línea 351); mantenla coherente con el nuevo espaciado.",
+        "PASOS (en orden):\n1. Lee en index.css la regla global 'button' (~línea 490), el bloque '@media (min-width: 768px)' del sidebar contraído (~líneas 315-345), el '@media (max-height: 720px)' (~línea 351) y las reglas .sidebar-nav, .nav-item, .nav-icon y .nav-label, y las variables --nav-icon-size y --sidebar-w-collapsed de :root.\n2. Quita el margen heredado en el menú: '.nav-item, .sidebar-collapse-btn { margin: 0; }'. El espacio entre elementos solo lo da el gap de .sidebar-nav.\n3. En '.sidebar.collapsed .nav-label' sustituye opacity/width:0 por el patrón visualmente oculto pero accesible: position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0.\n4. En el menú contraído pon un padding pequeño y fijo en el .nav-item y en .sidebar-nav (por ejemplo 4px) y un gap de .sidebar-nav de 4px como máximo.\n5. Recalcula --sidebar-w-collapsed para que sea el icono más ambos paddings más al menos 4px por lado (por ejemplo calc(var(--nav-icon-size) + 24px)). Comprueba la cuenta con 32, 64 y 128 px.\n6. Ajusta el '@media (max-height: 720px)' para que no contradiga el nuevo espaciado (o elimínalo si ya no hace falta).\n7. En index.html añade a cada <button class=\"nav-item\"> (también #removeAdsBtn) un atributo title con el mismo texto que su .nav-label.\n8. Comprueba que el indicador de opción activa (.nav-item.active y su ::before) y el anillo de foco se ven completos con el menú contraído. Si el overflow:hidden del .sidebar recorta el foco, usa outline-offset negativo solo en el menú contraído.\n9. Verifica: el menú expandido (>=768 px) y el móvil (<768 px) no cambian de aspecto. No hace falta tocar JS."
+      ],
+      "feedback": [],
+      "baseTree": "e90abf552a3ba0ec0b5f0fddb2351926b10d6c88",
+      "history": [
+        {
+          "at": "2026-10-19T03:16:05Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T03:26:09Z",
+          "event": "foto del árbol",
+          "note": "e90abf552a"
+        },
+        {
+          "at": "2026-10-19T03:26:09Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-001-20261019-052609.log"
+        },
+        {
+          "at": "2026-10-19T03:29:06Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T03:31:59Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T03:33:10Z",
+          "event": "estado → hecha",
+          "note": "Medido en Chrome headless (getBoundingClientRect). 1280x900, icono 64: hueco entre iconos 6,8 px, item 68,8 px, menú 88 px, sin scroll, icono a 11,5 px de cada borde. 32 px: menú 56 px, sin scroll. 128 px: menú 152 px, sin recortes, con scroll (9 items no caben en 844 px, esperado). Altura 700: hueco 2 px. Etiqueta oculta con patrón sr-only y title en todos los .nav-item (puesto desde index.js en vez de index.html, equivalente). Expandido sin cambios (items de 47 px). Solo tocó index.css e index.js; los cambios en ui/settings y worker-prompt.md no son de MiniMax. node --check OK. Pendiente menor: con 128 px la barra de scroll estrecha el botón a 120 px y el icono sobresale 4 px de su fondo."
+        }
+      ]
+    },
+    {
+      "id": "T-002",
+      "title": "Apariencia: sin modo edición solo se elige tema; el resto se oculta",
+      "status": "hecha",
+      "relatedTo": null,
+      "created": "2026-10-19T03:16:05Z",
+      "updated": "2026-10-19T03:55:23Z",
+      "attempts": 1,
+      "requests": [
+        {
+          "at": "2026-10-19T03:16:05Z",
+          "text": "Cuando se desactiva en apariencia el modo edición quiero que desaparezca la parte de crear/modificar temas."
+        },
+        {
+          "at": "2026-10-19T03:45:43Z",
+          "text": "Quiero que todo lo que tiene que ver con la apariencia, tamaño de letras etc se quite cuando el modo edit se quita, y jamás se quite la parte de los temas custom si el tema seleccionado está en 'personalizado'."
+        }
+      ],
+      "criteria": [
+        "Con el tema Personalizado y el modo edición desactivado no se ven: la sección «Crea tu tema» (#customTheme), el formulario «Crear un tema nuevo» ni el botón Eliminar.",
+        "Al activar el modo edición aparecen las tres partes; al desactivarlo desaparecen al instante. Se ocultan con el atributo hidden (no solo con CSS), para que tampoco las lean los lectores de pantalla.",
+        "Con cualquier tema distinto de Personalizado no se ven ni el editor ni el interruptor de modo edición. El aviso de borrador (#customDraftNotice) y su lógica se eliminan, porque el editor ya solo existe en Personalizado.",
+        "Al entrar en Apariencia el modo edición empieza desactivado, como ahora.",
+        "Si el foco del teclado estaba dentro del editor al desactivar el modo edición, pasa al interruptor «Modo edición» (no se pierde).",
+        "Los textos de ayuda son coherentes con el nuevo comportamiento (por ejemplo, #customHelp no debe pedir activar el modo edición cuando ya está activo).",
+        "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de color, rem con --fs-*, contraste AA en tema claro y oscuro) y no se sale de la pantalla con letra al 200 % en móvil.",
+        "SUSTITUYE al criterio anterior sobre otros temas: el interruptor «Modo edición» se ve con CUALQUIER tema (Automático, Claro, Oscuro, alto contraste y Personalizado), no solo con Personalizado.",
+        "Con el modo edición apagado solo se ven: el fieldset «Tema» (con el mapeo de Automático si aplica) y, con Personalizado, la lista de temas guardados (T-003). Se ocultan con hidden: «Crea tu tema» (#customTheme), «Crear un tema nuevo» (.custom-save), los botones Eliminar, «Tamaño de letra general», «Tamaño por partes» y «Vista previa».",
+        "Con el modo edición encendido se ven «Tamaño de letra general», «Tamaño por partes» y «Vista previa» con cualquier tema; «Crea tu tema» y «Crear un tema nuevo» solo con Personalizado.",
+        "Con Personalizado, el bloque de temas guardados (#customSavedGroup) se ve SIEMPRE, con modo edición o sin él y aunque no haya temas guardados.",
+        "Con Personalizado, modo edición encendido y CERO temas guardados se ve el formulario «Crear un tema nuevo» y se puede guardar el primer tema.",
+        "Cambiar de tema ya no apaga el modo edición (el interruptor existe en todos los temas); al entrar en Apariencia empieza apagado."
+      ],
+      "notes": [
+        "Archivos: ui/settings/settings-card.html, settings-card.js y settings-card.css. No hace falta tocar preferences.js.",
+        "Estado actual: el interruptor «Modo edición» (#customEditToggle dentro de #customEditToggleSection) solo aparece con el tema Personalizado y guarda su estado en this.editMode (no persistente; empieza desactivado). Al cambiarlo solo alterna la clase .edit-mode en la raíz, que muestra u oculta por CSS el formulario «Crear un tema nuevo» (.custom-edit-only) y el botón Eliminar (.custom-saved-only-btn).",
+        "El problema: la sección «Crea tu tema» (#customTheme: Empezar desde, tamaño de iconos del menú, colores, Restaurar tema y Comprobación de contraste) no se oculta nunca. syncCustomTheme() no toca su atributo hidden, y la sección aparece incluso con otros temas, mostrando el aviso de borrador #customDraftNotice.",
+        "Se considera parte de crear/modificar: toda la sección #customTheme, el formulario de guardar (.custom-save) y el botón Eliminar. La selección de temas guardados NO es parte de crear/modificar; se rediseña en T-003 y debe seguir visible sin modo edición.",
+        "PASOS (en orden):\n1. Lee ui/settings/settings-card.html, settings-card.js (mount, el listener de #customEditToggle, syncCustomTheme, syncCustomEdit, saveCurrentTheme, removeSavedTheme) y las reglas de settings-card.css para .custom-theme, .custom-edit-only, .custom-saved-only-btn y .edit-mode.\n2. Crea en settings-card.js un método syncEditorVisibility(): const visible = tema activo === 'custom' && this.editMode. Pon hidden = !visible en #customTheme, en el bloque del formulario de guardar (.custom-save) y en el botón #customSavedDelete.\n3. Llama a syncEditorVisibility() desde el listener de #customEditToggle, desde syncCustomTheme() y al final de mount().\n4. Al cambiar a un tema distinto de 'custom': this.editMode = false, desmarca #customEditToggle y quita la clase .edit-mode de la raíz.\n5. Antes de ocultar: si document.activeElement está dentro de lo que se oculta, mueve el foco a #customEditToggle.\n6. En settings-card.css cambia el mostrar/ocultar de .custom-edit-only y .custom-saved-only-btn, que hoy va con display y .edit-mode, para que dependa solo del atributo hidden. Asegúrate de que '[hidden]' gana a las reglas '…:not([hidden]) { display: grid }'.\n7. Elimina #customDraftNotice: el HTML, su CSS y la línea que lo gestiona en syncCustomTheme().\n8. Reescribe #customHelp para el editor ya visible, sin pedir que se active el modo edición.\n9. Verifica a mano: Personalizado con edición apagada, encendida y otra vez apagada; cambio a Claro y vuelta a Personalizado (el modo edición debe estar apagado); foco con teclado. Ejecuta node --check ui/settings/settings-card.js.",
+        "ESTADO: una sesión interactiva de opencode (fuera de la cola) ya implementó la primera versión: syncEditorVisibility() en settings-card.js, CSS con :not([hidden]), aviso de borrador eliminado y #customHelp reescrito. Revisado por Claude en Chrome: funciona (incluido el foco al interruptor). PARTE DE ESE TRABAJO, NO EMPIECES DE CERO.",
+        "FALLO a corregir: .custom-save está dentro de #customSavedGroup (settings-card.html:111-121) y syncCustomEdit() oculta el grupo si no hay temas guardados, así que no se puede crear el primero. Saca .custom-save del fieldset (por ejemplo al final de #customTheme o en su propio fieldset «Crear un tema nuevo») y deja #customSavedGroup visible siempre con Personalizado.",
+        "CAMBIOS sobre lo hecho: (1) syncCustomTheme() pone #customEditToggleSection.hidden = !isCustom: quítalo, el interruptor siempre visible. (2) Quita del listener de name=theme el bloque que apaga editMode al salir de Personalizado. (3) Amplía syncEditorVisibility(): const edit = this.editMode; const custom = tema==='custom'; #customTheme y .custom-save hidden = !(edit && custom); el fieldset de «Tamaño de letra general», la sección «Tamaño por partes» (aria-labelledby=sizesTitle) y .settings-preview hidden = !edit. Dales id (#textScaleGroup, #sizesGroup, #settingsPreview) para seleccionarlos. (4) El paso del foco al interruptor debe cubrir también las secciones de tamaños y la vista previa.",
+        "Actualiza el comentario obsoleto de syncCustomEdit() (habla de ocultar por CSS con .edit-mode) y #customHelp si menciona dónde está el formulario. Ojo: T-003 sustituye el select y Cargar por radios; aquí no toques esa lista salvo para sacar .custom-save y la visibilidad del grupo."
+      ],
+      "feedback": [],
+      "baseTree": "5909f489b4aa8ed14cfa2dd6d1b7a0b76be77525",
+      "history": [
+        {
+          "at": "2026-10-19T03:16:05Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T03:29:06Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T03:45:43Z",
+          "event": "modificada",
+          "note": "petición ampliada, título, criterio, criterio, criterio, criterio, criterio, criterio, nota, nota, nota, nota"
+        },
+        {
+          "at": "2026-10-19T03:45:58Z",
+          "event": "foto del árbol",
+          "note": "5909f489b4"
+        },
+        {
+          "at": "2026-10-19T03:45:58Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-002-20261019-054558.log"
+        },
+        {
+          "at": "2026-10-19T03:50:44Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax terminó los cambios; la conexión se cortó (Transport closed, exit 143) en las comprobaciones finales"
+        },
+        {
+          "at": "2026-10-19T03:50:44Z",
+          "event": "estado → hecha",
+          "note": "Probado en Chrome headless montando SettingsCard. Interruptor visible en todos los temas. Edición apagada: solo Tema (+ Tus temas guardados con Personalizado, también con 0 temas). Edición encendida: tamaños y vista previa con cualquier tema; Crea tu tema y Crear un tema nuevo (ahora fieldset propio #customSaveFieldset) solo con Personalizado; se guarda el primer tema con 0 guardados. Cambiar de tema no apaga la edición. Foco pasa al interruptor al ocultar desde tamaños o editor. node --check OK. Pendiente para T-003: con 0 temas se ve Eliminar junto al select vacío (T-003 reemplaza ese bloque)."
+        },
+        {
+          "at": "2026-10-19T03:51:41Z",
+          "event": "estado → en_revision",
+          "note": "Implementación completada por el supervisor tras matar la ejecución de fondo; cambios ya revisados, criterios cumplidos y node --check OK"
+        },
+        {
+          "at": "2026-10-19T03:55:23Z",
+          "event": "estado → hecha",
+          "note": "Revisado el diff entre fotos (5909f489b4→cc0e580a15): interruptor visible en todos los temas; editor, formulario propio #customSaveFieldset, Eliminar, tamaños y vista previa ocultos con hidden según modo edición; #customSavedGroup siempre visible con Personalizado; foco al interruptor; cambiar de tema no apaga la edición; aviso de borrador eliminado. node --check OK."
+        }
+      ]
+    },
+    {
+      "id": "T-003",
+      "title": "Apariencia: elegir el tema creado en una lista como los oficiales",
+      "status": "hecha",
+      "relatedTo": null,
+      "created": "2026-10-19T03:16:24Z",
+      "updated": "2026-10-19T04:03:01Z",
+      "attempts": 2,
+      "requests": [
+        {
+          "at": "2026-10-19T03:16:24Z",
+          "text": "En apariencia si se selecciona la opción 'personalizado' quiero que aparezca una parte para que seleccione el tema creado, el listado es como los temas oficiales."
+        },
+        {
+          "at": "2026-10-19T03:45:43Z",
+          "text": "No quiero un combobox para elegir y un botón para cargar: quiero exactamente el mismo sistema para elegir que los temas oficiales."
+        }
+      ],
+      "criteria": [
+        "Al elegir Personalizado aparece, justo debajo del fieldset «Tema», un grupo «Tus temas» (fieldset con legend) con un radio por cada tema guardado, con el mismo aspecto que los temas oficiales (.settings-option), su nombre y un icono ☀ o 🌙 según el esquema (con aria-hidden).",
+        "Elegir un tema de la lista lo aplica al instante, sin botón Cargar, y su radio queda marcado. Al salir y volver a Apariencia, o al recargar la app, sigue marcado el tema activo.",
+        "Se eliminan el <select id=\"customSaved\"> y el botón Cargar.",
+        "Esta lista se ve con el modo edición desactivado: elegir tema no es crear ni modificar.",
+        "Sin temas guardados, el grupo se muestra con el texto «Aún no has creado ningún tema. Activa el modo edición para crear uno.»",
+        "Guardar un tema nuevo (modo edición) lo añade a la lista al instante y lo deja marcado. Guardar con un nombre que ya existe lo sobrescribe sin duplicarlo en la lista.",
+        "Solo en modo edición, cada tema de la lista tiene un botón Eliminar con aria-label «Eliminar el tema «Nombre»» que pide confirmación. Al borrar el tema activo, ningún radio queda marcado y la app sigue funcionando con los colores actuales.",
+        "Con cualquier tema distinto de Personalizado el grupo «Tus temas» no se ve.",
+        "La lista se maneja con teclado (flechas entre radios, foco visible) y un nombre de tema con caracteres como < > & \" se muestra tal cual, sin romper el HTML.",
+        "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de color, rem con --fs-*, contraste AA en tema claro y oscuro) y no se sale de la pantalla con letra al 200 % en móvil, incluso con nombres de tema largos.",
+        "La lista «Tus temas» usa exactamente el mismo marcado, clases y aspecto que las opciones del fieldset «Tema» (label.settings-option > input[type=radio] + span); no queda ningún <select> ni botón Cargar para elegir tema guardado."
+      ],
+      "notes": [
+        "Hazla después de T-002 (mismos archivos; T-002 define qué se ve con y sin modo edición). Archivos: ui/settings/settings-card.html, .js y .css, y ui/settings/preferences.js.",
+        "Estado actual: los temas guardados están en un <select id=\"customSaved\"> con un botón Cargar (#customSavedApply) y Eliminar (#customSavedDelete) dentro del fieldset #customSavedGroup «Tus temas guardados». Solo aparece con Personalizado y si hay temas. Se rellena en renderSavedThemes() y se muestra u oculta en syncCustomEdit().",
+        "Los temas oficiales son radios <input type=\"radio\" name=\"theme\"> dentro de <label class=\"settings-option\">, agrupados en .settings-options dentro del fieldset «Tema». La lista nueva debe usar el mismo marcado y las mismas clases, pero con otro name (por ejemplo name=\"savedTheme\"), para no interferir con el selector de tema.",
+        "API disponible en preferences.js: getSavedThemes(), applySavedTheme(id), deleteSavedTheme(id), addSavedTheme(name, overrides, scheme). Cada tema es { id, name, base, scheme, colors, navIconSize }.",
+        "Hoy no se guarda cuál es el tema guardado activo. Añade custom.savedId en preferences.js: valídalo en getPreferences() (que exista en getSavedThemes()), guárdalo en applySavedTheme() y en addSavedTheme() (el tema recién guardado queda activo) y límpialo en deleteSavedTheme() si era el activo y en «Cargar estos colores» o «Restaurar tema».",
+        "Los nombres de tema los escribe el usuario: inyéctalos siempre con escapeHtml() (ya existe en settings-card.js), igual que ahora en renderSavedThemes().",
+        "El selector «Empezar desde» (#customBase) del editor sigue ofreciendo los temas guardados como punto de partida; no lo cambies.",
+        "PASOS (en orden; requiere T-002 terminada):\n1. preferences.js: añade savedId: null a DEFAULTS.custom. En getPreferences() acéptalo solo si existe en getSavedThemes() (si no, null). Guárdalo en applySavedTheme(id) y en addSavedTheme() (el tema guardado pasa a ser el activo). En deleteSavedTheme(id), si era el activo, ponlo a null con setPreferences.\n2. settings-card.js: en loadBase() y restoreTheme() deja savedId en null (los colores ya no corresponden a un tema guardado).\n3. settings-card.html: mueve el fieldset #customSavedGroup justo después del fieldset «Tema». Cambia su legend a «Tus temas». Sustituye el bloque .custom-saved-list (select #customSaved y botones Cargar y Eliminar) por <div class=\"settings-options\" id=\"savedThemeOptions\"></div> y un párrafo <p class=\"settings-help\" id=\"savedThemesEmpty\" hidden> con el texto del criterio. El formulario «Crear un tema nuevo» (.custom-save) sigue gobernado por T-002.\n4. Reescribe renderSavedThemes(): por cada tema, un <label class=\"settings-option\"> con <input type=\"radio\" name=\"savedTheme\" value=\"id\">, un <span aria-hidden=\"true\"> con ☀ o 🌙 y el nombre pasado por escapeHtml(). En modo edición, después del label, un <button type=\"button\" class=\"settings-btn saved-theme-delete\" data-id=\"…\" aria-label=\"Eliminar el tema «Nombre»\">. Marca checked el radio cuyo id coincide con getPreferences().custom.savedId. Muestra #savedThemesEmpty si no hay temas.\n5. Eventos (delegados en el contenedor): un change en name=savedTheme llama a applySavedTheme(id) y luego a syncColorInputs(), syncNavIconSize(), syncCustomScheme() y renderContrast(). Un click en .saved-theme-delete pide confirm(), llama a deleteSavedTheme y vuelve a llamar a renderSavedThemes(). Añade un caso para name=savedTheme en el listener 'change' general, para que no lo confunda con name=theme.\n6. syncCustomEdit(): #customSavedGroup visible siempre que el tema sea 'custom' (aunque no haya temas). Al cambiar el modo edición, vuelve a llamar a renderSavedThemes() para mostrar u ocultar los botones Eliminar.\n7. Tras saveCurrentTheme(), vuelve a llamar a renderSavedThemes() para que el tema nuevo aparezca marcado.\n8. Borra el código y el CSS que quedan sin uso: loadSavedTheme(), removeSavedTheme() en su forma actual, las referencias a #customSaved, #customSavedApply y #customSavedDelete, y .custom-saved-list y .custom-saved-only-btn en el CSS.\n9. CSS: los nombres largos deben partir línea (overflow-wrap: anywhere; max-width: 100%) y el botón Eliminar debe ir alineado con su píldora y usar tokens (--danger, --danger-soft).\n10. Verifica a mano: guarda un tema llamado '<b>Prueba & \"x\"</b>' y comprueba que se ve como texto; elígelo y recarga; bórralo estando activo; navega con flechas. Ejecuta node --check en settings-card.js y preferences.js.",
+        "Coordinación con T-002 (ampliada): #customSavedGroup se ve siempre con Personalizado y el formulario .custom-save ya está fuera de ese fieldset; los botones Eliminar de cada tema solo en modo edición.",
+        "Estado tras T-002 (hecha): el formulario de guardar ya es un fieldset propio #customSaveFieldset fuera de #customSavedGroup; #customSavedGroup se ve siempre con Personalizado (syncCustomEdit). La visibilidad por modo edición está en syncEditorVisibility() (showEditor/showDelete): los botones Eliminar por tema deben depender de this.editMode && tema custom, y renderSavedThemes() debe llamarse también al cambiar el interruptor. Ya no existe la clase .edit-mode en la raíz. Ahora con 0 temas se ve Eliminar junto al select vacío: con la nueva lista no debe haber ningún botón Eliminar si no hay temas."
+      ],
+      "feedback": [
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "note": "BLOQUEANTE ui/settings/preferences.js:564: addSavedTheme() declara 'const prefs' dos veces (ya existe en la línea 535) → SyntaxError al cargar el módulo y la app entera deja de arrancar. Reutiliza la variable: 'setPreferences({ custom: { ...getPreferences().custom, savedId: entry.id } })'. OJO: 'node --check archivo.js' NO detecta este error en este proyecto; comprueba con 'node --input-type=module --check < archivo.js'."
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "note": "ui/settings/settings-card.js:85-95 (change de name=savedTheme): llama a renderSavedThemes(), que rehace el innerHTML y destruye el radio con foco. Con teclado, cada flecha aplica el tema y el foco se va al <body>: incumple el criterio de flechas entre radios. No repintes aquí: el radio ya queda marcado por el navegador; quita this.renderSavedThemes() de ese caso."
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "note": "ui/settings/settings-card.js renderSavedThemes(): el <button> Eliminar está DENTRO del <label class=\"settings-option\">. El nombre accesible del radio pasa a incluir «Eliminar el tema…» y es contenido interactivo anidado. El paso 4 pedía el botón DESPUÉS del label: envuelve cada tema en un <div class=\"saved-theme-row\"> (display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; min-width:0) con el label y, en modo edición, el botón como hermano. Quita la regla .settings-option:has(.saved-theme-delete) del CSS."
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "note": "Eliminar un tema: se quitó #customSavedStatus y ahora no se anuncia nada, y el foco se pierde porque el botón desaparece. Añade dentro de #customSavedGroup un <p class=\"settings-status\" id=\"savedThemesStatus\" role=\"status\"></p>, escribe «Tema «Nombre» eliminado.» al borrar (y «Ese tema ya no está disponible.» en la rama sin tema de removeSavedTheme) y, tras repintar, mueve el foco al primer radio de la lista o, si está vacía, al interruptor #customEditToggle."
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "note": "ui/settings/settings-card.html:80 (#customHelp) sigue diciendo «Tus temas guardados»; el grupo se llama ahora «Tus temas». Cambia ese texto. (El optgroup «Tus temas guardados» de #customBase no se toca.)"
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "note": "ui/settings/settings-card.js restoreTheme(): antes guardaba { base, colors: {} } y ahora hace ...custom, con lo que «Restaurar tema» deja de reiniciar navIconSize y scheme. Cambio de comportamiento no pedido: vuelve a { base, colors: {}, savedId: null }."
+        }
+      ],
+      "baseTree": "16562e636b535aeb66a718e75ed68d867b438796",
+      "history": [
+        {
+          "at": "2026-10-19T03:16:24Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T03:29:06Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T03:45:43Z",
+          "event": "modificada",
+          "note": "petición ampliada, criterio, nota"
+        },
+        {
+          "at": "2026-10-19T03:50:53Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T03:50:58Z",
+          "event": "foto del árbol",
+          "note": "cc0e580a15"
+        },
+        {
+          "at": "2026-10-19T03:50:58Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-003-20261019-055058.log"
+        },
+        {
+          "at": "2026-10-19T03:56:19Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "event": "devuelta a MiniMax",
+          "note": "BLOQUEANTE ui/settings/preferences.js:564: addSavedTheme() declara 'const prefs' dos veces (ya existe en la línea 535) → SyntaxError al cargar el módulo y la app entera deja de arrancar. Reutiliza la variable: 'setPreferences({ custom: { ...getPreferences().custom, savedId: entry.id } })'. OJO: 'node --check archivo.js' NO detecta este error en este proyecto; comprueba con 'node --input-type=module --check < archivo.js'."
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/settings/settings-card.js:85-95 (change de name=savedTheme): llama a renderSavedThemes(), que rehace el innerHTML y destruye el radio con foco. Con teclado, cada flecha aplica el tema y el foco se va al <body>: incumple el criterio de flechas entre radios. No repintes aquí: el radio ya queda marcado por el navegador; quita this.renderSavedThemes() de ese caso."
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/settings/settings-card.js renderSavedThemes(): el <button> Eliminar está DENTRO del <label class=\"settings-option\">. El nombre accesible del radio pasa a incluir «Eliminar el tema…» y es contenido interactivo anidado. El paso 4 pedía el botón DESPUÉS del label: envuelve cada tema en un <div class=\"saved-theme-row\"> (display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; min-width:0) con el label y, en modo edición, el botón como hermano. Quita la regla .settings-option:has(.saved-theme-delete) del CSS."
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "event": "devuelta a MiniMax",
+          "note": "Eliminar un tema: se quitó #customSavedStatus y ahora no se anuncia nada, y el foco se pierde porque el botón desaparece. Añade dentro de #customSavedGroup un <p class=\"settings-status\" id=\"savedThemesStatus\" role=\"status\"></p>, escribe «Tema «Nombre» eliminado.» al borrar (y «Ese tema ya no está disponible.» en la rama sin tema de removeSavedTheme) y, tras repintar, mueve el foco al primer radio de la lista o, si está vacía, al interruptor #customEditToggle."
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/settings/settings-card.html:80 (#customHelp) sigue diciendo «Tus temas guardados»; el grupo se llama ahora «Tus temas». Cambia ese texto. (El optgroup «Tus temas guardados» de #customBase no se toca.)"
+        },
+        {
+          "at": "2026-10-19T03:57:38Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/settings/settings-card.js restoreTheme(): antes guardaba { base, colors: {} } y ahora hace ...custom, con lo que «Restaurar tema» deja de reiniciar navIconSize y scheme. Cambio de comportamiento no pedido: vuelve a { base, colors: {}, savedId: null }."
+        },
+        {
+          "at": "2026-10-19T03:57:52Z",
+          "event": "foto del árbol",
+          "note": "16562e636b"
+        },
+        {
+          "at": "2026-10-19T03:57:52Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-003-20261019-055752.log"
+        },
+        {
+          "at": "2026-10-19T03:59:29Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T04:03:01Z",
+          "event": "estado → hecha",
+          "note": "Intento 2 revisado: las 6 correcciones aplicadas (const duplicado, sin repintado en change de savedTheme, botón Eliminar fuera del label en .saved-theme-row, #savedThemesStatus + foco tras borrar, texto de #customHelp, restoreTheme sin ...custom). Sintaxis OK con node --input-type=module --check. Arreglo del supervisor: renderSavedThemes() tras loadBase() y restoreTheme() para desmarcar el radio al poner savedId a null. Pendiente de prueba visual en la app (no se pudo abrir aquí)."
+        }
+      ]
+    },
+    {
+      "id": "T-004",
+      "title": "Apariencia: unificar temas oficiales y creados por el usuario, sin opción Personalizado",
+      "status": "hecha",
+      "relatedTo": "T-003",
+      "created": "2026-10-19T04:05:32Z",
+      "updated": "2026-10-19T04:13:22Z",
+      "attempts": 1,
+      "requests": [
+        {
+          "at": "2026-10-19T04:05:32Z",
+          "text": "Creo que el modo personalizado no es necesario y es mejor no ocultar los creados por el usuario y unificar ambas partes; eso sí, se especifica que es creado por el usuario."
+        }
+      ],
+      "criteria": [
+        "Desaparece la opción «Personalizado» del fieldset «Tema» y desaparece el fieldset aparte «Tus temas» (#customSavedGroup).",
+        "Los temas guardados por el usuario aparecen siempre en el mismo fieldset «Tema», después de los oficiales, con el mismo marcado (label.settings-option > input[type=radio][name=theme] + span), su icono ☀/🌙 con aria-hidden y la marca <small>(creado por ti)</small> tras el nombre.",
+        "Elegir un tema creado lo aplica al instante y queda marcado como un tema oficial más; al recargar la app sigue marcado. Elegir un oficial desmarca el creado.",
+        "Con el modo edición desactivado se ven y se pueden elegir los temas creados; el editor «Crea tu tema» y el formulario «Crear un tema nuevo» solo se ven con el modo edición activo, sea cual sea el tema elegido.",
+        "En modo edición, cambiar un color o pulsar «Cargar estos colores» aplica el borrador al instante aunque antes hubiera un tema oficial elegido; en ese estado de borrador sin guardar no queda marcado ningún radio y se indica con un texto role=status «Tema sin guardar: ponle un nombre en Crear un tema nuevo para conservarlo.».",
+        "Guardar un tema lo añade a la lista al instante y lo deja marcado; un nombre repetido lo sobrescribe sin duplicarlo.",
+        "Solo en modo edición, cada tema creado tiene un botón Eliminar (hermano del label, no dentro) con aria-label «Eliminar el tema «Nombre»», con confirmación, anuncio role=status y foco al primer radio del fieldset tras borrar. Al borrar el tema activo se pasa al tema Automático.",
+        "Un usuario que ya tenía theme='custom' guardado no pierde sus colores: si su savedId existe queda marcado ese tema; si no, se ve como borrador sin guardar.",
+        "Nombres con < > & \" se muestran tal cual (escapeHtml) y los largos parten línea; la lista se recorre con flechas sin perder el foco (no repintar en el change).",
+        "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de color, rem con --fs-*, contraste AA en tema claro y oscuro).",
+        "No se sale de la pantalla con letra al 200 % en móvil, incluso con nombres de tema largos."
+      ],
+      "notes": [
+        "Archivos: ui/settings/settings-card.html, .js, .css y ui/settings/preferences.js. No toques theme-boot.js: internamente se sigue usando theme='custom' + custom.savedId, así el arranque y schemeFor()/colorsForTheme() no cambian.",
+        "Modelo interno: el valor 'custom' sigue en THEMES. En la UI los radios de temas creados usan name=\"theme\" y value=\"saved:<id>\". En el listener change de name=theme: si value empieza por 'saved:' llama a applySavedTheme(id) y setPreferences({ theme: 'custom' }); si no, setPreferences({ theme: value }). Luego syncAutoMapping(), syncColorInputs(), syncNavIconSize(), syncCustomScheme(), renderContrast(), syncEditorVisibility(). NO repintes la lista en ese change (rompe la navegación con flechas).",
+        "Marcado al pintar: si theme==='custom' y custom.savedId existe, marca el radio value=saved:<savedId>; si theme==='custom' sin savedId (borrador), no marques ninguno y muestra el estado de borrador; si no, marca el radio del tema oficial. Pinta los radios de temas creados en un contenedor dentro del mismo .settings-options del fieldset «Tema» (por ejemplo un <div id=\"savedThemeOptions\" class=\"saved-theme-list\" style=display:contents> o añadiéndolos tras el último label oficial); cada tema en <div class=\"saved-theme-row\"> con label y, en modo edición, el botón Eliminar.",
+        "Borrador: en setColor(), loadBase(), restoreTheme() y setNavIconSize(), si getPreferences().theme !== 'custom', haz antes setPreferences({ theme: 'custom', custom: { ...custom, savedId: null } }) para que el cambio se vea; tras ello actualiza los radios (desmarcar todos) sin destruir el foco del editor. Mantén el comportamiento actual de savedId en loadBase/restoreTheme (null).",
+        "syncEditorVisibility(): showEditor = this.editMode (ya no depende de theme==='custom'). Elimina syncCustomEdit() o redúcelo, el fieldset #customSavedGroup, #savedThemesEmpty, el radio value=custom del HTML y el CSS que quede sin uso. Mueve #savedThemesStatus al fieldset «Tema». Actualiza el texto de #customHelp (ya no existe «Tus temas»: di que para eliminar uno creado se usa Eliminar junto a su nombre en «Tema»).",
+        "deleteSavedTheme(): si era el activo, en preferences.js pon theme: 'auto' y savedId null (antes dejaba los colores). Ajusta el comentario.",
+        "Auto-mapping (#autoMapping) y el selector «Empezar desde» (#customBase) no cambian."
+      ],
+      "feedback": [],
+      "baseTree": "db6e94b8c56d071c6020fc0a84a0b47636ebe195",
+      "history": [
+        {
+          "at": "2026-10-19T04:05:32Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T04:05:41Z",
+          "event": "foto del árbol",
+          "note": "db6e94b8c5"
+        },
+        {
+          "at": "2026-10-19T04:05:41Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-004-20261019-060541.log"
+        },
+        {
+          "at": "2026-10-19T04:10:39Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T04:13:22Z",
+          "event": "estado → hecha",
+          "note": "Aprobada. Cumple los 11 criterios. Cambia el modelo interno manteniendo el campo 'custom'/'savedId' pero con la UI unificada (sin opción Personalizado, sin fieldset aparte). Cero colores hardcoded; CSS solo con tokens; focus del teclado preservado en flechas (no repinta al change); migración de theme='custom' previo correcta; contraste conservado; layout robusto a 200% con nombres largos (flex-wrap + overflow-wrap). node --check pasa en settings-card.js y preferences.js."
+        }
+      ]
+    },
+    {
+      "id": "T-005",
+      "title": "Modo automático: poder elegir los temas creados por el usuario según sean claros u oscuros",
+      "status": "hecha",
+      "relatedTo": "T-004",
+      "created": "2026-10-19T04:17:15Z",
+      "updated": "2026-10-19T04:22:30Z",
+      "attempts": 1,
+      "requests": [
+        {
+          "at": "2026-10-19T04:17:15Z",
+          "text": "Que el modo automático tenga en cuenta los temas creados por el usuario y que estén donde toca, o sea, los claros en el desplegable de claro y los oscuros en el de oscuro."
+        }
+      ],
+      "criteria": [
+        "Con el tema «Automático» elegido, el desplegable «Sistema en claro» (#autoLight) ofrece Claro, Alto contraste (claro) y, después, cada tema creado cuyo esquema sea claro; «Sistema en oscuro» (#autoDark) ofrece Oscuro, Alto contraste (oscuro) y cada tema creado oscuro. Un tema creado nunca aparece en el desplegable del esquema contrario.",
+        "El esquema de un tema creado es su campo scheme; si es null, el de su base (BASES[base].scheme).",
+        "Las opciones de temas creados muestran el nombre seguido de « (creado por ti)», escapado (nombres con < > & \" se ven tal cual).",
+        "Elegir un tema creado en un desplegable lo aplica al instante si el sistema está en ese esquema (colores y tamaño de icono del menú lateral del tema guardado), y al cambiar el sistema de claro a oscuro o al revés se aplica el destino correspondiente en vivo.",
+        "La elección persiste al recargar la app, sin parpadeo de colores incorrectos en el arranque cuando el sistema no ha cambiado de esquema.",
+        "Guardar, sobrescribir o eliminar un tema actualiza las opciones de los desplegables al instante. Si se elimina (o se sobrescribe cambiando de esquema) un tema usado como destino automático, ese desplegable vuelve a su valor por defecto (Claro / Oscuro) y, si estaba aplicándose, la app cambia en el acto.",
+        "Elegir un tema creado como destino automático no cambia el tema activo «Automático» ni marca su radio en el fieldset «Tema», y no altera el borrador del editor (prefs.custom).",
+        "Valores guardados no válidos o de temas inexistentes en autoLight/autoDark se descartan y se usa el valor por defecto.",
+        "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de color, rem con --fs-*, contraste AA en tema claro y oscuro); los select siguen con su <label for>.",
+        "No se sale de la pantalla con letra al 200 % en móvil, incluso con nombres de tema largos en los desplegables."
+      ],
+      "notes": [
+        "Archivos: ui/settings/preferences.js, ui/settings/settings-card.js y, si hace falta, settings-card.html/.css. No toques theme-boot.js: ya aplica los prefs.vars y prefs.scheme guardados, así que basta con que schemeFor() y cssVarsFor() calculen bien el destino automático.",
+        "Valor del destino: los oficiales siguen como 'light'/'dark'/'contrast-light'/'contrast-dark'; los creados usan 'saved:<id>' (mismo prefijo que los radios de T-004). En getPreferences() (líneas ~330-331) acepta autoLight si está en AUTO_TARGETS con scheme light o es 'saved:<id>' de un tema existente cuyo esquema sea 'light' (y análogo para autoDark con 'dark'); si no, DEFAULTS. getPreferences ya llama a getSavedThemes(), puedes reutilizarlo. Valida también que el oficial sea del esquema correcto (light/contrast-light para autoLight; dark/contrast-dark para autoDark).",
+        "Añade en preferences.js un helper (p. ej. savedThemeScheme(t) = t.scheme ?? BASES[t.base].scheme) y otro que resuelva el destino automático a { scheme, colors, navIconSize }: oficial → BASES/null como ahora; 'saved:<id>' → scheme del tema guardado, colors = { ...BASES[t.base].colors, ...t.colors }, navIconSize = t.navIconSize. Úsalo en schemeFor() (rama 'auto', línea ~376), colorsForTheme() (rama 'auto', ~391) y cssVarsFor() (--nav-icon-size también en auto con destino creado). resolvedTheme('auto') debe devolver el esquema, no el id: revisa quién lo usa (grep resolvedTheme).",
+        "Exporta una función tipo autoTargetOptions(scheme) o similar para que settings-card.js pinte las <option> de los creados tras las oficiales en #autoLight/#autoDark (createElement + textContent, que ya escapa). Repíntalas en syncAutoMapping() y llama a syncAutoMapping() tras guardar/sobrescribir/eliminar (renderSavedThemes ya se llama ahí: puedes hacerlo desde renderSavedThemes). El texto de ayuda de #autoMapping puede mencionar que también se pueden elegir los temas creados.",
+        "deleteSavedTheme() y addSavedTheme() (sobrescritura con otro esquema): tras cambiar la lista, llama a setPreferences({}) cuando theme==='auto' para que getPreferences() descarte el destino inválido, recalcule vars y lo guarde."
+      ],
+      "feedback": [],
+      "baseTree": "5af315ce944230b6fc76d80db38084efebacedae",
+      "history": [
+        {
+          "at": "2026-10-19T04:17:15Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T04:17:23Z",
+          "event": "foto del árbol",
+          "note": "5af315ce94"
+        },
+        {
+          "at": "2026-10-19T04:17:23Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-005-20261019-061723.log"
+        },
+        {
+          "at": "2026-10-19T04:22:04Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T04:22:30Z",
+          "event": "estado → hecha",
+          "note": "Aprobada. Revisado diff de preferences.js, settings-card.js y .html: destinos 'saved:<id>' validados por esquema en getPreferences (normalizeAutoTarget), resolveAutoTarget usado en schemeFor/colorsForTheme/cssVarsFor (incluye --nav-icon-size) y resolvedTheme devuelve esquema; opciones con createElement+textContent (escape); repintado de selects tras guardar/sobrescribir/eliminar vía renderSavedThemes; setPreferences({}) recalcula al borrar/sobrescribir en modo auto. node --check OK. Arreglo del supervisor en settings-card.css (.auto-mapping-row): label min-width 12rem→0 + overflow-wrap y select min-width:0 + max-width:min(22rem,100%) para no desbordar a 200 % en 390 px con nombres largos. No probado en navegador."
+        }
+      ]
+    }
+  ]
+}

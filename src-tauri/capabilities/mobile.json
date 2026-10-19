@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "mobile",
+  "description": "Permisos extra solo para Android (anuncios nativos AdMob)",
+  "platforms": ["android"],
+  "windows": ["main"],
+  "permissions": [
+    "admob:default"
+  ]
+}

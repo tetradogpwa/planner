@@ -1,0 +1,172 @@
+<div class="settings-card">
+  <div class="settings-header">
+    <h2 class="settings-title">Apariencia</h2>
+    <div class="custom-edit-toggle" id="customEditToggleSection">
+      <label class="switch-row">
+        <span>Modo edición</span>
+        <div class="switch">
+          <input type="checkbox" id="customEditToggle">
+          <span class="slider"></span>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <fieldset class="settings-group">
+    <legend>Tema</legend>
+    <div class="settings-options">
+      <label class="settings-option">
+        <input type="radio" name="theme" value="auto">
+        <span>Automático <small>(como el sistema)</small></span>
+      </label>
+      <label class="settings-option">
+        <input type="radio" name="theme" value="light">
+        <span>Claro</span>
+      </label>
+      <label class="settings-option">
+        <input type="radio" name="theme" value="dark">
+        <span>Oscuro</span>
+      </label>
+      <label class="settings-option">
+        <input type="radio" name="theme" value="contrast-light">
+        <span>Alto contraste <small>(claro)</small></span>
+      </label>
+      <label class="settings-option">
+        <input type="radio" name="theme" value="contrast-dark">
+        <span>Alto contraste <small>(oscuro)</small></span>
+      </label>
+      <div class="saved-theme-list" id="savedThemeOptions"></div>
+    </div>
+    <p class="settings-status" id="savedThemesStatus" role="status"></p>
+    <p class="settings-help" id="draftStatus" role="status" hidden>
+      Tema sin guardar: ponle un nombre en <strong>Crear un tema nuevo</strong>
+      para conservarlo.
+    </p>
+
+    <div class="auto-mapping" id="autoMapping" hidden>
+      <p class="settings-help">
+        Elige qué tema usar cuando el sistema está en claro o en oscuro.
+        También puedes elegir uno de tus <strong>temas guardados</strong>
+        (solo aparecen los del esquema correspondiente).
+      </p>
+      <div class="auto-mapping-row">
+        <label for="autoLight">Sistema en claro</label>
+        <select id="autoLight">
+          <option value="light">Claro</option>
+          <option value="contrast-light">Alto contraste (claro)</option>
+        </select>
+      </div>
+      <div class="auto-mapping-row">
+        <label for="autoDark">Sistema en oscuro</label>
+        <select id="autoDark">
+          <option value="dark">Oscuro</option>
+          <option value="contrast-dark">Alto contraste (oscuro)</option>
+        </select>
+      </div>
+    </div>
+  </fieldset>
+
+  <section class="settings-group custom-theme" id="customTheme" aria-labelledby="customThemeTitle">
+    <h3 class="settings-subtitle" id="customThemeTitle">Crea tu tema</h3>
+    <p class="settings-help" id="customHelp">
+      Cambia cada color y verás el resultado al instante. Para guardarlo,
+      escribe un nombre en <strong>Crear un tema nuevo</strong> (abajo);
+      para eliminar uno guardado, usa <strong>Eliminar</strong> junto a
+      su nombre en <strong>Tema</strong>.
+    </p>
+
+    <div class="custom-base">
+      <label for="customBase">Empezar desde</label>
+      <div class="custom-base-row">
+        <select id="customBase"></select>
+        <button type="button" class="settings-btn" id="customBaseApply">Cargar estos colores</button>
+      </div>
+      <p class="settings-status" id="customBaseStatus" role="status"></p>
+    </div>
+
+    <div class="custom-icon-size">
+      <label for="navIconSize">Tamaño de los iconos del menú lateral</label>
+      <div class="custom-icon-size-row">
+        <input type="range" id="navIconSize" min="32" max="128" step="4" value="64">
+        <output id="navIconSizeValue" for="navIconSize">64 px</output>
+      </div>
+      <p class="settings-help">
+        En los demás temas es fijo (64×64 px). Aquí puedes ajustar este
+        tema personalizado a tu gusto.
+      </p>
+    </div>
+
+    <div class="color-groups" id="colorGroups"></div>
+
+    <div class="custom-actions">
+      <button type="button" class="settings-btn settings-btn-block" id="customRestore" title="Volver a los colores originales del estilo elegido">
+        ↺ Restaurar tema
+      </button>
+    </div>
+
+    <section class="contrast-panel" aria-labelledby="contrastTitle">
+      <h4 class="settings-subtitle" id="contrastTitle">Comprobación de contraste</h4>
+      <p class="settings-help" id="contrastSummary" role="status"></p>
+      <ul class="contrast-list" id="contrastList"></ul>
+    </section>
+  </section>
+
+  <fieldset class="settings-group custom-edit-only" id="customSaveFieldset">
+    <legend>Crear un tema nuevo</legend>
+    <div class="custom-save">
+      <label for="customName">Nombre del tema</label>
+      <div class="custom-save-row">
+        <input type="text" id="customName" class="custom-name-input"
+               placeholder="Ej: Mi tema nocturno" maxlength="40"
+               autocomplete="off" spellcheck="false">
+        <fieldset class="custom-save-scheme" id="customScheme" aria-label="Esquema del tema guardado">
+          <legend class="visually-hidden">Es claro u oscuro</legend>
+          <label class="settings-option">
+            <input type="radio" name="customScheme" value="light">
+            <span>☀ Claro</span>
+          </label>
+          <label class="settings-option">
+            <input type="radio" name="customScheme" value="dark">
+            <span>🌙 Oscuro</span>
+          </label>
+        </fieldset>
+        <button type="button" class="settings-btn" id="customSave">💾 Guardar</button>
+      </div>
+      <p class="settings-help">
+        Marca si el tema que vas a guardar es claro u oscuro. Esto se
+        recordará aunque cambies la base desde la que empezaste.
+      </p>
+      <p class="settings-status" id="customSaveStatus" role="status"></p>
+    </div>
+  </fieldset>
+
+  <fieldset class="settings-group" id="textScaleGroup">
+    <legend>Tamaño de letra general</legend>
+    <div class="settings-options" id="textScaleOptions"></div>
+  </fieldset>
+
+  <section class="settings-group" id="sizesGroup" aria-labelledby="sizesTitle">
+    <h3 class="settings-subtitle" id="sizesTitle">Tamaño por partes</h3>
+    <p class="settings-help">
+      Ajusta cada parte por separado. Se suma al tamaño general y se
+      mantiene aunque cambies de tema.
+    </p>
+    <div class="size-rows" id="sizeRows"></div>
+    <button type="button" class="settings-btn" id="sizesReset">Restablecer todos los tamaños</button>
+  </section>
+
+  <section class="settings-preview" id="settingsPreview" aria-labelledby="settings-preview-title">
+    <h3 id="settings-preview-title">Vista previa</h3>
+    <p>Así se verá el texto en la aplicación. Puedes cambiarlo cuando quieras.</p>
+    <div class="settings-preview-badges">
+      <span class="task-badge badge-odd">Gimnasio</span>
+      <span class="task-badge badge-even">Leer 20 minutos</span>
+      <span class="task-badge badge-slot">Medicación 2/3</span>
+    </div>
+    <div class="settings-preview-actions" aria-hidden="true">
+      <span class="preview-btn">Botón de ejemplo</span>
+      <span class="preview-btn preview-btn-danger">Borrar</span>
+      <span class="preview-link">Enlace de ejemplo</span>
+    </div>
+  </section>
+</div>
