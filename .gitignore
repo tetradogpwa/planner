@@ -30,6 +30,9 @@ src-tauri/gen/android/
 *.keystore
 *.jks
 
+# Carpeta donde tools/build.sh deposita los artefactos de cada build
+releases/
+
 # iOS (no objetivo, pero por si acaso)
 src-tauri/gen/ios/
 

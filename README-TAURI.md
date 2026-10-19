@@ -52,6 +52,83 @@ planner/
     └── build-android.sh
 ```
 
+### Build unificado (`tools/build.sh`)
+
+Script único en bash que cubre los tres objetivos desde cualquier
+carpeta (hace `cd` a la raíz del repo):
+
+```bash
+./tools/build.sh                # solo AppImage (Linux, release)
+./tools/build.sh --debug        # AppImage en debug
+./tools/build.sh --all          # AppImage + APK (Android) + .exe NSIS (Windows)
+./tools/build.sh --all --debug  # los tres en debug
+./tools/build.sh --help         # muestra el uso completo
+```
+
+Antes de compilar cada objetivo, el script comprueba sus requisitos y,
+si falta alguno, imprime exactamente qué instalar y cómo. Con `--all`,
+si un objetivo falla (requisitos o compilación) el script continúa con
+los demás y al final muestra un resumen por objetivo (`✓` / `✗` con
+motivo); el código de salida es `≠0` si alguno falla.
+
+Al terminar, los artefactos generados (`*.AppImage`, `*.apk`,
+`*-setup.exe`) se copian a `releases/` en la raíz del repo y se listan
+con su tamaño. La carpeta `releases/` está en `.gitignore`.
+
+Requisitos generales (comunes a los tres objetivos):
+
+- Rust toolchain estable (`rustup.rs`) y `cargo-tauri`:
+  ```bash
+  cargo install tauri-cli --version "^2.0" --locked
+  ```
+
+Requisitos específicos del **AppImage de Linux**:
+
+```bash
+sudo apt install -y \
+  libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+  librsvg2-dev libssl-dev libsoup-3.0-dev \
+  libjavascriptcoregtk-4.1-dev build-essential curl wget file \
+  pkg-config
+```
+
+Requisitos específicos del **instalador NSIS de Windows desde Linux
+(compilación cruzada con `cargo-xwin`)** — el script detecta y reporta
+cada uno si falta:
+
+```bash
+cargo install --locked cargo-xwin
+rustup target add x86_64-pc-windows-msvc
+sudo apt install -y nsis lld llvm clang   # lld-link + llvm-rc
+```
+
+El comando que lanza el script es:
+
+```bash
+cargo tauri build \
+  --runner cargo-xwin \
+  --target x86_64-pc-windows-msvc \
+  --bundles nsis
+```
+
+Requisitos específicos del **APK de Android** — el script detecta y
+reporta cada uno si falta:
+
+- SDK de Android (API 24+) y NDK r25+:
+  ```bash
+  export ANDROID_HOME=$HOME/Android/Sdk
+  export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/<version>
+  ```
+- Java 17 (Temurin o el de Android Studio).
+- Inicialización del módulo Android (solo la primera vez):
+  ```bash
+  cargo tauri android init
+  ```
+
+Si existe `.env` en la raíz, el script lo carga automáticamente (con
+`set -a; source .env; set +a`) para que `build.rs` y la firma de
+Android reciban las variables sin imprimir sus valores.
+
 ---
 
 ## 🚀 Build por plataforma
