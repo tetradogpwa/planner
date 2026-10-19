@@ -12,6 +12,7 @@ import { TermsCard, termsAccepted } from './ui/terms/terms-card.js';
 import { initMonetization, needsConsent, hasAds } from './monetization.js';
 import { shortcuts }       from './ui/shortcuts/shortcuts-card.js';
 import { isEditable, focusHeading, bindRovingTabindex } from './ui/a11y.js';
+import { startMcpBridge }  from './mcp-bridge.js';
 import './api.js';   // monta window.PlannerApi
 
 // ── Service Worker ────────────────────────────────────────
@@ -259,6 +260,26 @@ await requireTerms();
 await startMonetization();
 updateRemoveAdsButton();
 document.body.classList.remove('booting');
+
+// Puente MCP: escucha el evento 'mcp:call' del backend y delega en
+// PlannerApi. Solo se activa DESPUÉS de los términos y el
+// consentimiento para no aceptar llamadas de un usuario que no haya
+// pasado la pantalla de acceso.
+startMcpBridge().catch(err => console.warn('[mcp] bridge no iniciado:', err));
+
+// Arranca el servidor MCP si el usuario lo dejó activado. Solo en
+// escritorio (en Android no existe `mcp_start`).
+if (window.__TAURI__?.core?.invoke && !/android/i.test(navigator.userAgent)) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('planner_mcp') || '{}');
+    if (saved.enabled && saved.token) {
+      const port = Number(saved.port) || 41237;
+      await window.__TAURI__.core.invoke('mcp_start', { port, token: saved.token });
+    }
+  } catch (err) {
+    console.warn('[mcp] no se pudo reiniciar el servidor:', err);
+  }
+}
 
 // ── Atajos globales y diálogo de ayuda ────────────────────
 // Se registran DESPUÉS de requireTerms()/startMonetization() para que

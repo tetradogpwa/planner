@@ -775,11 +775,11 @@
     {
       "id": "T-009",
       "title": "Servidor MCP local para que un asistente use la app (escritorio)",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": "T-008",
       "created": "2026-10-19T04:38:59Z",
-      "updated": "2026-10-19T04:38:59Z",
-      "attempts": 0,
+      "updated": "2026-10-19T07:08:00Z",
+      "attempts": 3,
       "requests": [
         {
           "at": "2026-10-19T04:38:59Z",
@@ -801,16 +801,184 @@
       "notes": [
         "Arquitectura propuesta: los datos viven en localStorage del webview, así que el servidor (Rust) no los lee: reenvía cada llamada al frontend. 1) En src-tauri/src/mcp.rs, servidor HTTP con el crate rmcp (SDK oficial de MCP en Rust, feature de streamable HTTP server sobre axum/tokio) arrancado/parado con comandos Tauri mcp_start(port, token) y mcp_stop(). 2) Cada tool call: emitir evento Tauri 'mcp:call' {id, tool, args} a la ventana main y esperar con un oneshot (HashMap<id, Sender>) la respuesta que el frontend envía con el comando mcp_reply(id, ok, result). 3) En el frontend, un módulo (p. ej. mcp-bridge.js en raíz, añadido a WEB_ASSETS) escucha 'mcp:call' con window.__TAURI__.event.listen, llama a PlannerApi y responde con invoke('mcp_reply'). Solo se registra tras requireTerms/startMonetization en index.js.",
         "Registrar comandos en generate_handler! de src-tauri/src/lib.rs y añadir los permisos necesarios en src-tauri/capabilities/default.json (no en mobile.json). Dependencias Rust en Cargo.toml bajo [target.'cfg(not(any(target_os = \"android\", target_os = \"ios\")))'.dependencies]. Token: 32 bytes aleatorios en hex generados en el frontend (crypto.getRandomValues), guardado en localStorage junto con activado y puerto (por defecto 41237); al arrancar la app, si está activado, llama a mcp_start.",
-        "Depende de T-008 (PlannerApi). No hagas esta tarea hasta que T-008 esté hecha."
+        "Depende de T-008 (PlannerApi). No hagas esta tarea hasta que T-008 esté hecha.",
+        "Supervisor: falta comprobar (1) con un cliente MCP real (claude mcp add … y crear 'Regar cada 3 días' + 'qué tengo esta semana', la tarea aparece en la UI al momento), (2) la sección de Ajustes en tema claro y oscuro y con letra al 200 % a 390 px, (3) que con el servidor desactivado el puerto está cerrado.",
+        "Supervisor: antes de revisar, comprobar que ese último test E2E pasa de verdad (romperlo a propósito) y repasar las 11 correcciones anteriores con diff --total."
       ],
-      "feedback": [],
-      "baseTree": null,
+      "feedback": [
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "src-tauri/src/lib.rs: '.manage(mcp::McpState::default())' está fuera de #[cfg(desktop)], pero el módulo mcp solo existe en escritorio, así que el build de Android NO compila (incumple el criterio). Mueve el .manage dentro del bloque #[cfg(desktop)]."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "src-tauri/src/mcp.rs start(): el transmute_copy de AppHandle<R> a AppHandle es comportamiento indefinido: copia el Arc sin hacer mem::forget de 'raw', que se suelta al acabar el bloque y deja la cuenta de referencias corrupta (posible use-after-free). Quita el unsafe: haz start/stop/status no genéricos y que reciban tauri::AppHandle (Wry), que es lo que ya pasan los comandos."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "src-tauri/src/mcp.rs start(): el middleware usa token_for_handle, una copia hecha al arrancar. Si el servidor ya está activo y se regenera el token, solo se cambia state.token: el token VIEJO sigue funcionando y el NUEVO (el que muestra la UI y el comando) da 401. Haz que el middleware lea el mismo Arc<Mutex<Option<String>>> que McpState (p. ej. token: Arc<Mutex<..>> en McpState)."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "src-tauri/src/mcp.rs start(): con el servidor activo, cambiar el puerto no hace nada (solo actualiza state.port y devuelve Ok), pero la UI dice 'Servidor activo en 127.0.0.1:NUEVO'. Si cambia el puerto, para la tarea anterior y vuelve a enlazar."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "src-tauri/src/mcp.rs start(): el bind se hace dentro de tokio::spawn y el fallo solo va a eprintln, así que con el puerto ocupado mcp_start devuelve Ok y la UI dice 'activo'. Haz TcpListener::bind antes del spawn y devuelve Err('El puerto N está ocupado…') para que settings-card.js lo muestre en #mcpStatus; si falla, deja token/port en None."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "src-tauri/src/mcp.rs: faltan las anotaciones del criterio. rmcp 0.5 las admite: #[tool(description = ..., annotations(read_only_hint = true))] en listar_tareas, ver_tarea, ver_semana y exportar_json, y annotations(destructive_hint = true) en borrar_tarea."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "ui/settings/settings-card.css: .mcp-config usa var(--surface-2) y .mcp-row input usa var(--input-bg, ...), y ninguno de los dos existe en index.css (el fondo queda transparente). Usa tokens existentes (--surface-alt / --surface, --input-border para el borde del campo). El padding de .mcp-config debe ir con clamp(12px, 3vw, 1.5rem) según CLAUDE.md."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "ui/settings/settings-card.html: <label for=\"mcpCmd\"> apunta a un <code>, que no es un control: el label queda huérfano. Usa un <span id> con aria-labelledby en el code, o un <input readonly> o <textarea readonly> con su label, y añade un botón 'Copiar comando' (el comando lleva el token y es lo que el usuario va a pegar)."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "tests/unit/mcp-bridge.test.mjs prueba una COPIA de TOOL_TO_API y de handleCall, no el código real: si rompes mcp-bridge.js, la prueba sigue en verde. Exporta lo necesario desde mcp-bridge.js (p. ej. export async function handleMcpCall(payload, api = PlannerApi)) e impórtalo en la prueba, con el stub de api inyectado. Si importar api.js da problemas en node, inyecta la dependencia en vez de copiar el código."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "tests/e2e/specs/08-mcp.spec.mjs: falta cubrir lo importante. (a) Un tools/call real: initialize, notifications/initialized y tools/call crear_tarea {spec:{name:'Regar',repeat:'nDays',nDays:3}} con el Mcp-Session-Id, y luego comprobar que 'Regar' aparece en la UI y que listar_tareas la devuelve. (b) tools/list incluye las 9 herramientas, con readOnlyHint y destructiveHint donde toca. (c) Tras regenerar el token, el viejo da 401 y el nuevo 200. (d) Al desactivar el interruptor, fetch al puerto falla (conexión rechazada)."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "note": "legal/PRIVACY.md y legal/ACCESSIBILITY.md dicen que 'no envía las tareas a ningún servidor externo: el asistente habla con la Aplicación en el mismo equipo'. Es engañoso: lo que lea el asistente (p. ej. Claude) sí sale hacia el proveedor de ese asistente. Añade que los datos que el usuario deje leer al asistente se tratan según la política de privacidad de ese asistente, que el Desarrollador no los recibe y que el token da acceso total al plan, así que no hay que compartirlo. No toques las fechas de TERMS.md ni EULA.md."
+        }
+      ],
+      "baseTree": "22734f148c06513993bf5590800ec7dbc177631e",
       "history": [
         {
           "at": "2026-10-19T04:38:59Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-19T06:05:47Z",
+          "event": "foto del árbol",
+          "note": "10cb732089"
+        },
+        {
+          "at": "2026-10-19T06:05:47Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-19T06:18:40Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "src-tauri/src/lib.rs: '.manage(mcp::McpState::default())' está fuera de #[cfg(desktop)], pero el módulo mcp solo existe en escritorio, así que el build de Android NO compila (incumple el criterio). Mueve el .manage dentro del bloque #[cfg(desktop)]."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "src-tauri/src/mcp.rs start(): el transmute_copy de AppHandle<R> a AppHandle es comportamiento indefinido: copia el Arc sin hacer mem::forget de 'raw', que se suelta al acabar el bloque y deja la cuenta de referencias corrupta (posible use-after-free). Quita el unsafe: haz start/stop/status no genéricos y que reciban tauri::AppHandle (Wry), que es lo que ya pasan los comandos."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "src-tauri/src/mcp.rs start(): el middleware usa token_for_handle, una copia hecha al arrancar. Si el servidor ya está activo y se regenera el token, solo se cambia state.token: el token VIEJO sigue funcionando y el NUEVO (el que muestra la UI y el comando) da 401. Haz que el middleware lea el mismo Arc<Mutex<Option<String>>> que McpState (p. ej. token: Arc<Mutex<..>> en McpState)."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "src-tauri/src/mcp.rs start(): con el servidor activo, cambiar el puerto no hace nada (solo actualiza state.port y devuelve Ok), pero la UI dice 'Servidor activo en 127.0.0.1:NUEVO'. Si cambia el puerto, para la tarea anterior y vuelve a enlazar."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "src-tauri/src/mcp.rs start(): el bind se hace dentro de tokio::spawn y el fallo solo va a eprintln, así que con el puerto ocupado mcp_start devuelve Ok y la UI dice 'activo'. Haz TcpListener::bind antes del spawn y devuelve Err('El puerto N está ocupado…') para que settings-card.js lo muestre en #mcpStatus; si falla, deja token/port en None."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "src-tauri/src/mcp.rs: faltan las anotaciones del criterio. rmcp 0.5 las admite: #[tool(description = ..., annotations(read_only_hint = true))] en listar_tareas, ver_tarea, ver_semana y exportar_json, y annotations(destructive_hint = true) en borrar_tarea."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/settings/settings-card.css: .mcp-config usa var(--surface-2) y .mcp-row input usa var(--input-bg, ...), y ninguno de los dos existe en index.css (el fondo queda transparente). Usa tokens existentes (--surface-alt / --surface, --input-border para el borde del campo). El padding de .mcp-config debe ir con clamp(12px, 3vw, 1.5rem) según CLAUDE.md."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/settings/settings-card.html: <label for=\"mcpCmd\"> apunta a un <code>, que no es un control: el label queda huérfano. Usa un <span id> con aria-labelledby en el code, o un <input readonly> o <textarea readonly> con su label, y añade un botón 'Copiar comando' (el comando lleva el token y es lo que el usuario va a pegar)."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/unit/mcp-bridge.test.mjs prueba una COPIA de TOOL_TO_API y de handleCall, no el código real: si rompes mcp-bridge.js, la prueba sigue en verde. Exporta lo necesario desde mcp-bridge.js (p. ej. export async function handleMcpCall(payload, api = PlannerApi)) e impórtalo en la prueba, con el stub de api inyectado. Si importar api.js da problemas en node, inyecta la dependencia en vez de copiar el código."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/e2e/specs/08-mcp.spec.mjs: falta cubrir lo importante. (a) Un tools/call real: initialize, notifications/initialized y tools/call crear_tarea {spec:{name:'Regar',repeat:'nDays',nDays:3}} con el Mcp-Session-Id, y luego comprobar que 'Regar' aparece en la UI y que listar_tareas la devuelve. (b) tools/list incluye las 9 herramientas, con readOnlyHint y destructiveHint donde toca. (c) Tras regenerar el token, el viejo da 401 y el nuevo 200. (d) Al desactivar el interruptor, fetch al puerto falla (conexión rechazada)."
+        },
+        {
+          "at": "2026-10-19T06:22:07Z",
+          "event": "devuelta a MiniMax",
+          "note": "legal/PRIVACY.md y legal/ACCESSIBILITY.md dicen que 'no envía las tareas a ningún servidor externo: el asistente habla con la Aplicación en el mismo equipo'. Es engañoso: lo que lea el asistente (p. ej. Claude) sí sale hacia el proveedor de ese asistente. Añade que los datos que el usuario deje leer al asistente se tratan según la política de privacidad de ese asistente, que el Desarrollador no los recibe y que el token da acceso total al plan, así que no hay que compartirlo. No toques las fechas de TERMS.md ni EULA.md."
+        },
+        {
+          "at": "2026-10-19T06:23:41Z",
+          "event": "foto del árbol",
+          "note": "e83bf76779"
+        },
+        {
+          "at": "2026-10-19T06:23:41Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-009-20261019-082341.log"
+        },
+        {
+          "at": "2026-10-19T06:27:54Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T06:35:31Z",
+          "event": "estado → pendiente",
+          "note": "Proceso cortado al terminar la sesión anterior (lanzado sin lanzar.sh todavía). MiniMax estaba arreglando el test 'al desactivar el interruptor, el puerto se cierra'; no llegó a entregar."
+        },
+        {
+          "at": "2026-10-19T06:35:31Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T06:35:35Z",
+          "event": "foto del árbol",
+          "note": "22734f148c"
+        },
+        {
+          "at": "2026-10-19T06:35:35Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-009-20261019-083535.log"
+        },
+        {
+          "at": "2026-10-19T07:02:59Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T07:03:38Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T07:08:00Z",
+          "event": "estado → hecha",
+          "note": "Revisado: 11 correcciones resueltas y comprobadas en el código (no solo el resumen de MiniMax); cargo check y bash tools/test.sh en ✓ (69 unit, 27 e2e); sabotaje propio de borrar_tarea puso la prueba en rojo y al restaurar en verde. Pendiente de validar con un cliente MCP real (sin 'claude' disponible aquí) y visualmente a 200%/390px (CSS revisado, no con el driver)."
         }
-      ]
+      ],
+      "firstTree": "10cb73208943c063ddd9c7ba2ae71193a3f3a3f8"
     },
     {
       "id": "T-010",
@@ -1173,8 +1341,8 @@
       "status": "pendiente",
       "relatedTo": "T-011",
       "created": "2026-10-19T05:46:30Z",
-      "updated": "2026-10-19T05:47:34Z",
-      "attempts": 0,
+      "updated": "2026-10-19T06:08:00Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-10-19T05:46:30Z",
@@ -1198,8 +1366,21 @@
         "Depende de T-008 (en revisión), que también cambia index.html e index.js: no se lanza hasta que T-008 esté aprobada y con commit.",
         "Añade 'accessibility' a VIEWS en api.js (navigate/listViews) cuando exista la vista."
       ],
-      "feedback": [],
-      "baseTree": null,
+      "feedback": [
+        {
+          "at": "2026-10-19T06:08:00Z",
+          "note": "ui/accessibility/accessibility-card.js: la vista no carga los estilos de la lista (.shortcuts-list en cuadrícula, kbd, h4…), que están en ui/shortcuts/shortcuts-card.css y solo se inyectan al abrir el diálogo por primera vez (ShortcutsCard.ensureMounted). Si se entra en Accesibilidad sin haber pulsado '?', la lista sale sin estilo. Pasa esos estilos a ui/shortcuts/shortcuts-list.css, que cargan los dos (la vista y el diálogo), y quita de shortcuts-card.css los selectores .accessibility-* (el diálogo no debe conocer la vista). Prueba en 06-accesibilidad: con la app recién abierta, Alt+8 y getComputedStyle de '#accessibility-shortcuts .shortcuts-list' tiene display 'grid' y el kbd tiene borde."
+        },
+        {
+          "at": "2026-10-19T06:08:00Z",
+          "note": "ui/shortcuts/shortcuts-list.html: los id fijos (shortcuts-views-title, shortcuts-sidebar-title, shortcuts-tasks-title, shortcuts-help-title) se repiten cuando la vista está abierta y el diálogo montado, y los aria-labelledby quedan ambiguos. Quita los id y los aria-labelledby de las <section> (los <h4> ya dan la estructura). Prueba: con la vista abierta, '?' abre el diálogo y en el documento no hay ningún id repetido (todos los [id] únicos)."
+        },
+        {
+          "at": "2026-10-19T06:08:00Z",
+          "note": "ui/shortcuts/shortcuts-list.html línea 1: la introducción ('La tecla ? abre esta ayuda desde cualquier pantalla; Esc la cierra') es del diálogo y no encaja en la vista, donde Esc no cierra nada. Sácala del archivo compartido y déjala solo en shortcuts-card.html, antes del contenedor de la lista; la vista ya tiene su propia introducción."
+        }
+      ],
+      "baseTree": "ee2c9a1513522149b87cdb6a41706258eec1f2c2",
       "history": [
         {
           "at": "2026-10-19T05:46:30Z",
@@ -1209,6 +1390,41 @@
           "at": "2026-10-19T05:47:34Z",
           "event": "modificada",
           "note": "nota"
+        },
+        {
+          "at": "2026-10-19T05:59:09Z",
+          "event": "foto del árbol",
+          "note": "ee2c9a1513"
+        },
+        {
+          "at": "2026-10-19T05:59:09Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-019-20261019-075909.log"
+        },
+        {
+          "at": "2026-10-19T06:05:38Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T06:06:13Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T06:08:00Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/accessibility/accessibility-card.js: la vista no carga los estilos de la lista (.shortcuts-list en cuadrícula, kbd, h4…), que están en ui/shortcuts/shortcuts-card.css y solo se inyectan al abrir el diálogo por primera vez (ShortcutsCard.ensureMounted). Si se entra en Accesibilidad sin haber pulsado '?', la lista sale sin estilo. Pasa esos estilos a ui/shortcuts/shortcuts-list.css, que cargan los dos (la vista y el diálogo), y quita de shortcuts-card.css los selectores .accessibility-* (el diálogo no debe conocer la vista). Prueba en 06-accesibilidad: con la app recién abierta, Alt+8 y getComputedStyle de '#accessibility-shortcuts .shortcuts-list' tiene display 'grid' y el kbd tiene borde."
+        },
+        {
+          "at": "2026-10-19T06:08:00Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/shortcuts/shortcuts-list.html: los id fijos (shortcuts-views-title, shortcuts-sidebar-title, shortcuts-tasks-title, shortcuts-help-title) se repiten cuando la vista está abierta y el diálogo montado, y los aria-labelledby quedan ambiguos. Quita los id y los aria-labelledby de las <section> (los <h4> ya dan la estructura). Prueba: con la vista abierta, '?' abre el diálogo y en el documento no hay ningún id repetido (todos los [id] únicos)."
+        },
+        {
+          "at": "2026-10-19T06:08:00Z",
+          "event": "devuelta a MiniMax",
+          "note": "ui/shortcuts/shortcuts-list.html línea 1: la introducción ('La tecla ? abre esta ayuda desde cualquier pantalla; Esc la cierra') es del diálogo y no encaja en la vista, donde Esc no cierra nada. Sácala del archivo compartido y déjala solo en shortcuts-card.html, antes del contenedor de la lista; la vista ya tiene su propia introducción."
         }
       ]
     }

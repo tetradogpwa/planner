@@ -31,6 +31,9 @@
         "$APPDATA/**",
         "$APPLOCALDATA/**"
       ]
-    }
+    },
+
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
   ]
 }

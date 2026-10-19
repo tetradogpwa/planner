@@ -243,6 +243,48 @@ como encargado/responsable independiente, según su propia política.
 
 ---
 
+## 9. Control por asistente (servidor MCP local)
+
+La Aplicación incluye, opcionalmente, un servidor local compatible con
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/) para
+que un asistente de IA pueda leer y modificar el plan desde
+`127.0.0.1`. Este servidor:
+
+- Está **desactivado por defecto** y solo escucha en `127.0.0.1`
+  (no es accesible desde Internet ni desde otros dispositivos de la
+  red local).
+- Si se activa, exige un **token Bearer** aleatorio de 64 caracteres
+  generado por la propia Aplicación. La Aplicación no envía ese token
+  a ningún servidor externo.
+- No abre ningún puerto en Android (la función no está disponible
+  en esa plataforma).
+
+**Importante: el Desarrollador no recibe los datos que el asistente
+lea.** El servidor MCP de la Aplicación es solo un puente local:
+lo que el asistente haga con esos datos depende del proveedor del
+asistente (p. ej. Claude de Anthropic, otros modelos), no del
+Desarrollador. Cuando el usuario pide a su asistente «qué tengo esta
+semana» o «añade esta tarea», el contenido del plan **sale del
+dispositivo hacia el proveedor del asistente** como parte del diálogo
+con ese asistente. Ese proveedor lo trata según su propia política de
+privacidad ([https://www.anthropic.com/privacy](https://www.anthropic.com/privacy)
+en el caso de Anthropic), no la del Desarrollador. El Desarrollador
+no tiene acceso a esos datos, ni siquiera de forma agregada.
+
+**El token es personal y da acceso total al plan.** Quien conozca el
+token puede leer, modificar y borrar todas las tareas y la fecha de
+inicio. **No lo compartas**, igual que no compartirías la contraseña de
+un servicio. Si sospechas que se ha filtrado, regenera el token desde
+**Apariencia → Control por asistente (MCP)**: el token viejo deja de
+funcionar en el siguiente request.
+
+El usuario puede desactivar el servidor en cualquier momento desde
+**Apariencia → Control por asistente (MCP)**. Mientras esté
+desactivado, el puerto está cerrado y ninguna herramienta del
+asistente puede hablar con la Aplicación.
+
+---
+
 *Este texto es un modelo y no sustituye al asesoramiento jurídico
 profesional. El Desarrollador debería revisarlo con un abogado antes
 de publicar la app en tiendas.*

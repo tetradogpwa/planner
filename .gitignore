@@ -8,6 +8,7 @@ proyecto_1linea.txt
 # Tauri
 # ────────────────────────────────────────────────────────────────────
 src-tauri/target/
+src-tauri/target-android/
 src-tauri/gen/schemas/
 src-tauri/.cargo/
 src-tauri/Cargo.lock.bak

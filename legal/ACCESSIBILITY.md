@@ -153,4 +153,47 @@ publicará los avances en el repositorio del proyecto.
 
 ---
 
+## Control por asistente (MCP local)
+
+La Aplicación incorpora, opcionalmente, un servidor local compatible
+con [Model Context Protocol](https://modelcontextprotocol.io/) que
+permite a un asistente de IA controlar el plan. Esto es una
+**característica de accesibilidad**: una persona que no pueda usar
+la interfaz manualmente (por una discapacidad motora o visual)
+puede manejar el plan pidiéndoselo a su asistente. El servidor:
+
+- **Está desactivado por defecto** y solo escucha en `127.0.0.1`,
+  no en interfaces de red públicas.
+- **Exige autenticación** con un token Bearer aleatorio de 64
+  caracteres generado por la propia Aplicación; el usuario puede
+  regenerarlo cuando quiera.
+- **No está disponible en Android** (la sección de Ajustes
+  correspondiente lo indica claramente).
+- Mientras esté desactivado, el puerto está cerrado.
+
+### Quién ve los datos cuando lo activas
+
+El servidor MCP de la Aplicación es solo un **puente local** entre
+el asistente y el plan. El Desarrollador **no recibe** lo que el
+asistente lea o escriba. Lo que el asistente haga con esos datos
+depende del proveedor del asistente: por ejemplo, si usas Claude,
+Anthropic trata el contenido del diálogo según
+[sus políticas](https://www.anthropic.com/privacy); el Desarrollador
+ni siquiera ve métricas. Antes de activar esta función, revisa la
+política de privacidad del asistente que vayas a usar.
+
+### Seguridad del token
+
+El token da acceso completo al plan (leer, crear, editar y borrar
+tareas y la fecha de inicio). **No lo compartas** con nadie ni lo
+peges en chats: quien lo tenga puede tratar el plan como si fueras
+tú. Si sospechas que se ha filtrado, regenera el token desde
+**Apariencia → Control por asistente (MCP)** → "Regenerar": el
+token viejo deja de funcionar de inmediato.
+
+El usuario puede activar y desactivar el servidor en cualquier
+momento desde **Apariencia → Control por asistente (MCP)**.
+
+---
+
 *Modelo informativo, no sustituye al asesoramiento jurídico profesional.*

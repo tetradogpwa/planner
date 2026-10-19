@@ -169,4 +169,44 @@
       <span class="preview-link">Enlace de ejemplo</span>
     </div>
   </section>
+
+  <section class="settings-group" id="mcpGroup" aria-labelledby="mcpTitle">
+    <h3 class="settings-subtitle" id="mcpTitle">Control por asistente (MCP)</h3>
+    <p class="settings-help">
+      Permite que un asistente de IA controle la app por HTTP local.
+      Solo escucha en <code>127.0.0.1</code> y exige un token.
+      <span id="mcpAndroidNotice" hidden>No disponible en Android.</span>
+    </p>
+
+    <div class="settings-options">
+      <label class="settings-option">
+        <input type="checkbox" id="mcpEnabled">
+        <span>Activar servidor MCP</span>
+      </label>
+    </div>
+
+    <div class="mcp-config" id="mcpConfig" hidden>
+      <div class="mcp-row">
+        <label for="mcpPort">Puerto</label>
+        <input type="number" id="mcpPort" min="1024" max="65535" value="41237">
+      </div>
+      <div class="mcp-row">
+        <label for="mcpToken">Token</label>
+        <input type="text" id="mcpToken" readonly>
+        <button type="button" class="settings-btn" id="mcpCopyToken">Copiar</button>
+        <button type="button" class="settings-btn" id="mcpRegenToken">Regenerar</button>
+      </div>
+      <div class="mcp-row mcp-cmd-row">
+        <label for="mcpCmd">Comando para conectarlo</label>
+        <input type="text" id="mcpCmd" readonly aria-describedby="mcpCmdHelp">
+        <button type="button" class="settings-btn mcp-copy-cmd" id="mcpCopyCmd">Copiar comando</button>
+        <span id="mcpCmdHelp" class="visually-hidden">
+          Pega este comando en una terminal para registrar el servidor en tu
+          asistente. El comando incluye el token, que da acceso total al
+          plan: no lo compartas.
+        </span>
+      </div>
+      <p class="settings-status" id="mcpStatus" role="status"></p>
+    </div>
+  </section>
 </div>

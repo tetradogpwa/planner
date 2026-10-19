@@ -78,6 +78,7 @@ export class SettingsCard {
     this.syncCustomTheme();
     this.syncSizes();
     this.syncDraftStatus();
+    this.bindMcp();
 
     this.root.addEventListener('change', (e) => {
       if (e.target.name === 'theme') {
@@ -681,5 +682,145 @@ export class SettingsCard {
       input.setAttribute('aria-valuetext', `${value} por ciento`);
       this.$(`#size-${role.id}-value`).textContent = `${value} %`;
     }
+  }
+
+  // ── Control por asistente (MCP) ───────────────────────────────────
+  //
+  // Esta sección se oculta en Android (no hay servidor en móvil).
+  // El estado (activado, puerto, token) se guarda en localStorage
+  // para que la app lo restaure al rearrancar; el servidor se arranca
+  // al final de `index.js` si está activado.
+
+  bindMcp() {
+    const isMobile = /android/i.test(navigator.userAgent);
+    const notice = this.$('#mcpAndroidNotice');
+    if (isMobile) {
+      notice.hidden = false;
+      // En móvil no mostramos los controles (el servidor no existe).
+      this.$('#mcpEnabled').closest('.settings-option').hidden = true;
+      this.$('#mcpConfig').hidden = true;
+      return;
+    }
+
+    // Lee el estado guardado. Si no hay token, genera uno.
+    const saved = this.#readMcpState();
+    if (!saved.token) {
+      saved.token = this.#generateToken();
+      this.#writeMcpState(saved);
+    }
+    this.$('#mcpToken').value = saved.token;
+    this.$('#mcpPort').value  = saved.port ?? 41237;
+    this.$('#mcpEnabled').checked = !!saved.enabled;
+    this.#updateMcpUi();
+
+    this.$('#mcpEnabled').addEventListener('change', () => this.#applyMcp());
+    this.$('#mcpPort').addEventListener('change', () => this.#applyMcp());
+    this.$('#mcpRegenToken').addEventListener('click', () => {
+      const s = this.#readMcpState();
+      s.token = this.#generateToken();
+      this.#writeMcpState(s);
+      this.$('#mcpToken').value = s.token;
+      this.#updateMcpUi();
+      this.#applyMcp();
+    });
+    this.$('#mcpCopyToken').addEventListener('click', () => this.#copyField(this.$('#mcpToken'), 'Token'));
+    this.$('#mcpCopyCmd').addEventListener('click', () => this.#copyField(this.$('#mcpCmd'), 'Comando'));
+
+    // Si el estado guardado dice `enabled` pero el server no está
+    // corriendo (p. ej. porque el usuario acaba de desactivar y
+    // reactivar y el `change` no se procesó), lo arrancamos al montar
+    // la vista. Esto evita que la UI diga "activo" mintiendo.
+    if (saved.enabled && window.__TAURI__?.core?.invoke) {
+      this.#syncWithBackend();
+    }
+  }
+
+  /** Sincroniza el estado del checkbox con el estado real del backend:
+   *  si el localStorage dice `enabled` pero el server está parado, lo
+   *  levanta. Si dice `disabled` pero el server está activo, lo para.
+   *  Lo usa el `mount` del card y la app real cuando el driver o un
+   *  clic perdido no llegó a invocar `applyMcp`. */
+  async #syncWithBackend() {
+    try {
+      const status = await window.__TAURI__.core.invoke('mcp_status');
+      const saved = this.#readMcpState();
+      if (!!saved.enabled !== !!status.active) {
+        await this.#applyMcp();
+      }
+    } catch {
+      // Si `mcp_status` no existe (p. ej. en un navegador normal), no
+      // hacemos nada: el `change` del checkbox ya se ocupa.
+    }
+  }
+
+  /** Copia el contenido de un campo al portapapeles y muestra el
+   *  resultado en la zona de estado del MCP. */
+  async #copyField(input, label) {
+    try {
+      await navigator.clipboard.writeText(input.value);
+      this.#mcpStatus(`${label} copiado al portapapeles.`);
+    } catch {
+      this.#mcpStatus(`No se pudo copiar. Selecciónalo manualmente.`);
+    }
+  }
+
+  /** Estado del MCP en localStorage. */
+  #readMcpState() {
+    try {
+      return JSON.parse(localStorage.getItem('planner_mcp') || '{}');
+    } catch { return {}; }
+  }
+
+  #writeMcpState(s) {
+    localStorage.setItem('planner_mcp', JSON.stringify(s));
+  }
+
+  #generateToken() {
+    // 32 bytes hex = 64 chars. `crypto.getRandomValues` está en
+    // navegadores modernos y Tauri 2 (webview webkit/edge).
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  /** Aplica el estado: arranca o para el servidor. */
+  async #applyMcp() {
+    const s = this.#readMcpState();
+    s.enabled = this.$('#mcpEnabled').checked;
+    s.port    = Number(this.$('#mcpPort').value) || 41237;
+    s.token   = this.$('#mcpToken').value;
+    this.#writeMcpState(s);
+    this.#updateMcpUi();
+
+    if (!window.__TAURI__?.core?.invoke) {
+      this.#mcpStatus('Solo disponible dentro de la app Tauri.');
+      return;
+    }
+    try {
+      if (s.enabled) {
+        await window.__TAURI__.core.invoke('mcp_start', { port: s.port, token: s.token });
+        this.#mcpStatus(`Servidor activo en 127.0.0.1:${s.port}/mcp`);
+      } else {
+        await window.__TAURI__.core.invoke('mcp_stop');
+        this.#mcpStatus('Servidor detenido.');
+      }
+    } catch (err) {
+      this.#mcpStatus(`Error: ${err.message || err}`);
+    }
+  }
+
+  #updateMcpUi() {
+    const enabled = this.$('#mcpEnabled').checked;
+    this.$('#mcpConfig').hidden = !enabled;
+    const port  = Number(this.$('#mcpPort').value) || 41237;
+    const token = this.$('#mcpToken').value;
+    this.$('#mcpCmd').value =
+      `claude mcp add --transport http planner http://127.0.0.1:${port}/mcp ` +
+      `--header "Authorization: Bearer ${token}"`;
+  }
+
+  #mcpStatus(text) {
+    const el = this.$('#mcpStatus');
+    if (el) el.textContent = text;
   }
 }
