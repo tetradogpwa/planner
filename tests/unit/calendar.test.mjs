@@ -40,3 +40,48 @@ test('GetNWeeks: saltar semanas empieza en el lunes correcto', () => {
   mismoDia(semanas[1].mondayTo, new Date(2026, 5, 15));
   semanas.forEach(s => assert.deepEqual(s.weekTasks[0].map(t => t.Name), ['Gimnasio']));
 });
+
+// Cambio al horario de invierno (octubre): en Europe/Madrid el domingo
+// 25/10/2026 se retrocede una hora, así que la semana del 19/10 mide
+// 7 días + 1 h. El cálculo no debe añadir días fantasma ni pintar
+// semanas de más, y los lunes deben seguir cayendo en lunes.
+test('GetNWeeks: cruza el cambio de hora de octubre (invierno) sin desfase', () => {
+  const from    = new Date(2026, 9, 19); // lunes 19/10/2026
+  const lunes   = createDaysOfWeekTask('Gimnasio', [0]);
+  const semanas = GetNWeeks(from, 3, 0, [lunes]);
+
+  assert.equal(semanas.length, 3);
+
+  const fechas = [
+    new Date(2026, 9, 19),
+    new Date(2026, 9, 26),
+    new Date(2026, 10, 2),
+  ];
+  semanas.forEach((s, i) => mismoDia(s.mondayTo, fechas[i]));
+
+  semanas.forEach(s =>
+    assert.deepEqual(s.weekTasks[0].map(t => t.Name), ['Gimnasio'])
+  );
+});
+
+// Cambio al horario de verano (marzo): el domingo 29/03/2026 se adelanta
+// una hora, así que la semana del 23/03 mide 7 días − 1 h. Igual que el
+// caso de octubre, no debe añadir ni quitar semanas.
+test('GetNWeeks: cruza el cambio de hora de marzo (verano) sin desfase', () => {
+  const from    = new Date(2026, 2, 23); // lunes 23/03/2026
+  const lunes   = createDaysOfWeekTask('Gimnasio', [0]);
+  const semanas = GetNWeeks(from, 3, 0, [lunes]);
+
+  assert.equal(semanas.length, 3);
+
+  const fechas = [
+    new Date(2026, 2, 23),
+    new Date(2026, 2, 30),
+    new Date(2026, 3, 6),
+  ];
+  semanas.forEach((s, i) => mismoDia(s.mondayTo, fechas[i]));
+
+  semanas.forEach(s =>
+    assert.deepEqual(s.weekTasks[0].map(t => t.Name), ['Gimnasio'])
+  );
+});

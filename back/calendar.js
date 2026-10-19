@@ -1,5 +1,12 @@
 // ── Helpers de fecha ─────────────────────────────────────────────────────────
 
+/** Diferencia en días naturales entre dos fechas (ignora el cambio de hora). */
+function diffDays(from, to) {
+  const utcFrom = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
+  const utcTo   = Date.UTC(to.getFullYear(),   to.getMonth(),   to.getDate());
+  return Math.round((utcTo - utcFrom) / (1000 * 60 * 60 * 24));
+}
+
 /** Devuelve el lunes de la semana que contiene `date`. */
 export function getMondayOfWeek(date) {
   const d   = new Date(date);
@@ -11,9 +18,7 @@ export function getMondayOfWeek(date) {
 
 /** Diferencia en semanas (redondeando hacia arriba) entre dos fechas. */
 export function getDiffWeeks(from, to) {
-  const d1 = new Date(from); d1.setHours(0, 0, 0, 0);
-  const d2 = new Date(to);   d2.setHours(0, 0, 0, 0);
-  return Math.ceil(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24 * 7));
+  return Math.ceil(Math.abs(diffDays(from, to)) / 7);
 }
 
 /** Último día del mes de `date`. */
@@ -27,7 +32,7 @@ export function getWeeksInMonth(date) {
   const d     = new Date(date);
   const first = new Date(d.getFullYear(), d.getMonth(), 1);
   const last  = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-  return Math.ceil(Math.abs(last - first) / (1000 * 60 * 60 * 24 * 7));
+  return Math.ceil(diffDays(first, last) / 7);
 }
 
 // ── Tareas por día ───────────────────────────────────────────────────────────
@@ -49,7 +54,7 @@ export function GetWeek(from, numWeek, tasks) {
   const mondayTo   = new Date(mondayFrom);
   mondayTo.setDate(mondayTo.getDate() + numWeek * 7);
 
-  const dayFromOrigin = Math.ceil(Math.abs(mondayTo - mondayFrom) / (1000 * 60 * 60 * 24));
+  const dayFromOrigin = numWeek * 7;
   const weekTasks     = Array.from({ length: 7 }, (_, i) =>
     GetTasksOfDay(from, dayFromOrigin + i, tasks)
   );

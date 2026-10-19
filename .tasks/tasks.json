@@ -1156,11 +1156,11 @@
     {
       "id": "T-012",
       "title": "Corregir el desfase de días tras el cambio de hora",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-10-19T05:37:22Z",
-      "updated": "2026-10-19T05:37:22Z",
-      "attempts": 0,
+      "updated": "2026-10-19T08:01:42Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-10-19T05:37:22Z",
@@ -1179,13 +1179,34 @@
         "Solo back/calendar.js y tests/unit/calendar.test.mjs. No cambies back/daysOfWeek.js ni el resto."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "b9ca0cd935aa99f5fc0c18befe017b9feced6800",
       "history": [
         {
           "at": "2026-10-19T05:37:22Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-19T07:54:57Z",
+          "event": "foto del árbol",
+          "note": "b9ca0cd935"
+        },
+        {
+          "at": "2026-10-19T07:54:57Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-19T07:58:04Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T08:01:42Z",
+          "event": "estado → hecha",
+          "note": "Revisado: diffDays con Date.UTC en getDiffWeeks/getWeeksInMonth y dayFromOrigin = numWeek*7 (mismo valor que antes sin el error de DST). La prueba de octubre sale en rojo con el calendar.js anterior; la de marzo pasaba ya (queda como regresión). PLANNER_E2E_DISPLAY=x11 bash tools/test.sh en ✓ (unit 71, e2e 5/5); en Wayland la spec 09 falla por el entorno (T-020)."
         }
-      ]
+      ],
+      "firstTree": "b9ca0cd935aa99f5fc0c18befe017b9feced6800"
     },
     {
       "id": "T-013",
