@@ -1323,11 +1323,11 @@
     {
       "id": "T-014",
       "title": "E2E: crear tareas de cada tipo y verlas en la Semana",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-10-19T05:42:04Z",
-      "updated": "2026-10-19T05:42:04Z",
-      "attempts": 0,
+      "updated": "2026-10-19T09:18:35Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-10-19T05:42:04Z",
@@ -1346,16 +1346,73 @@
       "notes": [
         "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
         "Formulario: ui/taskManager/addTask/addTask-card.{html,js}: #taskName, #timesPerDay, radios name=repeat (no-repeat, daily, interval, days, cycle), #interval, casillas de días con data-day (0 = lunes), #addTaskBtn. Lista: .task-row .task-name / .task-type (ui/taskManager/taskManager-card.js). Semana: Alt+2 o el menú; celdas .day-cell con .task-list .task-badge (ui/week/taskItem/taskItem-card.js); el CSS pone las insignias en mayúsculas.",
-        "La semana 0 empieza el lunes de la semana de la fecha de inicio (dayFromOrigin 0 = ese lunes), aunque hoy sea otro día. Si necesitas una utilidad nueva (p. ej. crear una tarea de días concretos o leer las insignias de cada día), añádela a tests/e2e/helpers.mjs."
+        "La semana 0 empieza el lunes de la semana de la fecha de inicio (dayFromOrigin 0 = ese lunes), aunque hoy sea otro día. Si necesitas una utilidad nueva (p. ej. crear una tarea de días concretos o leer las insignias de cada día), añádela a tests/e2e/helpers.mjs.",
+        "Supervisor: ya comprobado en el intento 1 — spec 01 en verde; las pruebas de Cada 3d y las 3 validaciones se ponen en rojo al romper back/nDays.js y el alert de addTask-card.js. Fallos ajenos en la suite: unitarias de suggestContrastFixes (T-021) y 3 de 09-sidebar-colapsado (T-020). Falta comprobar solo el flujo del ciclo corregido y que la spec 01 siga en verde."
       ],
-      "feedback": [],
-      "baseTree": null,
+      "feedback": [
+        {
+          "at": "2026-10-19T09:11:27Z",
+          "note": "Criterio sin cumplir: el ciclo debe ejercitar 'añadir una semana, quitar otra y volver a añadirla'. tests/e2e/helpers.mjs crearTareaCiclo (bloque browser.execute que pulsa .btn-add-week/.btn-remove-week) solo llega al número de semanas pedido y lo hace con clicks dentro de execute, no como usuario. Cámbialo por clics reales de WebdriverIO ($('#extraOptions .btn-add-week').click(), $$('#extraOptions .btn-remove-week')[i].click()) y, en la spec 01, recorre explícitamente: añadir semana (comprobar 2 .cycle-week), quitar una (comprobar 1 y que no hay .btn-remove-week), volver a añadir (comprobar 2 y que la semana nueva tiene sus 7 casillas desmarcadas), marcar días distintos en cada semana y crear. Lo demás está bien: no toques el resto de pruebas, que ya se han visto en rojo rompiendo nDays.js y el alert de addTask-card.js."
+        }
+      ],
+      "baseTree": "fec1e605af9dff925c17235b8c906a50972a10ce",
       "history": [
         {
           "at": "2026-10-19T05:42:04Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-19T08:41:55Z",
+          "event": "foto del árbol",
+          "note": "87588af804"
+        },
+        {
+          "at": "2026-10-19T08:41:55Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-19T09:05:36Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T09:11:27Z",
+          "event": "devuelta a MiniMax",
+          "note": "Criterio sin cumplir: el ciclo debe ejercitar 'añadir una semana, quitar otra y volver a añadirla'. tests/e2e/helpers.mjs crearTareaCiclo (bloque browser.execute que pulsa .btn-add-week/.btn-remove-week) solo llega al número de semanas pedido y lo hace con clicks dentro de execute, no como usuario. Cámbialo por clics reales de WebdriverIO ($('#extraOptions .btn-add-week').click(), $$('#extraOptions .btn-remove-week')[i].click()) y, en la spec 01, recorre explícitamente: añadir semana (comprobar 2 .cycle-week), quitar una (comprobar 1 y que no hay .btn-remove-week), volver a añadir (comprobar 2 y que la semana nueva tiene sus 7 casillas desmarcadas), marcar días distintos en cada semana y crear. Lo demás está bien: no toques el resto de pruebas, que ya se han visto en rojo rompiendo nDays.js y el alert de addTask-card.js."
+        },
+        {
+          "at": "2026-10-19T09:11:27Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T09:11:33Z",
+          "event": "foto del árbol",
+          "note": "fec1e605af"
+        },
+        {
+          "at": "2026-10-19T09:11:33Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-014-20261019-111133.log"
+        },
+        {
+          "at": "2026-10-19T09:14:37Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T09:14:48Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T09:18:35Z",
+          "event": "estado → hecha",
+          "note": "Revisado en 2 intentos. Spec 01 10/10 en verde. Vista en rojo rompiendo back/nDays.js (falla Cada 3d), quitando el alert de addTask-card.js (fallan las 3 validaciones) y quitando el splice de quitar semana (falla la creación del ciclo); todo restaurado. Solo toca tests/. bash tools/test.sh en rojo solo por fallos previos y ajenos: 2 unitarias de suggestContrastFixes (T-021) y 3 de 09-sidebar-colapsado (T-020); aprobado con el visto bueno del usuario."
         }
-      ]
+      ],
+      "firstTree": "87588af80446e0e63f7a2391ad3f442f0fe1ca37"
     },
     {
       "id": "T-015",
