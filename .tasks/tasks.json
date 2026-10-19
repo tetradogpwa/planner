@@ -1,5 +1,5 @@
 {
-  "next": 22,
+  "next": 23,
   "tasks": [
     {
       "id": "T-001",
@@ -1417,11 +1417,11 @@
     {
       "id": "T-015",
       "title": "E2E: editar y borrar tareas, con el foco en su sitio",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-10-19T05:42:04Z",
-      "updated": "2026-10-19T05:42:14Z",
-      "attempts": 0,
+      "updated": "2026-10-19T11:06:31Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-10-19T05:42:04Z",
@@ -1439,10 +1439,28 @@
       "notes": [
         "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
         "ui/taskManager/taskManager-card.js: #editToggle (Gestionar), .btn-edit / .btn-trash por fila, panel .edit-panel; ui/taskManager/editTask/editTask-card.{html,js}: #editTaskName, #editTimesPerDay, radios name=edit-repeat, #saveEditBtn, #cancelEditBtn. Elemento con foco: browser.execute(() => document.activeElement) o comparar con .isFocused().",
-        "Corrección de la nota anterior: \"o comparar con .isFocused()\" quiere decir await $(selector).isFocused()."
+        "Corrección de la nota anterior: \"o comparar con .isFocused()\" quiere decir await $(selector).isFocused().",
+        "Supervisor: falta comprobar rompiendo #focusAfterDelete (taskManager-card.js:85) y el foco de cancelar (:124-135) que la spec 02 se pone en rojo. Fallos ajenos conocidos en test.sh: unit 72/73 (T-021) y spec 09-sidebar (T-020)."
       ],
-      "feedback": [],
-      "baseTree": null,
+      "feedback": [
+        {
+          "at": "2026-10-19T10:50:14Z",
+          "note": "tests/e2e/specs/02-editar-borrar.spec.mjs:209-226: el criterio pide que borrar la del medio la quite también de la Semana; falta comprobarlo (irASemana + celdasCon('Tarea B') todo false) y volver a Tareas con el menú antes de seguir."
+        },
+        {
+          "at": "2026-10-19T10:50:14Z",
+          "note": "tests/e2e/specs/02-editar-borrar.spec.mjs:158-166: vuelve a Tareas con el menú lateral como una persona ($('button.nav-item[data-view=\"tasks\"]').click(), mejor como helper irATareas() en tests/e2e/helpers.mjs), no con el evento planner:navigate, que es de la API."
+        },
+        {
+          "at": "2026-10-19T10:50:14Z",
+          "note": "tests/e2e/specs/02-editar-borrar.spec.mjs:42-51: quita el fallback de clic por DOM en activarGestionar: oculta justo el fallo de interacción que la prueba debe detectar. Usa scrollIntoView + click real; si no funciona en weston, descríbelo en el resumen."
+        },
+        {
+          "at": "2026-10-19T10:50:14Z",
+          "note": "Falta el resumen de prueba en rojo (criterio 5): di qué rompiste (p. ej. #focusAfterDelete y el foco al cancelar en ui/taskManager/taskManager-card.js) y qué prueba falló. Deshaz la rotura después."
+        }
+      ],
+      "baseTree": "80b85c78712a6b06f7122a339577cbc0a3de3610",
       "history": [
         {
           "at": "2026-10-19T05:42:04Z",
@@ -1452,8 +1470,74 @@
           "at": "2026-10-19T05:42:14Z",
           "event": "modificada",
           "note": "nota"
+        },
+        {
+          "at": "2026-10-19T10:08:13Z",
+          "event": "foto del árbol",
+          "note": "f6746c3cf6"
+        },
+        {
+          "at": "2026-10-19T10:08:13Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-19T10:41:48Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T10:50:14Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/e2e/specs/02-editar-borrar.spec.mjs:209-226: el criterio pide que borrar la del medio la quite también de la Semana; falta comprobarlo (irASemana + celdasCon('Tarea B') todo false) y volver a Tareas con el menú antes de seguir."
+        },
+        {
+          "at": "2026-10-19T10:50:14Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/e2e/specs/02-editar-borrar.spec.mjs:158-166: vuelve a Tareas con el menú lateral como una persona ($('button.nav-item[data-view=\"tasks\"]').click(), mejor como helper irATareas() en tests/e2e/helpers.mjs), no con el evento planner:navigate, que es de la API."
+        },
+        {
+          "at": "2026-10-19T10:50:14Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/e2e/specs/02-editar-borrar.spec.mjs:42-51: quita el fallback de clic por DOM en activarGestionar: oculta justo el fallo de interacción que la prueba debe detectar. Usa scrollIntoView + click real; si no funciona en weston, descríbelo en el resumen."
+        },
+        {
+          "at": "2026-10-19T10:50:14Z",
+          "event": "devuelta a MiniMax",
+          "note": "Falta el resumen de prueba en rojo (criterio 5): di qué rompiste (p. ej. #focusAfterDelete y el foco al cancelar en ui/taskManager/taskManager-card.js) y qué prueba falló. Deshaz la rotura después."
+        },
+        {
+          "at": "2026-10-19T10:50:14Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T10:50:22Z",
+          "event": "foto del árbol",
+          "note": "80b85c7871"
+        },
+        {
+          "at": "2026-10-19T10:50:22Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-015-20261019-125022.log"
+        },
+        {
+          "at": "2026-10-19T11:03:30Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T11:04:19Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T11:06:31Z",
+          "event": "estado → hecha",
+          "note": "Spec 02 7/7 en verde; correcciones resueltas (Semana tras borrar, irATareas por menú, sin clic DOM). Mutante propio (foco a buttons[0] al borrar y cancelar) pone en rojo cancelar y borrar del medio. Suite: solo fallan unit 72/73 (T-021) y spec 09 (T-020), ajenos."
         }
-      ]
+      ],
+      "firstTree": "f6746c3cf6b8389c221a8d8ee9708c2a2a59fab7"
     },
     {
       "id": "T-016",
@@ -1737,6 +1821,66 @@
         {
           "at": "2026-10-19T08:38:34Z",
           "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-022",
+      "title": "Apartado Ajustes con pestañas, ordenado por temas",
+      "status": "pendiente",
+      "relatedTo": "T-019",
+      "created": "2026-10-19T10:07:42Z",
+      "updated": "2026-10-19T10:12:49Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T10:07:42Z",
+          "text": "Mejor ponemos un apartado settings y englobamos exportar, imprimir, apariencia, licencias y accesibilidad, todo separado por tabs."
+        },
+        {
+          "at": "2026-10-19T10:12:49Z",
+          "text": "Pon un task para que quede todo bien ordenado en settings, con sentido."
+        }
+      ],
+      "criteria": [
+        "El menú lateral queda: Gestión tareas, Semana actual, Todas semanas, separador, 'Ajustes' (icono decorativo con aria-hidden) y 'Quitar anuncios' (sin cambios). Desaparecen del menú Gestión datos, Imprimir / PDF, Apariencia, Legal y privacidad y Accesibilidad. El menú contraído y las flechas/Inicio/Fin siguen funcionando.",
+        "Ajustes es una vista #view-ajustes con encabezado 'Ajustes' y una barra de pestañas en este orden: Exportar (contenido actual de Gestión datos: importar, exportar y borrar), Imprimir (Imprimir / PDF), Apariencia, Licencias (contenido actual de Legal y privacidad) y Accesibilidad (vista de T-019). El contenido de cada pestaña es el de la vista actual, sin perder funciones.",
+        "Pestañas accesibles con el patrón ARIA: role=tablist con aria-label, role=tab con aria-selected y aria-controls, role=tabpanel con aria-labelledby; tabindex itinerante (solo la pestaña activa con tabindex=0); flechas izquierda/derecha, Inicio y Fin cambian de pestaña; foco visible.",
+        "Abrir Ajustes desde el menú muestra la pestaña Exportar y pone el foco en el encabezado de la vista. Alt+1…3 no cambian; Alt+4…8 abren Ajustes directamente en Exportar, Imprimir, Apariencia, Licencias y Accesibilidad respectivamente, con el foco en la pestaña activa. La lista de atajos (vista y ayuda '?') y legal/ACCESSIBILITY.md lo describen así.",
+        "api.js: navigate('settings') (o el nombre que tenga la vista Ajustes) abre Ajustes, y navigate('data'|'print'|'legal'|'accessibility') sigue funcionando abriendo la pestaña correspondiente; listViews lo refleja. Las herramientas MCP que navegan siguen funcionando.",
+        "Los textos que remiten a 'Gestión datos', 'Legal y privacidad', 'Apariencia' o 'el menú Accesibilidad' como opciones del menú pasan a decir 'Ajustes › <pestaña>'. No se cambia la fecha de 'Última actualización' de legal/TERMS.md ni EULA.md.",
+        "Pruebas: spec nueva tests/e2e/specs/10-ajustes.spec.mjs que comprueba el menú nuevo, cada pestaña con su contenido (un elemento propio de cada una), roles y aria-selected, flechas/Inicio/Fin entre pestañas, Alt+4…8 abriendo la pestaña correcta y navigate() de api.js. Las specs existentes que entraban por el menú a esas vistas se adaptan a Ajustes sin rebajar lo que comprueban. Vista en rojo al romper el código y bash tools/test.sh en ✓ salvo los fallos ajenos conocidos (T-020 y T-021).",
+        "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de color, rem con --fs-*, contraste AA en tema claro y oscuro, foco visible); la pestaña activa se distingue por algo más que el color (p. ej. subrayado o borde).",
+        "No se sale de la pantalla con letra al 200 % en móvil de 390 px: la barra de pestañas hace flex-wrap (sin scroll horizontal de la página) y el contenido de cada pestaña cabe.",
+        "SUSTITUYE a los criterios anteriores sobre el orden y los nombres de las pestañas. Pestañas, en este orden: Apariencia, Accesibilidad, Datos, Imprimir y PDF, Asistente (MCP) y Legal. Cada ajuste está en una sola pestaña y en ninguna otra.",
+        "Apariencia: solo tema y colores. Contiene elegir tema (con Sistema en claro / Sistema en oscuro), Crea tu tema (con su comprobación de contraste) y la vista previa.",
+        "Accesibilidad: tamaño de letra general, tamaño por partes y su botón Restablecer (se mueven desde Apariencia), el tamaño de los iconos del menú contraído en pantallas táctiles (también desde Apariencia) y la lista de atajos de teclado de T-019, en ese orden.",
+        "Datos: importar y exportar arriba; 'Borrar' al final, separado en su propio bloque con un título que avise de que no se puede deshacer, y conservando la confirmación que ya pide.",
+        "Imprimir y PDF: contenido actual de Imprimir / PDF; su título deja de llamarse 'Exportar PDF' para no confundirse con exportar datos.",
+        "Asistente (MCP): la sección 'Control por asistente (MCP)', que sale de Apariencia. En las plataformas donde la sección no está disponible (Android), no aparece la pestaña.",
+        "Legal: contenido actual de Legal y privacidad (documentos y Acerca de).",
+        "Jerarquía de títulos coherente en todas las pestañas: h2 'Ajustes' para la vista, h3 para cada bloque de una pestaña y h4 para sus apartados, sin saltos de nivel, sin dos títulos iguales en la misma pestaña y con los emojis de los títulos en aria-hidden.",
+        "Los atajos siguen llevando al mismo contenido aunque cambie el orden de las pestañas: Alt+4 Datos, Alt+5 Imprimir y PDF, Alt+6 Apariencia, Alt+7 Legal, Alt+8 Accesibilidad. Lo mismo para navigate('data'|'print'|'settings'|'legal'|'accessibility') de api.js. La lista de atajos y legal/ACCESSIBILITY.md lo reflejan.",
+        "Pruebas en 10-ajustes.spec.mjs: comprueban que cada control está en su pestaña. Ejemplos: el tamaño de letra y los atajos en Accesibilidad y no en Apariencia; el MCP en Asistente; Borrar como último bloque de Datos. Al mover un control de pestaña, las specs existentes que lo usan (07-api, 08-mcp, 06-accesibilidad y las de T-016/T-017/T-018 si ya existen) se adaptan sin rebajar lo que comprueban."
+      ],
+      "notes": [
+        "Depende de T-019 (vista Accesibilidad y lista de atajos compartida): no se lanza hasta que T-019 esté aprobada y con commit.",
+        "Menú en index.html ~líneas 40-84 (.nav-item[data-view]: data, print, settings, legal, accessibility); secciones <main> ~94-101. index.js: objeto views, render(view) y el mapa Alt+1…8 (~líneas 295-310). Hoy data-view='settings' es Apariencia (ui/settings/): elige un nombre interno para la vista Ajustes que no choque (p. ej. 'ajustes') y mantén 'settings' como nombre de la pestaña Apariencia en navigate().",
+        "Reutiliza las tarjetas actuales (ui/dataManager, ui/print, ui/settings, ui/legal, ui/accessibility) montándolas en el tabpanel de cada pestaña, sin copiar su HTML. Nueva tarjeta ui/ajustes/ajustes-card.{js,html,css} con el patrón de CLAUDE.md. Cada tarjeta tiene hoy su propio h2 de vista: dentro de la pestaña debe bajar de nivel o servir de etiqueta del tabpanel, sin dos h2 iguales ni ids repetidos.",
+        "api.js línea 35: VIEWS. Specs que navegan a esas vistas: tests/e2e/specs/06-accesibilidad, 07-api, 08-mcp (sección MCP en Apariencia?) y las de T-016/T-017/T-018 si ya existen.",
+        "Al mover bloques entre tarjetas (MCP y tamaños de letra salen de ui/settings/settings-card.*), pasa su HTML, CSS y JS a la tarjeta de destino o a una tarjeta propia (p. ej. ui/mcp/mcp-card.*, ui/fontSizes/…), sin duplicarlo y sin dejar restos en settings-card. La lógica de preferencias sigue en ui/settings/preferences.js."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T10:07:42Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-19T10:12:49Z",
+          "event": "modificada",
+          "note": "petición ampliada, título, criterio, criterio, criterio, criterio, criterio, criterio, criterio, criterio, criterio, criterio, nota"
         }
       ]
     }

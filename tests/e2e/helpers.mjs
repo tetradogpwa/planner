@@ -117,6 +117,19 @@ export async function irASemana() {
   );
 }
 
+/** Navega a la vista Tareas usando el menú lateral (clic real sobre
+ *  el botón del sidebar, como lo haría una persona). Espera a que
+ *  la vista esté visible. */
+export async function irATareas() {
+  await $('button.nav-item[data-view="tasks"]').click();
+  await browser.waitUntil(
+    async () => await browser.execute(
+      () => document.getElementById('view-tasks').classList.contains('active')
+    ),
+    { timeout: 5_000, timeoutMsg: 'No se volvió a la vista Tareas' },
+  );
+}
+
 /** Devuelve, para cada celda de la vista Semana (0 lunes … 6 domingo),
  *  los textos de las insignias que contiene (.task-badge). Las
  *  insignias se pintan en mayúsculas con CSS; los textos aquí son los
