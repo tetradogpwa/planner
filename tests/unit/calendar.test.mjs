@@ -4,7 +4,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getMondayOfWeek, GetNWeeks } from '../../back/calendar.js';
+import {
+  getMondayOfWeek,
+  GetNWeeks,
+  getDiffWeeks,
+  getLastDayOfMonth,
+  getWeeksInMonth,
+} from '../../back/calendar.js';
 import { createDailyTask, createDaysOfWeekTask } from '../../back/taskFactory.js';
 
 const mismoDia = (a, b) => assert.equal(a.toDateString(), b.toDateString());
@@ -84,4 +90,81 @@ test('GetNWeeks: cruza el cambio de hora de marzo (verano) sin desfase', () => {
   semanas.forEach(s =>
     assert.deepEqual(s.weekTasks[0].map(t => t.Name), ['Gimnasio'])
   );
+});
+
+// ── getDiffWeeks ─────────────────────────────────────────────────────────
+// Redondea hacia arriba la diferencia en días dividida por 7 (un día de
+// más ya suma una semana). Usa meses de junio para evitar el cambio de
+// hora de marzo/octubre.
+
+test('getDiffWeeks: misma fecha vale 0', () => {
+  const d = new Date(2026, 5, 15);
+  assert.equal(getDiffWeeks(d, d), 0);
+});
+
+test('getDiffWeeks: lunes a lunes siguiente (7 días) cuenta 1 semana', () => {
+  assert.equal(getDiffWeeks(new Date(2026, 5, 1), new Date(2026, 5, 8)), 1);
+});
+
+test('getDiffWeeks: un día de más ya cuenta como una semana', () => {
+  // Lunes 1/6 → lunes 15/6 son exactamente 14 días → ceil(14/7)=2.
+  assert.equal(getDiffWeeks(new Date(2026, 5, 1), new Date(2026, 5, 15)), 2);
+});
+
+test('getDiffWeeks: semanas exactas y diferencias grandes', () => {
+  assert.equal(getDiffWeeks(new Date(2026, 5, 1), new Date(2026, 5, 8)), 1); // 1 semana
+  assert.equal(getDiffWeeks(new Date(2026, 5, 1), new Date(2026, 5, 29)), 4); // 4 semanas
+  assert.equal(getDiffWeeks(new Date(2026, 5, 1), new Date(2026, 7, 30)), 13); // ~3 meses
+});
+
+test('getDiffWeeks: es simétrico (no le importa el orden)', () => {
+  const a = new Date(2026, 5, 1);
+  const b = new Date(2026, 5, 22); // 21 días → 3 semanas
+  assert.equal(getDiffWeeks(a, b), getDiffWeeks(b, a));
+});
+
+// ── getLastDayOfMonth ────────────────────────────────────────────────────
+// Fecha de junio para evitar el cambio de hora (las pruebas usan meses
+// con 30/31 días) y un caso en febrero de 2028, año bisiesto (29 días).
+
+test('getLastDayOfMonth: junio (30 días) y julio (31 días) de 2026', () => {
+  mismoDia(getLastDayOfMonth(new Date(2026, 5, 15)), new Date(2026, 5, 30));
+  mismoDia(getLastDayOfMonth(new Date(2026, 6,  1)), new Date(2026, 6, 31));
+});
+
+test('getLastDayOfMonth: no muta la fecha original', () => {
+  const original = new Date(2026, 5, 15);
+  const copia    = new Date(original);
+  getLastDayOfMonth(original);
+  mismoDia(original, copia);
+});
+
+test('getLastDayOfMonth: febrero de 2028 es bisiesto (29 días)', () => {
+  mismoDia(getLastDayOfMonth(new Date(2028, 1,  1)), new Date(2028, 1, 29));
+});
+
+test('getLastDayOfMonth: febrero de 2026 no es bisiesto (28 días)', () => {
+  // 2026 no es bisiesto → 28 días (regresión para distinguir del 2028).
+  mismoDia(getLastDayOfMonth(new Date(2026, 1,  1)), new Date(2026, 1, 28));
+});
+
+// ── getWeeksInMonth ──────────────────────────────────────────────────────
+// Junio de 2026 empieza en lunes (1/6) y termina el miércoles 30/6:
+// semana 1 = 1–7, semana 2 = 8–14, semana 3 = 15–21, semana 4 = 22–28,
+// semana 5 = 29–30. Cualquier día del mes devuelve 5 semanas (ceil(29/7)).
+
+test('getWeeksInMonth: junio de 2026 (empieza en lunes) da 5 semanas', () => {
+  assert.equal(getWeeksInMonth(new Date(2026, 5,  1)), 5);
+  assert.equal(getWeeksInMonth(new Date(2026, 5, 15)), 5);
+});
+
+test('getWeeksInMonth: julio de 2026 también da 5 semanas', () => {
+  // 1/7/2026 cae en miércoles; semana 1 empieza el 29/6 fuera del mes.
+  assert.equal(getWeeksInMonth(new Date(2026, 6,  1)), 5);
+});
+
+test('getWeeksInMonth: depende del mes, no del día de la fecha', () => {
+  const a = new Date(2026, 5,  1);
+  const b = new Date(2026, 5, 30);
+  assert.equal(getWeeksInMonth(a), getWeeksInMonth(b));
 });

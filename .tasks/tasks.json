@@ -1,5 +1,5 @@
 {
-  "next": 21,
+  "next": 22,
   "tasks": [
     {
       "id": "T-001",
@@ -1211,11 +1211,11 @@
     {
       "id": "T-013",
       "title": "Pruebas unitarias: resto de back/ y preferencias de apariencia",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-10-19T05:42:04Z",
-      "updated": "2026-10-19T05:42:04Z",
-      "attempts": 0,
+      "updated": "2026-10-19T08:38:34Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-10-19T05:42:04Z",
@@ -1234,16 +1234,91 @@
       "notes": [
         "Lee antes .claude/skills/test/SKILL.md §4 (cómo se escriben) y las pruebas que ya existen como modelo (tests/unit/*.test.mjs, tests/e2e/specs/00-arranque.spec.mjs, tests/e2e/helpers.mjs). Prohibido .skip/.only y copiar en la prueba la lógica que prueba.",
         "preferences.js usa window.matchMedia al importarse (línea 158), así que en Node falla con 'window is not defined'. Antes del import dinámico define un stub mínimo de entorno: globalThis.window = { matchMedia: () => ({ matches: false, addEventListener() {} }) } (y localStorage si algo lo pide). Es solo entorno; no imites ninguna lógica.",
-        "No pruebes LimitedTimeTask con Repeat > 1: su comportamiento actual (solo la N-ésima aparición) está pendiente de confirmar con el usuario. No pruebes GetRestoOfMonth/GetMonth (dependen de la fecha de hoy)."
+        "No pruebes LimitedTimeTask con Repeat > 1: su comportamiento actual (solo la N-ésima aparición) está pendiente de confirmar con el usuario. No pruebes GetRestoOfMonth/GetMonth (dependen de la fecha de hoy).",
+        "Supervisor (revisión 1): calendar, tareas, isHexColor, resolveAutoTarget, savedThemeScheme y protección de contraste ya están revisados y caen en rojo al romper el código (mutantes de calendar.js, nDays.js, daysOfWeek.js y preferences.js). Los guardas hasDay de setDay/unSetDay son mutantes equivalentes: no hace falta cubrirlos. Las 3 pruebas en rojo de la spec 09 en weston son de T-020, no de esta tarea. Falta comprobar solo las correcciones de suggestContrastFixes."
       ],
-      "feedback": [],
-      "baseTree": null,
+      "feedback": [
+        {
+          "at": "2026-10-19T08:19:59Z",
+          "note": "tests/unit/preferences.test.mjs (suggestContrastFixes): el par #444444/#bbbbbb ya tiene 5,07:1 > 4,5, así que la función devuelve los mismos colores y la prueba no ejercita ninguna corrección (es falso que esté 'verificado al fijar el caso'). Usa pares que de verdad no cumplen, p. ej. #777777/#888888 con min 3 y #0f172a/#334155 con min 4.5, y comprueba primero contrastRatio(fg,bg) < min. Con esos pares la app devuelve sugerencias por debajo del mínimo (lighter #d3d3d3 → 2,99:1; #6981a5 → 4,49:1): es un fallo real de la app. Deja esa prueba en rojo, sin tocar preferences.js, y descríbelo en el resumen."
+        },
+        {
+          "at": "2026-10-19T08:19:59Z",
+          "note": "tests/unit/preferences.test.mjs (suggestContrastFixes): añade que la sugerencia es la más cercana, como dice su comentario: el ratio no supera min + 0,3 (o el valor queda a menos de ~3 % de luminosidad HSL del original). Ahora, si se invierte la búsqueda binaria de nearestValidLuminance (preferences.js:251 y :254, intercambiar hi/lo), las 20 pruebas siguen en verde."
+        },
+        {
+          "at": "2026-10-19T08:19:59Z",
+          "note": "tests/unit/preferences.test.mjs:59-61: el comentario habla de #767676 y el código usa #777777; que coincidan."
+        }
+      ],
+      "baseTree": "79c13fb674230cba0cd7a3682ead5efb10c8edef",
       "history": [
         {
           "at": "2026-10-19T05:42:04Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-19T08:03:11Z",
+          "event": "foto del árbol",
+          "note": "9dc24a8971"
+        },
+        {
+          "at": "2026-10-19T08:03:11Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-19T08:17:25Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T08:19:59Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/unit/preferences.test.mjs (suggestContrastFixes): el par #444444/#bbbbbb ya tiene 5,07:1 > 4,5, así que la función devuelve los mismos colores y la prueba no ejercita ninguna corrección (es falso que esté 'verificado al fijar el caso'). Usa pares que de verdad no cumplen, p. ej. #777777/#888888 con min 3 y #0f172a/#334155 con min 4.5, y comprueba primero contrastRatio(fg,bg) < min. Con esos pares la app devuelve sugerencias por debajo del mínimo (lighter #d3d3d3 → 2,99:1; #6981a5 → 4,49:1): es un fallo real de la app. Deja esa prueba en rojo, sin tocar preferences.js, y descríbelo en el resumen."
+        },
+        {
+          "at": "2026-10-19T08:19:59Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/unit/preferences.test.mjs (suggestContrastFixes): añade que la sugerencia es la más cercana, como dice su comentario: el ratio no supera min + 0,3 (o el valor queda a menos de ~3 % de luminosidad HSL del original). Ahora, si se invierte la búsqueda binaria de nearestValidLuminance (preferences.js:251 y :254, intercambiar hi/lo), las 20 pruebas siguen en verde."
+        },
+        {
+          "at": "2026-10-19T08:19:59Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/unit/preferences.test.mjs:59-61: el comentario habla de #767676 y el código usa #777777; que coincidan."
+        },
+        {
+          "at": "2026-10-19T08:19:59Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-19T08:20:07Z",
+          "event": "foto del árbol",
+          "note": "79c13fb674"
+        },
+        {
+          "at": "2026-10-19T08:20:07Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-013-20261019-102007.log"
+        },
+        {
+          "at": "2026-10-19T08:34:46Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T08:37:04Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-19T08:38:34Z",
+          "event": "estado → hecha",
+          "note": "Revisión 2: las 3 correcciones resueltas. La prueba de cercanía cae en rojo al intercambiar hi/lo en nearestValidLuminance (lado lighter y darker, comprobado por el supervisor). Supervisor: retocado un comentario de la prueba de cercanía y borrado el archivo vacío '=' que dejó un node -e. tools/test.sh: unit 112/114 (2 en rojo a propósito: fallo real de suggestContrastFixes, registrado aparte); e2e solo falla spec 09 (3 pruebas, de T-020)."
         }
-      ]
+      ],
+      "firstTree": "9dc24a8971eca518b082802a070dcc9f802ee7d2"
     },
     {
       "id": "T-014",
@@ -1573,6 +1648,38 @@
           "at": "2026-10-19T07:54:18Z",
           "event": "modificada",
           "note": "nota"
+        }
+      ]
+    },
+    {
+      "id": "T-021",
+      "title": "Las sugerencias de contraste deben alcanzar el mínimo pedido",
+      "status": "pendiente",
+      "relatedTo": "T-013",
+      "created": "2026-10-19T08:38:34Z",
+      "updated": "2026-10-19T08:38:34Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-19T08:38:34Z",
+          "text": "Detectado por las pruebas de T-013: suggestContrastFixes (ui/settings/preferences.js) devuelve a veces una sugerencia que se queda justo por debajo del mínimo pedido."
+        }
+      ],
+      "criteria": [
+        "suggestContrastFixes nunca devuelve una sugerencia cuyo contraste real (medido con contrastRatio sobre el hex final) sea menor que min.",
+        "Las pruebas de tests/unit/preferences.test.mjs 'par #777777/#888888 con min 3' y 'par #0f172a/#334155 con min 4.5' pasan a verde sin cambiarlas; la de 'la sugerencia es la más cercana al original' sigue en verde.",
+        "bash tools/test.sh unit sale en ✓."
+      ],
+      "notes": [
+        "Causa probable: nearestValidLuminance devuelve hslToHex((lo+hi)/2) y no el extremo que cumple (hi para lighter, lo para darker); además el redondeo a #rrggbb puede bajar el ratio. Devuelve el candidato del lado que cumple y, si tras redondear no llega, avanza un paso hasta que contrastRatio(hex, other) >= min.",
+        "El par #444444/#aaaaaa (lighter #b0b0b0 → 4,49) tiene el mismo fallo."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-19T08:38:34Z",
+          "event": "creada"
         }
       ]
     }
