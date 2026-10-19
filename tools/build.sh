@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────
 # build.sh — Script de build unificado para Planificador Semanal.
-#            Por defecto genera solo el AppImage de Linux.
-#            Con --all genera además el APK de Android y el instalador
-#            NSIS de Windows (por compilación cruzada desde Linux).
+#            Por defecto genera solo el AppImage de Linux. Los
+#            binarios se copian a releases/ (en la raíz, ignorada por
+#            git).
 # ─────────────────────────────────────────────────────────────────────
 # Uso:
-#   ./tools/build.sh                → solo AppImage (Linux, release)
-#   ./tools/build.sh --debug        → AppImage en debug
-#   ./tools/build.sh --all          → AppImage + APK + .exe NSIS
-#   ./tools/build.sh --all --debug  → los tres objetivos en debug
-#   ./tools/build.sh --help         → muestra esta ayuda
+#   ./tools/build.sh                  → solo AppImage (Linux, release)
+#   ./tools/build.sh linux            → igual que sin argumentos
+#   ./tools/build.sh windows          → instalador NSIS (.exe, xwin)
+#   ./tools/build.sh android          → APK de Android
+#   ./tools/build.sh linux android    → varios objetivos a la vez
+#   ./tools/build.sh all              → AppImage + .exe NSIS + APK
+#   ./tools/build.sh all --debug      → los tres objetivos en debug
+#   ./tools/build.sh --help           → muestra esta ayuda
+#   (--all equivale a all, por compatibilidad)
 #
 # Requisitos generales (comunes a todos los objetivos):
 #   * Rust toolchain estable (rustup.rs) y cargo-tauri:
@@ -55,18 +59,25 @@ REPO_ROOT="$(pwd)"
 
 # ─────────────── Argumentos ──────────────────────────────────────────
 MODE="release"
-BUILD_ALL=0
 PRINT_HELP=0
+TARGETS=()
+
+add_target() {
+  local t
+  for t in "${TARGETS[@]}"; do [[ "$t" == "$1" ]] && return 0; done
+  TARGETS+=("$1")
+}
 
 for arg in "$@"; do
   case "$arg" in
     --debug) MODE="debug" ;;
-    --all)   BUILD_ALL=1 ;;
+    all|--all) add_target linux; add_target windows; add_target android ;;
+    linux|windows|android) add_target "$arg" ;;
     --help|-h) PRINT_HELP=1 ;;
     *)
       echo "✗ Argumento desconocido: $arg" >&2
       echo "" >&2
-      echo "   Uso: ./tools/build.sh [--debug] [--all] [--help]" >&2
+      echo "   Uso: ./tools/build.sh [linux|windows|android|all]... [--debug]" >&2
       echo "        ./tools/build.sh --help   para más información" >&2
       exit 2
       ;;
@@ -86,9 +97,11 @@ if [[ "$PRINT_HELP" -eq 1 ]]; then
   echo "Códigos de salida:"
   echo "  0  → todos los objetivos solicitados se generaron correctamente."
   echo "  2  → argumentos incorrectos."
-  echo "  ≠0 → con --all, al menos un objetivo falló (ver resumen final)."
+  echo "  1  → al menos un objetivo falló (ver resumen final)."
   exit 0
 fi
+
+[[ ${#TARGETS[@]} -eq 0 ]] && TARGETS=(linux)
 
 # ─────────────── Cargar .env (sin imprimir valores) ──────────────────
 if [[ -f .env ]]; then
@@ -123,17 +136,6 @@ require() {
     return 1
   fi
   return 0
-}
-
-# Resumen de objetivos al final con --all.
-declare -a TARGET_NAMES=()
-declare -a TARGET_STATUS=()
-declare -a TARGET_REASON=()
-
-record() {
-  TARGET_NAMES+=("$1")
-  TARGET_STATUS+=("$2")
-  TARGET_REASON+=("$3")
 }
 
 # ─────────────── Comprobaciones de requisitos ───────────────────────
@@ -259,100 +261,66 @@ build_android() {
 # ─────────────── Recolección de artefactos ──────────────────────────
 RELEASES_DIR="${REPO_ROOT}/releases"
 
-# Copia un patrón glob (incluyendo espacios en nombres) a releases/.
-# Argumentos: <etiqueta> <patrón>...
+# Copia a releases/ los binarios que genera cada objetivo y los lista.
+# Devuelve 1 si no encontró ninguno (el build "funcionó" pero no hay
+# nada que entregar).
 collect_artifacts() {
-  local label="$1"; shift
-  local pattern
-  local copied=0
-  for pattern in "$@"; do
-    # shellcheck disable=SC2086
-    for f in $pattern; do
-      if [[ -f "$f" ]]; then
-        cp -f "$f" "${RELEASES_DIR}/" && copied=$((copied + 1))
-      fi
-    done
+  local target="$1"
+  local -a files=()
+  case "$target" in
+    linux)
+      files=(src-tauri/target/"${MODE}"/bundle/appimage/*.AppImage) ;;
+    windows)
+      files=(src-tauri/target/x86_64-pc-windows-msvc/"${MODE}"/bundle/nsis/*-setup.exe) ;;
+    android)
+      mapfile -t files < <(find src-tauri/gen/android/app/build/outputs/apk \
+        -path "*/${MODE}/*" -name '*.apk' 2>/dev/null) ;;
+  esac
+  local f copied=0
+  for f in "${files[@]}"; do
+    [[ -f "$f" ]] || continue
+    cp -f "$f" "${RELEASES_DIR}/"
+    echo "   → releases/$(basename "$f")"
+    copied=$((copied + 1))
   done
-  return $copied
-}
-
-print_releases() {
-  if [[ -d "$RELEASES_DIR" ]]; then
-    local any=0
-    shopt -s nullglob
-    local f
-    for f in "$RELEASES_DIR"/*; do
-      if [[ -f "$f" ]]; then
-        any=1
-        break
-      fi
-    done
-    shopt -u nullglob
-    if [[ "$any" -eq 1 ]]; then
-      echo ""
-      echo "📦 Artefactos en releases/:"
-      ls -lh "$RELEASES_DIR" | sed 's/^/    /'
-    fi
-  fi
+  [[ "$copied" -gt 0 ]]
 }
 
 # ─────────────── Ejecución ──────────────────────────────────────────
 mkdir -p "${RELEASES_DIR}"
+shopt -s nullglob
 
-if [[ "$BUILD_ALL" -eq 0 ]]; then
-  # Modo por defecto: solo Linux AppImage.
-  if build_linux; then
-    echo ""
-    echo "✓ Binarios Linux en:"
-    ls -lh "src-tauri/target/${MODE}/bundle/appimage"/*.AppImage 2>/dev/null || true
-    collect_artifacts "linux" "src-tauri/target/${MODE}/bundle/appimage/*.AppImage"
-    print_releases
-    exit 0
-  else
-    code=$?
-    echo "✗ Falló el build de Linux." >&2
-    exit "$code"
-  fi
-fi
+declare -a STATUS=()
+declare -a REASON=()
 
-# --all: encadena los tres objetivos y muestra resumen.
-TARGETS=(linux windows android)
 for t in "${TARGETS[@]}"; do
   echo ""
   echo "════════════════════════════════════════════════════════════"
-  echo "Objetivo: $t"
+  echo "Objetivo: $t (${MODE})"
   echo "════════════════════════════════════════════════════════════"
-  if "build_${t}"; then
-    record "$t" "✓" "OK"
+  if ! "build_${t}"; then
+    STATUS+=("✗"); REASON+=("falló el build (revisa los mensajes de arriba)")
+  elif ! collect_artifacts "$t"; then
+    STATUS+=("✗"); REASON+=("el build terminó pero no se encontró el binario")
   else
-    code=$?
-    record "$t" "✗" "falló (revisa los mensajes arriba)"
+    STATUS+=("✓"); REASON+=("OK")
   fi
 done
 
-# Copia de artefactos tras cada objetivo (los que se hayan generado).
-collect_artifacts "linux"   "src-tauri/target/${MODE}/bundle/appimage/*.AppImage"
-collect_artifacts "windows" "src-tauri/target/x86_64-pc-windows-msvc/${MODE}/bundle/nsis/*-setup.exe"
-collect_artifacts "android" \
-  "$(find src-tauri/gen/android/app/build/outputs/apk -name '*.apk' 2>/dev/null)" || true
-
-# Resumen final.
 echo ""
 echo "════════════════════════════════════════════════════════════"
-echo "Resumen de objetivos"
+echo "Resumen"
 echo "════════════════════════════════════════════════════════════"
-for i in "${!TARGET_NAMES[@]}"; do
-  printf "  %s  %-8s  %s\n" "${TARGET_STATUS[$i]}" "${TARGET_NAMES[$i]}" "${TARGET_REASON[$i]}"
-done
-
-print_releases
-
-# Salida: 0 si todos ✓; distinto de 0 si alguno ✗.
 any_fail=0
-for s in "${TARGET_STATUS[@]}"; do
-  if [[ "$s" != "✓" ]]; then any_fail=1; fi
+for i in "${!TARGETS[@]}"; do
+  printf "  %s  %-8s  %s\n" "${STATUS[$i]}" "${TARGETS[$i]}" "${REASON[$i]}"
+  [[ "${STATUS[$i]}" == "✓" ]] || any_fail=1
 done
-if [[ "$any_fail" -eq 1 ]]; then
-  exit 1
+
+if compgen -G "${RELEASES_DIR}/*" >/dev/null; then
+  echo ""
+  echo "📦 Contenido de releases/:"
+  ls -lh "$RELEASES_DIR" | tail -n +2 | sed 's/^/    /'
 fi
-exit 0
+
+exit "$any_fail"

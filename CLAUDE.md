@@ -88,6 +88,7 @@ node --check ruta/al/archivo.js            # cada JS modificado
 (cd src-tauri && cargo check)              # si cambias Rust, build.rs o tauri.conf.json
 node tools/tasks/tasks.mjs list            # tareas abiertas
 bash tools/minimax/run-task.sh --check     # configuración de MiniMax
+bash tools/build.sh [linux|windows|android|all]   # build → releases/ (skill y comando /build)
 ```
 
 No hay tests automáticos todavía. Las vistas se prueban abriendo la app

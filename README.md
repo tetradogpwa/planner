@@ -40,10 +40,14 @@ Un planificador inteligente con repeticiones de tareas, ciclos personalizados y 
 Si quieres un `.exe`, `.AppImage` o `.apk`, usa la versión Tauri:
 
 ```bash
-./tools/build-linux.sh      # Linux AppImage + .deb
-./tools/build-android.sh    # Android APK
-# build-windows.ps1         # Windows NSIS (en Windows)
+./tools/build.sh            # Linux AppImage (por defecto)
+./tools/build.sh windows    # Windows NSIS (.exe, compilación cruzada)
+./tools/build.sh android    # Android APK
+./tools/build.sh all        # los tres
 ```
+
+Los binarios quedan en `releases/` (ignorada por git). Desde Claude
+Code o desde OpenCode también vale `/build [linux|windows|android|all]`.
 
 Ver `README-TAURI.md` para el detalle.
 
