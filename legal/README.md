@@ -5,11 +5,19 @@ Esta carpeta contiene todos los textos legales del proyecto.
 > ⚠️ **AVISO IMPORTANTE — MODELOS.**
 > Todos los textos de esta carpeta son **modelos informativos**, no
 > asesoramiento jurídico profesional. Antes de publicar la app en
-> cualquier tienda o de activar la monetización con anuncios, el
-> Desarrollador debería revisarlos con un abogado de su jurisdicción.
+> cualquier tienda, el Desarrollador debería revisarlos con un abogado
+> de su jurisdicción.
 >
-> Los campos marcados con `[…]` **deben rellenarse con datos reales**
-> antes del primer release en producción.
+> El campo `[TU_EMAIL_CONTACTO]` **debe rellenarse** antes del primer
+> release en producción. Se usa como email único para privacidad,
+> contacto general y accesibilidad.
+
+> **Modelo actual:** la app se distribuye **gratuita, sin anuncios,
+> sin compras y 100 % local**. Los textos siguientes están adaptados
+> a ese modelo. Si en el futuro el Desarrollador decide reactivar la
+> monetización (ver `docs/publicacion-comercial/README.md`), debe
+> restaurar aquí las versiones con anuncios guardadas en
+> `docs/publicacion-comercial/legal/`.
 
 ---
 
@@ -17,29 +25,33 @@ Esta carpeta contiene todos los textos legales del proyecto.
 
 | Archivo | Para qué sirve | Obligatorio en… |
 |---------|----------------|-----------------|
-| `PRIVACY.md` | Política de privacidad (RGPD, CCPA/CPRA, LGPD) | Google Play, Microsoft Store, web pública |
-| `TERMS.md` | Términos generales de uso | Web pública |
-| `EULA.md` | Contrato de licencia de usuario final | Microsoft Store (MSIX), opcional en Google Play |
-| `COOKIES.md` | Política de cookies y consentimiento | Web pública, webview de escritorio |
+| `PRIVACY.md` | Política de privacidad (RGPD, CCPA/CPRA, LGPD) adaptada al modelo gratuito | Google Play, Microsoft Store, web pública |
+| `TERMS.md` | Términos generales de uso (sin anuncios ni compras) | Web pública |
+| `EULA.md` | Contrato de licencia de usuario final (sin anuncios ni compras) | Microsoft Store (MSIX), opcional en Google Play |
+| `COOKIES.md` | Política de cookies y almacenamiento local (sin redes publicitarias) | Web pública, webview de escritorio |
 | `DMCA.md` | Política de retirada de contenido | Microsoft Store |
-| `REDS.md` (renombrar) → ver `REFUNDS.md` | Política de reembolsos y desistimiento | Google Play, Microsoft Store |
-| `REFUNDS.md` | Política de reembolsos y desistimiento (UE) | Google Play, Microsoft Store |
-| `ADS_DISCLOSURE.md` | Aviso publicitario específico (Google Ads) | Web pública, app, README de monetización |
 | `ACCESSIBILITY.md` | Declaración de accesibilidad (WCAG 2.1 AA) | Web pública (UE), opcional en stores |
-| `ACCEPTABLE_USE.md` | Política de uso aceptable y edad mínima | Google Play, Microsoft Store |
-| `CONTACT.md` | Datos del responsable del tratamiento | Todos (especialmente para AEPD/LSSI) |
-| `DATA_SAFETY.md` | Plantilla para el formulario Data Safety del Play Console | Google Play |
+| `ACCEPTABLE_USE.md` | Política de uso aceptable y edad mínima (sin sección de anuncios) | Google Play, Microsoft Store |
+| `CONTACT.md` | Datos del responsable (sin datos fiscales; solo nombre comercial, marca y email único) | Todos (especialmente para AEPD/LSSI) |
+| `DATA_SAFETY.md` | **Interno.** Plantilla para el formulario Data Safety del Play Console (modelo "sin datos, sin anuncios") | Google Play |
+| `STORE_POLICIES.md` | **Interno.** Cumplimiento específico de cada tienda (cuenta no comerciante) | Repositorio |
 | `SOURCES_OF_FINES.md` | **Interno.** Checklist de fuentes de multas y riesgos | Repositorio (no se distribuye) |
-| `THIRD_PARTY_LICENSES.md` | Inventario de licencias de terceros | Repositorio (no se distribuye) |
+| `THIRD_PARTY_LICENSES.md` | Inventario de licencias de terceros (sin servicios externos de anuncios) | Repositorio (no se distribuye) |
 | `LICENSE` | Licencia de código fuente del Desarrollador | Repositorio |
-| `STORE_POLICIES.md` | **Pendiente de crear.** Cumplimiento específico de cada tienda | Repositorio |
+| `README.md` | Este archivo | — |
+
+> **Nota histórica.** Los antiguos documentos `ADS_DISCLOSURE.md` y
+> `REFUNDS.md` ya no se distribuyen (la app no muestra anuncios ni
+> permite compras). Sus versiones con anuncios se conservan en
+> `docs/publicacion-comercial/legal/` por si en el futuro hay que
+> reactivarlos.
 
 ## Cómo usarlos
 
-1. **Rellena los placeholders** `[…]` en cada archivo. Sugerencia:
-   usar `grep -r "\[TU_" legal/` para localizarlos todos.
+1. **Rellena** el *placeholder* `[TU_EMAIL_CONTACTO]` con un correo
+   real (sirve para privacidad, contacto general y accesibilidad).
 2. **Publica** las versiones `.md` en tu web como `.html`
-   (cualquier static site renderer tipo GitHub Pages sirve).
+   (cualquier *static site renderer* tipo GitHub Pages sirve).
 3. **Configura** las direcciones en `CONTACT.md` (sección 5).
 4. **Antes de cada release**, revisa `SOURCES_OF_FINES.md` (sección
    18 — checklist pre-release).
@@ -50,8 +62,8 @@ Estos modelos están en **español**, alineados con la UI de la app.
 
 Si publicas en mercados no hispanohablantes:
 
-- Considera traducir al menos `PRIVACY.md`, `TERMS.md`, `COOKIES.md` y
-  `EULA.md` al inglés y al idioma local del mercado objetivo.
+- Considera traducir al menos `PRIVACY.md`, `TERMS.md`, `COOKIES.md`
+  y `EULA.md` al inglés y al idioma local del mercado objetivo.
 - Las tiendas **no exigen** traducción a todos los idiomas, pero sí
   que el idioma por defecto esté disponible y sea el declarado en el
   listado de la tienda.

@@ -2231,10 +2231,10 @@
     {
       "id": "T-023",
       "title": "Edición gratuita sin anuncios: ocultar monetización y datos de comerciante",
-      "status": "en_revision",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-10-19T11:26:47Z",
-      "updated": "2026-10-19T14:19:19Z",
+      "updated": "2026-10-20T14:43:29Z",
       "attempts": 2,
       "requests": [
         {
@@ -2310,6 +2310,11 @@
           "at": "2026-10-19T14:19:19Z",
           "event": "estado → en_revision",
           "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-20T14:43:29Z",
+          "event": "estado → hecha",
+          "note": "Correcciones resueltas (expect con un argumento, código muerto fuera, fetch de ADS_DISCLOSURE/REFUNDS). Criterios verificados en legal/ (solo negaciones de anuncios/compras, CONTACT con [TU_EMAIL_CONTACTO], LICENSE con Gabriel Cat Developer, copias en docs/publicacion-comercial). Spec 11 en verde y en rojo al volver a listar REFUNDS. test.sh: unit ✓; e2e en verde salvo 02-editar-borrar (T-026) y 09-sidebar (T-020), ya registrados."
         }
       ],
       "firstTree": "88239985db7a50e2b1c80e583f4824f5bd4c4112"

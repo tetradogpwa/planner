@@ -12,14 +12,15 @@
 
 ## A. ¿La app recoge o comparte datos del usuario?
 
-**Respuesta corta:** No, por defecto.
+**Respuesta corta:** No, por defecto. La app es gratuita, sin
+anuncios, sin compras y 100 % local.
 
 **Detalle por categoría (marca lo que corresponda):**
 
 | Categoría | ¿Se recoge? | ¿Se comparte? | Notas |
 |-----------|--------------|----------------|-------|
 | Información de contacto (nombre, email, etc.) | ❌ no | ❌ no | La app no tiene formularios que lo pidan |
-| Información financiera | ❌ no | ❌ no | Las compras in-app las gestiona la tienda |
+| Información financiera | ❌ no | ❌ no | No hay compras in-app en la versión actual |
 | Salud y estado físico | ❌ no | ❌ no | Las tareas son personales |
 | Mensajes | ❌ no | ❌ no | Sin chat |
 | Fotos y vídeos | ❌ no | ❌ no | No se accede a cámara |
@@ -38,42 +39,28 @@
 dispositivo del usuario**. El Desarrollador no recibe ninguna de las
 categorías anteriores.
 
-## C. ¿Qué ocurre cuando la versión gratuita muestra anuncios?
+## C. ¿Qué ocurre cuando la versión muestra anuncios?
 
-En ese caso se carga **Google AdMob**, que sí recoge y trata datos.
-Marca en el formulario:
-
-- **Categoría:** "Actividad en la app" + "Información del dispositivo"
-- **Recogida:** ✅ sí, pero por el **proveedor (Google)**; el
-  Desarrollador no recibe los datos.
-- **Compartida:** ✅ sí, con Google Ads como procesador.
-- **¿Es opcional?** Sí — el usuario puede adquirir la versión sin
-  anuncios.
-- **¿Se puede desactivar?** Sí, mediante compra in-app o restableciendo
-  el ID de publicidad en los ajustes del sistema.
-- **Se usan para personalizar anuncios:** según la configuración del
-  usuario en `adssettings.google.com` y en los ajustes del dispositivo.
+**No aplica.** La Aplicación no muestra anuncios. Esta sección se
+rellenará si en el futuro el Desarrollador reactiva la monetización
+(ver `docs/publicacion-comercial/README.md`).
 
 ## D. Compras in-app
 
-- **Producto:** "Quitar anuncios" (suscripción o compra única,
-  pendiente de decidir).
-- **¿Se recoge información financiera?** No por el Desarrollador. El
-  pago lo gestiona la tienda; Google Play emite un justificante firmado
-  con el `purchaseToken` y el `orderId`. Esos campos no contienen PII.
-- **Persistencia local:** la app guarda un flag `adsRemoved` en disco.
-  Este dato es local y no sale del dispositivo.
+**No aplica.** La Aplicación no ofrece compras in-app. Cuando se
+reactive la monetización, esta sección se actualizará con el nombre
+del producto y la persistencia local del flag correspondiente.
 
 ## E. ¿La app está dirigida a niños?
 
 **No.** Marcar como "No, no está dirigida a niños".
 
-Aun así, si un usuario menor de 13 usa la app:
+## F. Cuenta de desarrollador y declaración de comerciante
 
-- La app no recoge datos propios del menor.
-- Google AdMob aplica automáticamente restricciones para tráfico
-  marcado como infantil por su propio sistema (TAG child-directed
-  treatment). En el inventario no se solicita TAG.
+En Google Play Console: declarar la cuenta como **"no comerciante"**
+mientras la app siga siendo gratuita, sin anuncios y sin compras. Si
+se reactiva la monetización, cambiar la declaración a comerciante y
+volver a revisar este documento.
 
 ## G. Compromisos
 

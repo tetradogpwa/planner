@@ -1,6 +1,6 @@
 # Política de uso aceptable
 
-**Última actualización:** 16 de octubre de 2026
+**Última actualización:** 19 de octubre de 2026
 
 Esta política describe los usos permitidos y prohibidos de Planificador
 Semanal (la "Aplicación"). Al usar la Aplicación, aceptas cumplirla.
@@ -11,16 +11,13 @@ Semanal (la "Aplicación"). Al usar la Aplicación, aceptas cumplirla.
 
 La Aplicación está pensada para **usuarios de 13 años en adelante**.
 Los menores de 13 años solo pueden usar la Aplicación bajo
-responsabilidad de su madre, padre o tutor legal, y **solo si**:
+responsabilidad de su madre, padre o tutor legal.
 
-- la versión gratuita con anuncios no está activa, o
-- el anuncio/médico ha consentido la publicidad contextualizada.
-
-El motivo es el cumplimiento de:
-
-- **COPPA** (Children's Online Privacy Protection Act, EE. UU.).
-- **UK Age-Appropriate Design Code** (ICO, Reino Unido).
-- Recomendación del RGPD sobre información a niños.
+Puesto que la Aplicación es local, no muestra anuncios y no recoge
+datos personales, no se aplican las restricciones específicas de
+**COPPA**, **UK Age-Appropriate Design Code** ni la recomendación del
+RGPD sobre información a niños: la Aplicación es segura por defecto
+para todos los públicos que la usen con fines personales legítimos.
 
 ## 2. Usos prohibidos
 
@@ -34,8 +31,8 @@ No puedes usar la Aplicación para, en relación con ella:
 3. Introducir o intentar introducir virus, malware, ransomware,
    cryptominers, keyloggers o cualquier código malicioso.
 4. Realizar ingeniería inversa no permitida por la ley (ver `EULA.md`).
-5. Suplantar la identidad del Desarrollador, de Google, de la tienda de
-   aplicaciones o de cualquier otro tercero.
+5. Suplantar la identidad del Desarrollador o de cualquier otro
+   tercero.
 6. Realizar acciones que sobrecarguen la Aplicación o la expongan a
    caídas o denegación de servicio.
 7. Vulnerar o intentar vulnerar las medidas de seguridad de la
@@ -55,26 +52,24 @@ El Desarrollador:
 
 ## 4. Compras dentro de la app
 
-- Está prohibido revender, prestar o transferir la "versión sin
-  anuncios" a un tercero. La activación está vinculada al dispositivo.
-- Está prohibido usar cuentas de terceros o fraudulentas para
-  realizar compras.
-- El Desarrollador puede suspender el acceso sin derecho a reembolso
-  en caso de fraude.
+La Aplicación **no ofrece compras dentro de la app** en su versión
+actual. Es un producto gratuito. Si en el futuro se añadiesen compras,
+esta política se actualizaría en consecuencia.
 
 ## 5. Anuncios y el ecosistema publicitario
 
-- Está prohibido hacer clic en tus propios anuncios o animar a otros a
-  hacerlo (esto invalida tu cuenta de AdSense/AdMob).
-- Está prohibido usar la Aplicación como parte de un esquema de
-  generación de tráfico fraudulento o "click farms".
+La Aplicación **no muestra anuncios** ni integra redes publicitarias.
+Por tanto, no se aplica ninguna de las restricciones habituales de
+AdSense/AdMob (clic en tus propios anuncios, *click farms*, etc.).
+Esta sección se conservará simplemente para recordar al Desarrollador
+que, si en el futuro se reactiva la monetización, se añadirán aquí
+las prohibiciones estándar.
 
 ## 6. Sanciones
 
 El incumplimiento de esta política puede dar lugar a:
 
 - La suspensión del acceso a la Aplicación.
-- La cancelación de compras in-app sin derecho a reembolso.
 - La comunicación a las autoridades competentes (AEPD, policía,
   etc.) si el caso lo requiere.
 

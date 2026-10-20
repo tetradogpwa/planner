@@ -48,15 +48,13 @@
       "icons/icon.ico"
     ],
     "resources": {
-      
+
       "../legal/PRIVACY.md": "legal/PRIVACY.md",
       "../legal/TERMS.md": "legal/TERMS.md",
       "../legal/EULA.md": "legal/EULA.md",
       "../legal/COOKIES.md": "legal/COOKIES.md",
-      "../legal/REFUNDS.md": "legal/REFUNDS.md",
       "../legal/ACCESSIBILITY.md": "legal/ACCESSIBILITY.md",
       "../legal/ACCEPTABLE_USE.md": "legal/ACCEPTABLE_USE.md",
-      "../legal/ADS_DISCLOSURE.md": "legal/ADS_DISCLOSURE.md",
       "../legal/CONTACT.md": "legal/CONTACT.md",
       "../legal/THIRD_PARTY_LICENSES.md": "legal/THIRD_PARTY_LICENSES.md"
     },

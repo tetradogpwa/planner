@@ -1,6 +1,6 @@
 # Contrato de Licencia de Usuario Final (EULA)
 
-**Última actualización:** 16 de octubre de 2026
+**Última actualización:** 19 de octubre de 2026
 
 Este Contrato de Licencia de Usuario Final (en adelante, el "EULA") es
 un acuerdo legal entre **tú** (el "Usuario") y **Gabriel Cat Developer**
@@ -18,6 +18,9 @@ licencia **limitada, no exclusiva, intransferible y revocable** para:
    fines personales o internos en tu organización.
 2. Acceder a las funcionalidades descritas en la documentación pública
    del producto.
+
+La Aplicación se ofrece **gratuita, sin anuncios, sin compras dentro
+de la app y 100 % local**.
 
 ## 2. Restricciones
 
@@ -45,21 +48,16 @@ No podrás, salvo permiso expreso por escrito del Desarrollador:
 
 ## 4. Anuncios y compras dentro de la app
 
-- Por defecto, la versión gratuita muestra anuncios servidos por
-  Google.
-- Puedes adquirir la "versión sin anuncios" como compra in-app. Tras la
-  compra, no se mostrarán más anuncios.
-- El procesamiento del pago se realiza por la tienda
-  correspondiente (Google Play, Microsoft Store, App Store si
-  estuviese disponible). Las condiciones de dichas tiendas forman
-  parte de este acuerdo en lo relativo a compras.
+**La Aplicación no muestra anuncios ni ofrece compras dentro de la
+app** en su versión actual. Es un producto gratuito y local. En el
+futuro, si se añadiesen anuncios o compras, este EULA se actualizaría y
+se volvería a pedir la aceptación expresa del Usuario.
 
 ## 5. Actualizaciones
 
 El Desarrollador puede, a su criterio, lanzar actualizaciones de la
 Aplicación. Algunas pueden ser obligatorias por motivos de seguridad o
-compatibilidad. Las compras in-app realizadas siguen activas en
-versiones compatibles.
+compatibilidad.
 
 ## 6. Terminación
 
@@ -94,12 +92,14 @@ Desarrollador será responsable por:
   punitivos.
 - Pérdida de datos, beneficios, fondo de comercio o uso.
 - Daños derivados del uso o la imposibilidad de usar la Aplicación o
-  los servicios de terceros integrados (Google Ads, tiendas de
-  aplicaciones).
+  los servicios de terceros que el Usuario haya decidido integrar por
+  su cuenta (por ejemplo, asistentes de IA conectados al servidor MCP
+  local).
 
-La responsabilidad total del Desarrollador por cualquier reclamación
-relacionada con la Aplicación se limitará al importe que hayas pagado
-por la versión sin anuncios (o a cero si usas la versión gratuita).
+Puesto que la Aplicación es gratuita, la responsabilidad total del
+Desarrollador por cualquier reclamación relacionada con la Aplicación
+se limita a **cero euros** o al mínimo que la ley aplicable permita en
+caso de gratuidad.
 
 ## 9. Indemnización
 

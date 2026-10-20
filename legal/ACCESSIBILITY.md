@@ -54,8 +54,6 @@ versiones.
   PDF que hereda la maquetación de la vista de impresión. La
   accesibilidad del PDF depende de las opciones que se pasen al
   motor; actualmente **no se embeben etiquetas de accesibilidad**.
-- **Avisos publicitarios:** los anuncios servidos por Google están
-  fuera del control del Desarrollador en cuanto a su accesibilidad.
 
 ## 4. Compatibilidad con tecnologías de asistencia
 
@@ -134,8 +132,8 @@ de la barra lateral.
 Si encuentras una barrera de accesibilidad o quieres solicitar el
 contenido en un formato alternativo, escríbenos a:
 
-- **Correo:** `[TU_EMAIL_ACCESIBILIDAD]` (puede ser el mismo de
-  contacto general).
+- **Correo:** `[TU_EMAIL_CONTACTO]` (canal único, válido para
+  privacidad, consultas generales y accesibilidad).
 - **Plazo de respuesta objetivo:** 5 días hábiles.
 
 Por favor, incluye:

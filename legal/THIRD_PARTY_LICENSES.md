@@ -1,6 +1,6 @@
 # Licencias de terceros
 
-**Última actualización:** 16 de octubre de 2026
+**Última actualización:** 19 de octubre de 2026
 
 Este archivo lista todas las dependencias de terceros que el Software
 utiliza en tiempo de ejecución o empaqueta en sus binarios, junto con
@@ -38,15 +38,16 @@ El texto completo de la licencia MIT está disponible en:
 - Distribuido junto a `html2pdf.bundle.min.js` en su archivo `.LICENSE.txt`
   generado por el bundler.
 
-## 2. Servicios externos (carga dinámica, solo con consentimiento)
+## 2. Servicios externos (carga dinámica)
 
-Estos servicios **no se incluyen en el binario**. Se cargan desde sus
-CDN oficiales **solo si** el usuario acepta el banner de cookies:
+**La Aplicación no carga servicios externos en tiempo de ejecución.**
+No hay scripts de redes publicitarias (AdSense, AdMob, etc.), ni SDK
+de analítica ni de seguimiento. Todas las funcionalidades funcionan en
+local, sin conexiones de red salientes con fines publicitarios.
 
-| Servicio | Licencia / Términos | URL |
-|----------|---------------------|-----|
-| Google AdSense | Términos de Google | https://policies.google.com/terms |
-| Google AdMob | Términos de Google | https://policies.google.com/terms |
+> Si en el futuro se añadiesen servicios externos al reactivar la
+> monetización, se deben listar en esta sección junto con sus
+> términos y licencias.
 
 ## 3. Iconos y assets gráficos
 
@@ -55,9 +56,8 @@ CDN oficiales **solo si** el usuario acepta el banner de cookies:
 | `icon-192x192.png` | Propiedad del Desarrollador | A confirmar por el Desarrollador |
 | `icon-512x512.png` | Propiedad del Desarrollador | A confirmar por el Desarrollador |
 
-Si en algún momento se usan fuentes de iconos open source
-(por ejemplo, Material Symbols, Font Awesome), añadir aquí la licencia
-correspondiente.
+Si en algún momento se usan fuentes de iconos open source (por ejemplo,
+Material Symbols, Font Awesome), añadir aquí la licencia correspondiente.
 
 ---
 

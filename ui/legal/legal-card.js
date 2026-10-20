@@ -18,8 +18,6 @@ const DOCS = {
   TERMS:                 { title: 'Términos de uso',          file: './legal/TERMS.md' },
   EULA:                  { title: 'Contrato de licencia',     file: './legal/EULA.md' },
   COOKIES:               { title: 'Política de cookies',      file: './legal/COOKIES.md' },
-  ADS_DISCLOSURE:        { title: 'Aviso de publicidad',      file: './legal/ADS_DISCLOSURE.md' },
-  REFUNDS:               { title: 'Reembolsos',               file: './legal/REFUNDS.md' },
   ACCESSIBILITY:         { title: 'Accesibilidad',            file: './legal/ACCESSIBILITY.md' },
   ACCEPTABLE_USE:        { title: 'Uso aceptable',            file: './legal/ACCEPTABLE_USE.md' },
   DMCA:                  { title: 'Propiedad intelectual',    file: './legal/DMCA.md' },

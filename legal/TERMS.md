@@ -10,9 +10,10 @@ Aplicación.
 
 ## 1. La Aplicación
 
-Planificador Semanal es una aplicación local de gestión de tareas y
-hábitos con repetición periódica y exportación a PDF. El Desarrollador
-es **Gabriel Cat Developer**.
+Planificador Semanal es una aplicación **gratuita, sin anuncios, sin
+compras dentro de la app y 100 % local** de gestión de tareas y
+hábitos con repetición periódica y exportación a PDF. El
+Desarrollador es **Gabriel Cat Developer**.
 
 ## 2. Licencia de uso
 
@@ -33,7 +34,7 @@ Desarrollador:
   aplicable (por ejemplo, para interoperabilidad).
 - Usar la Aplicación para actividades ilícitas.
 
-## 4. Datos y contenido
+## 3. Datos y contenido
 
 - Tus tareas y hábitos se almacenan en tu dispositivo. Eres responsable
   de hacer copias de seguridad si lo consideras necesario (la
@@ -42,28 +43,25 @@ Desarrollador:
   decidas compartirlas voluntariamente (por ejemplo, enviando un JSON
   al Desarrollador para soporte).
 
-## 5. Anuncios y compras
+## 4. Anuncios y compras
 
-- Si no has adquirido la versión sin anuncios, la Aplicación muestra
-  anuncios servidos por Google. Estos anuncios son responsabilidad de
-  Google, no del Desarrollador.
-- Puedes quitar los anuncios realizando la compra in-app correspondiente
-  desde la tienda donde conseguiste la Aplicación.
-- Las compras in-app se procesan por la tienda (Google Play, Microsoft
-  Store, etc.) y están sujetas a los términos de esa tienda.
+**La Aplicación no muestra anuncios ni ofrece compras dentro de la
+app.** Es un producto gratuito que se distribuye tal cual. En el
+futuro, si el Desarrollador decidiese reactivar la monetización (con
+anuncios o compras), se publicarían unos términos actualizados con
+las condiciones aplicables y se te pediría de nuevo la aceptación.
 
-## 6. Actualizaciones
+## 5. Actualizaciones
 
 El Desarrollador puede publicar actualizaciones que:
 
 - Añadan, modifiquen o eliminen funcionalidades.
 - Cambien requisitos técnicos (versión mínima de sistema, etc.).
-- Modifiquen la ubicación o el tamaño de las zonas publicitarias.
 
-En la medida de lo posible, las funcionalidades principales del producto
-(local-only, sin recopilación de datos) se mantendrán.
+En la medida de lo posible, las funcionalidades principales del
+producto (local-only, sin recopilación de datos) se mantendrán.
 
-## 7. Garantías y responsabilidad
+## 6. Garantías y responsabilidad
 
 La Aplicación se proporciona "tal cual" (AS IS) y "según disponibilidad"
 (AS AVAILABLE), sin garantías de ningún tipo, expresas o implícitas,
@@ -77,23 +75,23 @@ responsable de:
   del propio usuario.
 - Daños indirectos, incidentales, especiales, consecuentes o
   punitivos.
-- Daños derivados del uso de los servicios de terceros (Google Ads,
-  tienda de aplicaciones, etc.).
+- Daños derivados del uso de los servicios de terceros que el usuario
+  haya decidido integrar por su cuenta (por ejemplo, asistentes de
+  IA conectados al servidor MCP local de la Aplicación).
 
-La responsabilidad total del Desarrollador, en cualquier caso, queda
-limitada al importe que hayas pagado por la versión sin anuncios (o
-cero si usas la versión gratuita).
+Puesto que la Aplicación es gratuita, la responsabilidad total del
+Desarrollador, en cualquier caso, queda limitada a **cero euros** o al
+mínimo que la ley aplicable permita en caso de gratuidad.
 
-## 8. Terminación
+## 7. Terminación
 
 - Puedes dejar de usar la Aplicación en cualquier momento
   desinstalándola.
 - El Desarrollador puede dejar de distribuir la Aplicación en una
-  tienda concreta. Si ocurre, tus datos locales y tus compras
-  registradas en esa tienda se mantienen según las políticas de la
-  tienda.
+  tienda concreta. Si ocurre, tus datos locales se mantienen según
+  las políticas de la tienda.
 
-## 9. Ley aplicable y jurisdicción
+## 8. Ley aplicable y jurisdicción
 
 Estos términos se rigen por la legislación del país de residencia del
 Desarrollador. Para cualquier disputa, las partes se someten a los
@@ -108,15 +106,7 @@ aplicable disponga otra cosa (por ejemplo, en defensa del consumidor).
 - También puedes acudir a la autoridad de control de tu país en
   materia de consumo.
 
-## 9bis. Desistimiento (consumidores UE)
-
-La Directiva 2011/83/UE te da, por defecto, 14 días desde la compra
-para desistir. El producto in-app "Quitar anuncios" es un **contenido
-digital cuya ejecución comienza inmediatamente**, por lo que el
-usuario **acepta perder el derecho de desistimiento** en cuanto se
-completa la compra. Ver `REFUNDS.md` para el detalle.
-
-## 9ter. Exclusión de responsabilidad frente a contenido del usuario
+## 9bis. Exclusión de responsabilidad frente a contenido del usuario
 
 El contenido que introduces en la Aplicación (nombres de tareas,
 descripciones, etc.) se guarda únicamente en tu dispositivo. El
@@ -126,7 +116,7 @@ supervisa, modera, retira ni bloquea.
 Eres el único responsable de que ese contenido cumpla la ley y no
 infrinja derechos de terceros.
 
-## 9 quater. Cumplimiento de accesibilidad
+## 9ter. Cumplimiento de accesibilidad
 
 El Desarrollador se esfuerza por cumplir la **Directiva (UE)
 2019/882** (European Accessibility Act) y publica una declaración de

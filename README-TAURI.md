@@ -235,17 +235,19 @@ Los textos legales están en `legal/`:
 | `PRIVACY.md` | Política de privacidad (RGPD + CCPA/CPRA + LGPD) |
 | `TERMS.md` | Términos de uso |
 | `EULA.md` | EULA |
-| `COOKIES.md` | Política de cookies y consentimiento |
-| `REFUNDS.md` | Política de reembolsos |
+| `COOKIES.md` | Política de cookies (sin redes publicitarias) |
 | `ACCESSIBILITY.md` | Declaración de accesibilidad WCAG 2.1 AA |
 | `ACCEPTABLE_USE.md` | Política de uso aceptable |
 | `DMCA.md` | Política de retirada DMCA |
-| `ADS_DISCLOSURE.md` | Aviso de publicidad |
-| `CONTACT.md` | Datos del responsable (plantilla con placeholders) |
-| `DATA_SAFETY.md` | Plantilla para el formulario de Google Play |
+| `CONTACT.md` | Datos del responsable (con placeholder del email único) |
+| `DATA_SAFETY.md` | **interno.** Plantilla para el formulario de Google Play (modelo gratuito) |
 | `SOURCES_OF_FINES.md` | **interno.** Checklist de riesgos regulatorios |
-| `STORAGE_POLICIES.md` | **interno.** Checklist de cumplimiento de tiendas |
+| `STORE_POLICIES.md` | **interno.** Checklist de cumplimiento de tiendas |
 | `THIRD_PARTY_LICENSES.md` | Inventario de licencias OSS |
+
+La Aplicación se distribuye **gratuita, sin anuncios y sin compras**.
+Para reactivar la monetización, sigue los pasos de
+`docs/publicacion-comercial/README.md`.
 
 ⚠️ Todos los textos son **modelos informativos**. El Desarrollador
 debe rellenarlos con sus datos reales (ver `[TU_*]` en

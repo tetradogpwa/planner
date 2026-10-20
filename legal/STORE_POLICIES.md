@@ -1,9 +1,14 @@
 # Cumplimiento de políticas de tiendas
 
-**Última actualización:** 16 de octubre de 2026
+**Última actualización:** 19 de octubre de 2026
 
 > Documento **interno** del repositorio. Sirve como checklist antes
 > de cada release. No se distribuye con la app.
+
+La Aplicación se distribuye como **gratuita, sin anuncios, sin
+compras y 100 % local**. Mientras se mantenga este modelo, las
+secciones de cada tienda son más simples: no hay *Data Safety* con
+anuncios, no hay *Ads Disclosure*, no hay declaración de comerciante.
 
 ---
 
@@ -16,17 +21,18 @@
 | `targetSdkVersion` ≥ mínimo exigido por Play | usar el del año en curso | Tauri 2 sigue el target SDK actual por defecto |
 | `minSdkVersion` declarado | 24 (Android 7.0) | configurado en `src-tauri/tauri.conf.json` |
 | 64-bit nativo (arm64-v8a) | ✅ | Tauri produce ambos por defecto |
-| Sin permisos peligrosos no justificados | ✅ | La app no pide CAMERA, LOCATION, RECORD_AUDIO, READ_CONTACTS, READ_CALENDAR |
+| Sin permisos peligrosos no justificados | ✅ | La app no pide CAMERA, LOCATION, RECORD_AUDIO, READ_CONTACTS, READ_CALENDAR, INTERNET para anuncios |
 | Política de privacidad enlazada en el listado | ⏳ pendiente de URL pública | Publicar `legal/PRIVACY.md` en una URL estable |
 | Sección "Data Safety" rellenada | ⏳ pendiente | Usar `legal/DATA_SAFETY.md` como guía |
+| Cuenta declarada como **no comerciante** | sí | Mientras la app siga siendo gratuita y sin anuncios |
 
 ### 1.2 Contenido y comportamiento
 
 - La app no reproduce contenido con copyright de terceros.
-- La app no muestra anuncios a niños (TAG child-directed desactivado
-  por defecto).
+- La app no muestra anuncios a niños (la app no muestra anuncios en
+  absoluto, dado el modelo gratuito).
 - La app no redirige al usuario a una web para completar la compra
-  (las IAP pasan por Google Play Billing).
+  (no hay IAP en la versión actual).
 - La app no usa SMS ni llamadas.
 - La app no accede a `AccountManager`.
 
@@ -96,15 +102,15 @@ web del Desarrollador:
 
 ## 4. Política de anuncios y compras en cada tienda
 
-| Tienda | Inserción de anuncios | Compra in-app "Quitar anuncios" |
-|--------|-----------------------|--------------------------------|
-| Google Play | Google AdMob (gestionado por app) | Google Play Billing |
-| Microsoft Store | Google AdSense (vía WebView) | Microsoft Store IAP |
-| Web (futuro) | Google AdSense | TPV propio (Stripe/LemonSqueezy) |
+**Modelo actual:** la app es gratuita y no muestra anuncios ni
+ofrece compras en ninguna tienda. Cada tienda se publica sin IAP
+ni redes publicitarias.
 
-La librería `monetization.js` está preparada para los tres casos; la
-clave que active los anuncios se decide en tiempo de build según la
-plataforma objetivo.
+> Cuando el Desarrollador reactive la monetización, esta sección se
+> ampliará para indicar qué tienda usa qué red publicitaria y qué
+> tienda procesa las compras (Google Play Billing en Android,
+> Microsoft Store IAP en Windows, etc.). Ver
+> `docs/publicacion-comercial/README.md`.
 
 ---
 
