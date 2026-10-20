@@ -1605,10 +1605,10 @@
     {
       "id": "T-017",
       "title": "E2E: apariencia y letra al 200 % sin desbordar en móvil",
-      "status": "en_revision",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-10-19T05:42:04Z",
-      "updated": "2026-10-19T14:09:26Z",
+      "updated": "2026-10-20T14:26:23Z",
       "attempts": 2,
       "requests": [
         {
@@ -1684,6 +1684,11 @@
           "at": "2026-10-19T14:09:26Z",
           "event": "estado → en_revision",
           "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-20T14:26:23Z",
+          "event": "estado → hecha",
+          "note": "Supervisor: la medición de .content funciona (detectó el desbordamiento real de Ajustes › Accesibilidad, ya corregido en T-022). Visto en rojo por el supervisor: #view-week{min-width:1500px} → Semana ✖; dataset.theme fijo a light → 4 pruebas de tema ✖. Arreglos del supervisor en la spec: Asistente (MCP) ya no se salta en silencio si falta la pestaña, fuera un bloque sin efecto, cabecera actualizada. 04-apariencia 18/18; bash tools/test.sh: unit ✓, e2e solo fallan 02 (T-026) y 09 en weston (T-020). La parte de helpers.mjs entró en el commit de T-022."
         }
       ],
       "firstTree": "006055c17b89102b5989f6a13cb0c5ce92590234"
