@@ -52,7 +52,8 @@ Esta carpeta contiene todos los textos legales del proyecto.
    igual en `CONTACT.md`, `PRIVACY.md` y `ACCESSIBILITY.md`.
 2. **Publica** las versiones `.md` en tu web como `.html`
    (cualquier *static site renderer* tipo GitHub Pages sirve).
-3. **Configura** las direcciones en `CONTACT.md` (sección 5).
+3. **Mantén activas** las direcciones públicas de la política de
+   privacidad (ver "Direcciones públicas" más abajo).
 4. **Antes de cada release**, revisa `SOURCES_OF_FINES.md` (sección
    18 — checklist pre-release).
 
@@ -67,6 +68,21 @@ Si publicas en mercados no hispanohablantes:
 - Las tiendas **no exigen** traducción a todos los idiomas, pero sí
   que el idioma por defecto esté disponible y sea el declarado en el
   listado de la tienda.
+
+## Direcciones públicas
+
+Google Play y Microsoft Store piden la **URL pública** de la política
+de privacidad (y conviene publicar también los términos). No hace falta
+dominio propio: sirve un subdominio gratuito (GitHub Pages
+`usuario.github.io`, Google Sites…). Cada URL debe responder 200 OK y
+mostrar la última versión del `.md` correspondiente:
+
+- política de privacidad → `legal/PRIVACY.md`
+- términos de uso → `legal/TERMS.md`
+- contrato de licencia → `legal/EULA.md`
+- cookies → `legal/COOKIES.md`
+- accesibilidad → `legal/ACCESSIBILITY.md`
+- contacto → `legal/CONTACT.md`
 
 ---
 

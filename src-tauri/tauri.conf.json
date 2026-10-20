@@ -38,7 +38,6 @@
     "shortDescription": "Planificador local de tareas y hábitos",
     "longDescription": "Planificador semanal con tareas recurrentes, ciclos personalizados y exportación a PDF. Funciona 100% local; sin servidor ni cuentas.",
     "copyright": "© 2026 Gabriel Cat Developer",
-    "homepage": "https://gabriel-cat-developer.example",
     "targets": ["appimage", "nsis"],
     "icon": [
       "icons/32x32.png",

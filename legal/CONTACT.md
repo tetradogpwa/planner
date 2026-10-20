@@ -55,22 +55,4 @@ ni en el Reino Unido. **No aplica** si resides en un Estado miembro.
 
 ---
 
-## 5. Direcciones públicas que necesitas mantener activas
-
-Estos enlaces deben responder 200 OK y mantener la última versión de
-los textos:
-
-- `https://[TU_DOMINIO]/legal/privacy.html` → `legal/PRIVACY.md`
-- `https://[TU_DOMINIO]/legal/terms.html` → `legal/TERMS.md`
-- `https://[TU_DOMINIO]/legal/eula.html` → `legal/EULA.md`
-- `https://[TU_DOMINIO]/legal/cookies.html` → `legal/COOKIES.md`
-- `https://[TU_DOMINIO]/legal/accessibility.html` → `legal/ACCESSIBILITY.md`
-- `https://[TU_DOMINIO]/legal/contact.html` → este archivo
-
-> **Consejo:** configura un redirect desde cada `.html` al `.md`
-> correspondiente en tu CDN (Cloudflare Pages, GitHub Pages, Netlify) y
-> deja que GitHub Pages renderice el Markdown automáticamente.
-
----
-
 *Modelo informativo, no sustituye al asesoramiento jurídico profesional.*

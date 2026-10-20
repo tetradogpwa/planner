@@ -1,5 +1,5 @@
 {
-  "next": 28,
+  "next": 29,
   "tasks": [
     {
       "id": "T-001",
@@ -2508,6 +2508,42 @@
           "at": "2026-10-20T14:57:31Z",
           "event": "estado → hecha",
           "note": "Correo puesto en CONTACT, PRIVACY y ACCESSIBILITY; quitado el aviso de PLANTILLA; README actualizado. Fechas de PRIVACY y ACCESSIBILITY al 20 oct; TERMS y EULA sin tocar. test.sh: unit ✓, e2e ✓ (Xvfb)."
+        }
+      ]
+    },
+    {
+      "id": "T-028",
+      "title": "Quitar las referencias a un dominio propio",
+      "status": "hecha",
+      "relatedTo": null,
+      "created": "2026-10-20T14:58:52Z",
+      "updated": "2026-10-20T15:00:03Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-20T14:58:52Z",
+          "text": "no tengo dominio...ya que quiero publicar en las tiendas"
+        }
+      ],
+      "criteria": [
+        "legal/CONTACT.md (visible en la app) no tiene [TU_DOMINIO] ni instrucciones para el desarrollador; esas instrucciones pasan a legal/README.md",
+        "tauri.conf.json no tiene el homepage inventado (.example)",
+        "cargo check y bash tools/test.sh en ✓"
+      ],
+      "notes": [
+        "Supervisor: cambio de texto y configuración con decisión del usuario; lo hace el supervisor."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-20T14:58:52Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-20T15:00:03Z",
+          "event": "estado → hecha",
+          "note": "Sección 5 de CONTACT.md movida a legal/README.md (Direcciones públicas, sin dominio propio); homepage .example quitado de tauri.conf.json. cargo check ✓; test.sh: unit ✓, e2e ✓ (Xvfb)."
         }
       ]
     }
