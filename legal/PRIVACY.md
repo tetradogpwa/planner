@@ -1,6 +1,6 @@
 # Política de Privacidad
 
-**Última actualización:** 19 de octubre de 2026
+**Última actualización:** 20 de octubre de 2026
 
 **Planificador Semanal** (en adelante, "la Aplicación") es una
 aplicación desarrollada por **Gabriel Cat Developer** (en adelante,
@@ -98,7 +98,7 @@ de la UE tendrían los siguientes derechos:
 7. **No ser objeto de decisiones automatizadas** — la app no toma
    decisiones automatizadas sobre ti.
 
-Para ejercerlos, escribe a `[TU_EMAIL_CONTACTO]`. Plazo legal de
+Para ejercerlos, escribe a gabriel.cat.developer+planner@gmail.com. Plazo legal de
 respuesta: **1 mes**, ampliable a 2 meses si la solicitud es compleja
 (te avisaremos en ese caso). Si no quedas satisfecho, puedes reclamar
 ante la **AEPD** (España) o la autoridad de control de tu país
@@ -126,13 +126,13 @@ esta política y, en su caso, un enlace habilitable para ejercer este
 derecho.
 
 Para consultas específicas sobre derechos CCPA/CPRA, escribe a
-`[TU_EMAIL_CONTACTO]`.
+gabriel.cat.developer+planner@gmail.com.
 
 ## 5ter. Derechos del usuario en Brasil (LGPD)
 
 Si resides en Brasil, te asisten los derechos análogos del RGPD
 (acceso, rectificación, supresión, portabilidad, oposición). Puedes
-ejercerlos escribiendo a `[TU_EMAIL_CONTACTO]`. La autoridad de
+ejercerlos escribiendo a gabriel.cat.developer+planner@gmail.com. La autoridad de
 control es la **ANPD** (`gov.br/anpd`).
 
 ## 5 quater. Accesibilidad
@@ -140,7 +140,7 @@ control es la **ANPD** (`gov.br/anpd`).
 El Desarrollador publica una **declaración de accesibilidad** con el
 estado de cumplimiento WCAG 2.1 AA en `ACCESSIBILITY.md`. Si
 encuentras una barrera, repórtala por los canales indicados en ese
-documento (correo único: `[TU_EMAIL_CONTACTO]`).
+documento (correo único: gabriel.cat.developer+planner@gmail.com).
 
 ## 5 quinquies. Ley aplicable (España / LSSI-CE)
 
@@ -169,7 +169,7 @@ de la Aplicación.
 ## 7. Contacto
 
 Para cualquier duda sobre privacidad, el usuario puede escribir a la
-dirección indicada en `CONTACT.md` (`[TU_EMAIL_CONTACTO]`).
+dirección indicada en `CONTACT.md` (gabriel.cat.developer+planner@gmail.com).
 
 ---
 

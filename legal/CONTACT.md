@@ -1,9 +1,5 @@
 # Datos de contacto e información del responsable
 
-> ⚠️ **PLANTILLA.** El campo marcado con `[TU_EMAIL_CONTACTO]` debe
-> rellenarse con un correo real antes de publicar el documento. Los
-> textos legales son inválidos para producción mientras esté vacío.
-
 ---
 
 ## 1. Responsable de la Aplicación
@@ -12,7 +8,7 @@
 |-------|-------|
 | Nombre comercial | "Gabriel Cat Developer" |
 | Marca del producto | "Planificador Semanal" |
-| Correo de contacto | `[TU_EMAIL_CONTACTO]` |
+| Correo de contacto | gabriel.cat.developer+planner@gmail.com |
 
 La Aplicación se ofrece actualmente **gratuita, sin anuncios, sin
 compras y 100 % local**. El Desarrollador no recoge datos personales
@@ -34,7 +30,7 @@ escala, no trata categorías especiales de datos y el Desarrollador no
 cuenta con empleados. Aun así, se designa un canal único para temas
 de privacidad:
 
-- **Email único de contacto:** `[TU_EMAIL_CONTACTO]` (se usa también
+- **Email único de contacto:** gabriel.cat.developer+planner@gmail.com (se usa también
   para privacidad y accesibilidad).
 - **Plazo de respuesta objetivo:** 7 días naturales (legal: 1 mes,
   ampliable a 2 meses si la solicitud es compleja).

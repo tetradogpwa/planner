@@ -8,9 +8,9 @@ Esta carpeta contiene todos los textos legales del proyecto.
 > cualquier tienda, el Desarrollador debería revisarlos con un abogado
 > de su jurisdicción.
 >
-> El campo `[TU_EMAIL_CONTACTO]` **debe rellenarse** antes del primer
-> release en producción. Se usa como email único para privacidad,
-> contacto general y accesibilidad.
+> El email único para privacidad, contacto general y accesibilidad es
+> gabriel.cat.developer+planner@gmail.com (está en `CONTACT.md`,
+> `PRIVACY.md` y `ACCESSIBILITY.md`).
 
 > **Modelo actual:** la app se distribuye **gratuita, sin anuncios,
 > sin compras y 100 % local**. Los textos siguientes están adaptados
@@ -48,8 +48,8 @@ Esta carpeta contiene todos los textos legales del proyecto.
 
 ## Cómo usarlos
 
-1. **Rellena** el *placeholder* `[TU_EMAIL_CONTACTO]` con un correo
-   real (sirve para privacidad, contacto general y accesibilidad).
+1. **Mantén** el correo de contacto (gabriel.cat.developer+planner@gmail.com)
+   igual en `CONTACT.md`, `PRIVACY.md` y `ACCESSIBILITY.md`.
 2. **Publica** las versiones `.md` en tu web como `.html`
    (cualquier *static site renderer* tipo GitHub Pages sirve).
 3. **Configura** las direcciones en `CONTACT.md` (sección 5).

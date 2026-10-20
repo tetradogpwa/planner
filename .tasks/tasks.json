@@ -1,5 +1,5 @@
 {
-  "next": 27,
+  "next": 28,
   "tasks": [
     {
       "id": "T-001",
@@ -2474,6 +2474,42 @@
         }
       ],
       "firstTree": "6768a9ce9ba678de712c67a10fdea8cc0df597f9"
+    },
+    {
+      "id": "T-027",
+      "title": "Rellenar el correo de contacto en los textos legales",
+      "status": "hecha",
+      "relatedTo": null,
+      "created": "2026-10-20T14:56:17Z",
+      "updated": "2026-10-20T14:57:31Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-10-20T14:56:17Z",
+          "text": "gabriel.cat.developer+planner@gmail.com (respuesta a: correo de contacto para CONTACT.md y PRIVACY.md antes de publicar)"
+        }
+      ],
+      "criteria": [
+        "No queda [TU_EMAIL_CONTACTO] en legal/ (sí en docs/publicacion-comercial, que son plantillas futuras)",
+        "Se quita el aviso de PLANTILLA de CONTACT.md y legal/README.md deja de pedir rellenarlo",
+        "No cambia la fecha de Última actualización de TERMS.md ni de EULA.md"
+      ],
+      "notes": [
+        "Supervisor: sustitución mecánica de un dato del usuario; la hace el supervisor, no MiniMax."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-10-20T14:56:17Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-10-20T14:57:31Z",
+          "event": "estado → hecha",
+          "note": "Correo puesto en CONTACT, PRIVACY y ACCESSIBILITY; quitado el aviso de PLANTILLA; README actualizado. Fechas de PRIVACY y ACCESSIBILITY al 20 oct; TERMS y EULA sin tocar. test.sh: unit ✓, e2e ✓ (Xvfb)."
+        }
+      ]
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Declaración de accesibilidad
 
-**Última actualización:** 19 de octubre de 2026
+**Última actualización:** 20 de octubre de 2026
 
 Planificador Semanal se compromete a hacer su aplicación utilizable
 por el mayor número de personas posible, incluidas personas con
@@ -132,7 +132,7 @@ de la barra lateral.
 Si encuentras una barrera de accesibilidad o quieres solicitar el
 contenido en un formato alternativo, escríbenos a:
 
-- **Correo:** `[TU_EMAIL_CONTACTO]` (canal único, válido para
+- **Correo:** gabriel.cat.developer+planner@gmail.com (canal único, válido para
   privacidad, consultas generales y accesibilidad).
 - **Plazo de respuesta objetivo:** 5 días hábiles.
 
