@@ -1,0 +1,57 @@
+/* Pestaña "Asistente (MCP)" dentro de Ajustes. La maquetación sale
+   casi toda de las reglas compartidas en ui/settings/settings-card.css
+   (.settings-subtitle, .settings-help, .settings-options, .settings-option,
+   .settings-btn, .settings-status). Solo añadimos lo específico. */
+
+.mcp-card { display: grid; gap: 1rem; }
+
+/* Icono decorativo del título "Control por asistente (MCP)": el
+   emoji va en su propio <span aria-hidden="true"> y el texto en el
+   span #mcpTitle, que da nombre a la sección (aria-labelledby) sin
+   incluir el icono. */
+.mcp-card h3.settings-subtitle > span[aria-hidden] { margin-right: 0.4rem; }
+
+.mcp-config {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: clamp(12px, 3vw, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-alt);
+}
+.mcp-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mcp-row label {
+  font-weight: 600;
+  min-width: 6rem;
+  font-size: calc(0.875rem * var(--fs-label));
+}
+.mcp-row input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: calc(0.875rem * var(--fs-input));
+  padding: 0.4rem 0.6rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+}
+.mcp-cmd-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+.mcp-cmd-row label { min-width: 0; }
+.mcp-cmd-row input {
+  flex: 0 0 auto;
+  width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+.mcp-cmd-row .mcp-copy-cmd { align-self: flex-end; }

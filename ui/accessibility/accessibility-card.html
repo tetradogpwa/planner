@@ -1,5 +1,17 @@
 <div class="accessibility-card">
-  <h2 id="view-accessibility-heading" tabindex="-1">Accesibilidad</h2>
+  <!-- Bloque 1: "Tamaño de letra general".
+       Bloque 2: "Tamaño por partes" + botón Restablecer.
+       Bloque 3: "Tamaño de los iconos del menú contraído en
+       pantallas táctiles".
+       Bloque 4: lista de atajos de teclado de T-019.
+       Los tres primeros los monta AccessibilityFontSizesCard en el
+       hueco #accessibility-fontsizes-mount, en este orden. -->
+
+  <div class="accessibility-fontsizes" id="accessibility-fontsizes-mount"></div>
+
+  <h3 class="accessibility-title" id="accessibilityShortcutsTitle">
+    <span aria-hidden="true">⌨️</span> Atajos de teclado
+  </h3>
   <p class="accessibility-intro">
     Aquí encontrarás la lista completa de combinaciones de teclado de
     la aplicación. La ayuda también está disponible como diálogo en

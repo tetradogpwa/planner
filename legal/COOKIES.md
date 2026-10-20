@@ -60,7 +60,7 @@ para guardar:
 - Estado de la compra "sin anuncios" (si la realizas).
 
 Estos datos **no abandonan tu dispositivo**. Borrarlos desde la
-configuración de tu navegador o desde la sección "Gestión de datos" de
+configuración de tu navegador o desde la sección "Ajustes › Datos" de
 la Aplicación no afecta a otras personas.
 
 ## 5. Identificadores publicitarios en móvil (Android / iOS)

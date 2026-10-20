@@ -1,0 +1,66 @@
+/* Vista "Ajustes": encabezado + barra de pestañas + contenido de la
+   pestaña activa. El contenido real de cada pestaña lo monta
+   ui/ajustes/ajustes-card.js reutilizando las tarjetas existentes
+   (ui/settings, ui/accessibility, ui/dataManager, ui/print,
+   ui/mcp, ui/legal) dentro de cada .ajustes-panel. */
+
+.ajustes-card {
+  display: grid;
+  gap: 1rem;
+  max-width: 60rem;
+}
+
+.ajustes-card h2 {
+  margin: 0;
+  font-size: calc(1.5rem * var(--fs-title));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Barra de pestañas: flex-wrap para que las pestañas salten a una
+   segunda línea con letra grande en móvil (390 px) en lugar de forzar
+   scroll horizontal. La pestaña activa lleva un subrayado grueso más
+   allá del color, para cumplir con el criterio de "se distingue por
+   algo más que el color". */
+.ajustes-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+
+.ajustes-tab {
+  margin: 0;
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  font-size: calc(0.95rem * var(--fs-chip));
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  min-height: 2.5rem;
+  overflow-wrap: anywhere;
+}
+
+.ajustes-tab:hover {
+  background: var(--hover-bg);
+  color: var(--text);
+}
+
+.ajustes-tab[aria-selected="true"] {
+  color: var(--text);
+  background: var(--soft-strong);
+  border-color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 700;
+}
+
+/* Cada tabpanel contiene una tarjeta ya maquetada. Sin márgenes
+   extra: las tarjetas ya ponen los suyos. */
+.ajustes-panel { min-width: 0; }
+.ajustes-panel[hidden] { display: none; }

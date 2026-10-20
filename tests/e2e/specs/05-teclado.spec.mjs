@@ -143,19 +143,18 @@ describe('Uso completo con teclado', () => {
     expect(mainTag).toBe('MAIN');
   });
 
-  // ── Atajos de vista (Alt+1..Alt+7) ─────────────────────────────
-  // Se han añadido los 7 atajos base (Alt+8 = Accesibilidad existe,
-  // pero se prueba en 06-accesibilidad.spec.mjs). Aquí cubrimos los
-  // 7 originales del criterio de T-007.
+  // ── Atajos de vista (Alt+1..Alt+3 y Alt+4..Alt+8) ─────────────────
+  // Alt+1..Alt+3 abren vistas distintas (Tareas, Semana, Vista
+  // completa) y el foco va al encabezado de cada vista.
+  // Alt+4..Alt+8 abren Ajustes en una pestaña concreta (T-022) y el
+  // foco va a la pestaña activa, NO al encabezado de la vista
+  // (criterio explícito: "foco en la pestaña activa"). Estos casos
+  // los cubre la spec 10-ajustes; aquí verificamos el resto.
 
   const atajosBase = [
-    { n: 1, vista: 'tasks',        idHeading: 'view-tasks-heading' },
-    { n: 2, vista: 'week',         idHeading: 'view-week-body-title' },
-    { n: 3, vista: 'allWeeks',     idHeading: 'view-allWeeks-heading' },
-    { n: 4, vista: 'data',         idHeading: 'view-data-heading' },
-    { n: 5, vista: 'print',        idHeading: 'view-print-heading' },
-    { n: 6, vista: 'settings',     idHeading: 'view-settings-heading' },
-    { n: 7, vista: 'legal',        idHeading: 'view-legal-heading' },
+    { n: 1, vista: 'tasks',    idHeading: 'view-tasks-heading' },
+    { n: 2, vista: 'week',     idHeading: 'view-week-body-title' },
+    { n: 3, vista: 'allWeeks', idHeading: 'view-allWeeks-heading' },
   ];
 
   for (const { n, vista, idHeading } of atajosBase) {
@@ -234,12 +233,12 @@ describe('Uso completo con teclado', () => {
     );
     expect(vistaDespuesArriba).toBe('tasks');
 
-    // Fin → última opción con data-view (accessibility, índice 7).
+    // Fin → última opción con data-view (ajustes, índice 4 desde T-022).
     await browser.keys([Key.End]);
     const vistaFin = await browser.execute(
       () => document.activeElement?.dataset?.view || '',
     );
-    expect(vistaFin).toBe('accessibility');
+    expect(vistaFin).toBe('ajustes');
 
     // Inicio → primera opción (tasks).
     await browser.keys([Key.Home]);
@@ -427,9 +426,11 @@ describe('Uso completo con teclado', () => {
 
   // ── Modal legal: foco en título, trampa, retorno al enlace ─────
   it('abrir un documento desde Legal enfoca el título del modal y devuelve el foco al enlace', async () => {
-    // Vamos a la vista Legal.
+    // Vamos a la pestaña Legal de Ajustes (Alt+7 desde T-022).
     await browser.keys([Key.Alt, '7']);
-    await porId('view-legal-heading').waitForDisplayed();
+    // La pestaña Legal está dentro de #view-ajustes; esperamos al
+    // primer enlace de documento como señal de que la pestaña pintó.
+    await $('a[data-doc="PRIVACY"]').waitForDisplayed();
 
     // Identificamos el primer enlace de documento (PRIVACY) y
     // pulsamos Enter sobre él (ya debe estar en el orden del DOM).

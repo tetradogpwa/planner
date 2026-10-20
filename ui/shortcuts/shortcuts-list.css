@@ -39,8 +39,15 @@
 .shortcuts-list dt {
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   font-size: calc(0.85rem * var(--fs-meta));
-  white-space: nowrap;
+  /* Sin `white-space: nowrap` en el dt: la combinación entera
+     ("Flecha izquierda / Flecha derecha", por ejemplo) tiene que
+     poder partirse en varias líneas con letra grande en móvil de
+     390 px (T-022). El nowrap solo vive dentro de cada <kbd>, así
+     que una tecla individual no se rompe, pero el dt puede pasar a
+     la línea siguiente entre teclas. */
   align-self: center;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .shortcuts-list dd {
   margin: 0;

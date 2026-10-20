@@ -1,0 +1,74 @@
+/* Estilos compartidos entre la pestaña "Apariencia"
+   (ui/settings/settings-card.{html,js,css}) y la pestaña
+   "Asistente (MCP)" (ui/mcp/mcp-card.{js,html,css}). Antes vivían
+   dentro de settings-card.css y el card del MCP los necesitaba; al
+   separar el MCP los movimos aquí para que ambas tarjetas los
+   carguen explícitamente sin tener que importar settings-card.css
+   entero. */
+
+.settings-subtitle {
+  margin: 0;
+  font-size: calc(1rem * var(--fs-label));
+  font-weight: 700;
+  color: var(--text);
+}
+.settings-help {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  max-width: 60ch;
+}
+.settings-status { margin: 0.4rem 0 0; color: var(--text-secondary); font-size: calc(0.875rem * var(--fs-meta)); min-height: 1.2em; }
+
+.settings-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.settings-option {
+  font-size: calc(1rem * var(--fs-chip));
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--input-border);
+  border-radius: 999px;
+  color: var(--text);
+  cursor: pointer;
+}
+.settings-option small { color: var(--text-secondary); font-size: calc(0.875rem * var(--fs-meta)); }
+.settings-option input {
+  width: 1.1rem; height: 1.1rem;
+  margin: 0;
+  accent-color: var(--primary);
+}
+.settings-option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--soft-strong);
+}
+.settings-option:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.settings-btn {
+  margin: 0;
+  padding: 0.55rem 1rem;
+  min-height: 2.75rem;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+}
+.settings-btn:hover { background: var(--hover-bg); opacity: 1; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}

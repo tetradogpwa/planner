@@ -82,11 +82,11 @@ globales están disponibles desde cualquier vista (los que usan
 | `Alt` + `1` | Ir a Gestión de tareas |
 | `Alt` + `2` | Ir a Semana actual |
 | `Alt` + `3` | Ir a Todas las semanas |
-| `Alt` + `4` | Ir a Gestión de datos |
-| `Alt` + `5` | Ir a Imprimir / PDF |
-| `Alt` + `6` | Ir a Apariencia |
-| `Alt` + `7` | Ir a Legal y privacidad |
-| `Alt` + `8` | Ir a Accesibilidad |
+| `Alt` + `4` | Ir a **Ajustes › Datos** |
+| `Alt` + `5` | Ir a **Ajustes › Imprimir y PDF** |
+| `Alt` + `6` | Ir a **Ajustes › Apariencia** |
+| `Alt` + `7` | Ir a **Ajustes › Legal** |
+| `Alt` + `8` | Ir a **Ajustes › Accesibilidad** |
 
 ### Menú lateral
 
@@ -126,7 +126,7 @@ recibir foco y lleva directamente al área principal de la vista.
 | `?` | Abre esta ayuda (fuera de campos de texto) |
 | `Esc` | Cierra cualquier diálogo abierto |
 
-La ayuda también está disponible desde el menú **"Accesibilidad"**
+La ayuda también está disponible desde **Ajustes › Accesibilidad**
 de la barra lateral.
 
 ## 6. Cómo reportar una barrera
@@ -189,11 +189,11 @@ El token da acceso completo al plan (leer, crear, editar y borrar
 tareas y la fecha de inicio). **No lo compartas** con nadie ni lo
 peges en chats: quien lo tenga puede tratar el plan como si fueras
 tú. Si sospechas que se ha filtrado, regenera el token desde
-**Apariencia → Control por asistente (MCP)** → "Regenerar": el
-token viejo deja de funcionar de inmediato.
+**Ajustes › Asistente (MCP)** → "Regenerar": el token viejo deja
+de funcionar de inmediato.
 
 El usuario puede activar y desactivar el servidor en cualquier
-momento desde **Apariencia → Control por asistente (MCP)**.
+momento desde **Ajustes › Asistente (MCP)**.
 
 ---
 

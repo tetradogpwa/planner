@@ -1,0 +1,43 @@
+<!-- Bloque "Tamaños de letra" + "Tamaño de los iconos del menú contraído
+     en pantallas táctiles" dentro de la pestaña Accesibilidad de
+     Ajustes (T-022). Antes vivían en ui/settings/settings-card; se
+     movieron aquí porque la pestaña Apariencia ahora solo cubre tema
+     y colores. La lógica de preferencias sigue en
+     ui/settings/preferences.js. -->
+
+<section class="settings-group fontSizes-scaleGroup" id="fontSizes-scaleGroup"
+         aria-labelledby="fontSizes-scaleGroup-title">
+  <h3 class="settings-subtitle" id="fontSizes-scaleGroup-title">
+    <span aria-hidden="true">🔠</span> Tamaño de letra general
+  </h3>
+  <div class="settings-options" id="textScaleOptions"></div>
+</section>
+
+<section class="settings-group fontSizes-sizesGroup" id="sizesGroup" aria-labelledby="sizesTitle">
+  <h3 class="settings-subtitle" id="sizesTitle">
+    <span aria-hidden="true">🔡</span> Tamaño por partes
+  </h3>
+  <p class="settings-help">
+    Ajusta cada parte por separado. Se suma al tamaño general y se
+    mantiene aunque cambies de tema.
+  </p>
+  <div class="size-rows" id="sizeRows"></div>
+  <button type="button" class="settings-btn" id="sizesReset">Restablecer todos los tamaños</button>
+</section>
+
+<div class="settings-group fontSizes-navIconGroup" id="fontSizes-navIconGroup"
+     aria-labelledby="fontSizes-navIconGroup-title">
+  <h3 class="settings-subtitle" id="fontSizes-navIconGroup-title">
+    <span aria-hidden="true">📱</span> Tamaño de los iconos del menú contraído en pantallas táctiles
+  </h3>
+  <label class="visually-hidden" for="navIconSize">Tamaño de los iconos del menú contraído en pantallas táctiles</label>
+  <div class="custom-icon-size-row">
+    <input type="range" id="navIconSize" min="32" max="128" step="4" value="64">
+    <output id="navIconSizeValue" for="navIconSize">64 px</output>
+  </div>
+  <p class="settings-help">
+    En los demás temas es fijo (64×64 px). En escritorio con ratón el
+    menú contraído usa el mismo tamaño que el expandido, así que este
+    control solo afecta al menú contraído en pantallas táctiles.
+  </p>
+</div>

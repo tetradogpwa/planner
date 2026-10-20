@@ -1,16 +1,14 @@
 <div class="print-card">
-  <h3 id="view-print-heading" tabindex="-1">🖨️ Exportar PDF</h3>
-
-  <div class="print-section">
-    <h4>Rápido</h4>
+  <section class="print-section" aria-labelledby="settingsPrintQuickTitle">
+    <h3 id="settingsPrintQuickTitle">Rápido</h3>
     <div class="btn-row">
       <button id="printWeekBtn">📄 Semana actual</button>
       <button id="printAllBtn">📋 12 semanas</button>
     </div>
-  </div>
+  </section>
 
-  <div class="print-section">
-    <h4>Rango personalizado</h4>
+  <section class="print-section" aria-labelledby="settingsPrintCustomTitle">
+    <h3 id="settingsPrintCustomTitle">Rango personalizado</h3>
     <div class="print-row">
       <label for="printWeeks">Semanas a exportar</label>
       <input id="printWeeks" type="number" value="4" min="1" max="52"/>
@@ -20,7 +18,7 @@
       <input id="printAvoid" type="number" value="0" min="0"/>
     </div>
     <button id="printCustomBtn">Exportar rango</button>
-  </div>
+  </section>
 
   <div id="printStatus" class="print-status" role="status"></div>
 </div>

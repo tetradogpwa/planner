@@ -1,6 +1,11 @@
 // ────────────────────────────────────────────────────────────────────
-// settings-card.js — Vista "Apariencia": tema (incluido uno propio),
-// tamaño general y tamaño por partes de la interfaz.
+// settings-card.js — Pestaña "Apariencia" de Ajustes (T-022): tema
+// (incluido uno propio con guardado), comprobación de contraste y
+// vista previa. Antes era la vista completa de ui/settings; ahora
+// solo cubre esto. Los tamaños de letra (general y por partes) y el
+// tamaño del icono del menú contraído están en
+// ui/accessibility/fontSizes-card; la sección "Control por asistente
+// (MCP)" está en ui/mcp/mcp-card.
 // ────────────────────────────────────────────────────────────────────
 
 import {
@@ -15,26 +20,10 @@ import {
   applySavedTheme,
   deleteSavedTheme,
   autoTargetOptions,
-  TEXT_SCALES,
-  SIZE_ROLES,
-  SIZE_MIN,
-  SIZE_MAX,
-  SIZE_STEP,
   COLOR_GROUPS,
   BASES,
   CONTRAST_CHECKS,
-  NAV_ICON_MIN,
-  NAV_ICON_MAX,
 } from './preferences.js';
-
-const SCALE_LABELS = {
-  100: 'Normal',
-  115: 'Grande',
-  130: 'Más grande',
-  150: 'Muy grande',
-  175: 'Enorme',
-  200: 'Máximo',
-};
 
 const formatRatio = (r) => r.toFixed(2).replace('.', ',');
 
@@ -48,11 +37,12 @@ export class SettingsCard {
   }
 
   async init() {
-    const [html, css] = await Promise.all([
+    const [html, css, sharedCss] = await Promise.all([
       fetch('./ui/settings/settings-card.html').then(r => r.text()),
       fetch('./ui/settings/settings-card.css').then(r => r.text()),
+      fetch('./ui/settings/settings-shared.css').then(r => r.text()),
     ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    this.root.innerHTML = `<style>${sharedCss}${css}</style>${html}`;
     this.mount();
   }
 
@@ -65,29 +55,20 @@ export class SettingsCard {
 
     this.editMode = false;
 
-    this.renderTextScales();
     this.renderBaseOptions();
     this.renderColorRows();
-    this.renderSizeRows();
     this.renderSavedThemes();
 
     this.markActiveThemeRadio();
-    this.$(`input[name="textScale"][value="${prefs.textScale}"]`).checked = true;
     this.$('#customBase').value = prefs.custom.base;
     this.syncAutoMapping();
     this.syncCustomTheme();
-    this.syncSizes();
     this.syncDraftStatus();
-    this.bindMcp();
 
     this.root.addEventListener('change', (e) => {
       if (e.target.name === 'theme') {
         const value = e.target.value;
         if (value.startsWith('saved:')) {
-          // Tema guardado: lo aplicamos y marcamos el estado «custom»
-          // sin repintar la lista (así el navegador mantiene el foco
-          // del teclado sobre el radio). Si el id ya no existe
-          // (huérfano), limpiamos savedId para no dejar un estado raro.
           const result = applySavedTheme(value.slice('saved:'.length));
           if (!result) {
             const { custom } = getPreferences();
@@ -102,11 +83,9 @@ export class SettingsCard {
         this.syncCustomTheme();
         this.syncDraftStatus();
       }
-      if (e.target.name === 'textScale') setPreferences({ textScale: Number(e.target.value) });
     });
 
-    // Botón Eliminar de cada tema guardado (delegado en la raíz del
-    // card). Solo aparece si el modo edición está activo.
+    // Botón Eliminar de cada tema guardado (delegado en la raíz).
     this.root.addEventListener('click', (e) => {
       const btn = e.target.closest('.saved-theme-delete');
       if (!btn) return;
@@ -120,13 +99,11 @@ export class SettingsCard {
       setPreferences({ autoDark: this.$('#autoDark').value });
     });
 
-    // Modo edición (muestra u oculta el editor de temas personalizados y
-    // las secciones de tamaño de letra y vista previa).
+    // Modo edición: muestra u oculta el editor de temas personalizados
+    // y la vista previa.
     this.$('#customEditToggle').addEventListener('change', (e) => {
       this.editMode = e.target.checked;
       this.syncEditorVisibility();
-      // Repintamos para mostrar u ocultar el botón Eliminar de cada
-      // tema guardado (solo se ve con modo edición).
       this.renderSavedThemes();
     });
 
@@ -140,9 +117,6 @@ export class SettingsCard {
       }
     });
 
-    // Tamaño del icono del menú lateral (solo aplica al tema personalizado).
-    this.$('#navIconSize').addEventListener('input', () => this.setNavIconSize());
-
     // Sugerencias automáticas de la lista de contraste (delegación).
     this.$('#contrastList').addEventListener('click', (e) => {
       const btn = e.target.closest('.contrast-fix');
@@ -150,23 +124,8 @@ export class SettingsCard {
       this.setColor(btn.dataset.target, btn.dataset.value);
     });
 
-    this.$('#sizesReset').addEventListener('click', () => {
-      setPreferences({ sizes: {} });
-      this.syncSizes();
-    });
-
-    // Estado inicial de visibilidad (ver JSDoc de syncEditorVisibility).
+    // Estado inicial de visibilidad.
     this.syncEditorVisibility();
-  }
-
-  // ── Tamaño general ────────────────────────────────────────────────
-
-  renderTextScales() {
-    this.$('#textScaleOptions').innerHTML = TEXT_SCALES.map(scale => `
-      <label class="settings-option">
-        <input type="radio" name="textScale" value="${scale}">
-        <span>${SCALE_LABELS[scale]} <small>(${scale}%)</small></span>
-      </label>`).join('');
   }
 
   // ── Tema propio ───────────────────────────────────────────────────
@@ -236,16 +195,10 @@ export class SettingsCard {
   loadBase() {
     const value = this.$('#customBase').value;
     const { theme, custom } = getPreferences();
-    // Si el usuario eligió uno de sus temas guardados (formato
-    // `saved:<id>`) partimos de sus colores en lugar de los de un base
-    // predefinido. Tras cargar, el selector vuelve a mostrar el base
-    // real para que sea fácil re-empezar desde otro.
     if (value.startsWith('saved:')) {
       const themeId = value.slice('saved:'.length);
       const themeEntry = getSavedThemes().find(t => t.id === themeId);
       if (themeEntry) {
-        // Pasamos a borrador (theme=custom, savedId=null) para que el
-        // cambio se vea reflejado al instante en los radios.
         if (theme !== 'custom') {
           setPreferences({ theme: 'custom', custom: { ...custom, savedId: null } });
         } else {
@@ -253,7 +206,6 @@ export class SettingsCard {
             custom: {
               base: themeEntry.base,
               colors: { ...themeEntry.colors },
-              navIconSize: themeEntry.navIconSize ?? null,
               scheme: themeEntry.scheme ?? null,
               savedId: null,
             },
@@ -261,7 +213,6 @@ export class SettingsCard {
         }
         this.$('#customBase').value = themeEntry.base;
         this.syncColorInputs();
-        this.syncNavIconSize();
         this.syncCustomScheme();
         this.renderContrast();
         this.renderSavedThemes();
@@ -271,8 +222,6 @@ export class SettingsCard {
       }
     }
     const base = value;
-    // El borrador pasa a tener este base y se desmarcan los radios de
-    // temas guardados.
     if (theme !== 'custom') {
       setPreferences({ theme: 'custom', custom: { ...custom, savedId: null } });
     } else {
@@ -289,8 +238,6 @@ export class SettingsCard {
   restoreTheme() {
     const { theme, custom } = getPreferences();
     const base = custom.base;
-    // Pasamos a borrador (sin tema guardado) para que los radios se
-    // desmarquen al instante.
     if (theme !== 'custom') {
       setPreferences({ theme: 'custom', custom: { ...custom, base, colors: {}, savedId: null } });
     } else {
@@ -302,7 +249,6 @@ export class SettingsCard {
     this.enterDraft();
     this.$('#customBaseStatus').textContent =
       `Tema restaurado a «${BASES[base].label}».`;
-    // Pequeña sacudida visual en el botón para confirmar la acción.
     const btn = this.$('#customRestore');
     btn.classList.add('is-flashing');
     setTimeout(() => btn.classList.remove('is-flashing'), 350);
@@ -332,14 +278,7 @@ export class SettingsCard {
     }
   }
 
-  /** Elimina el tema guardado cuyo botón «Eliminar» se ha pulsado. Se
-   *  llama desde un click delegado en la raíz, así que no necesita
-   *  ningún id pasado como argumento: lo lee del `data-id` del
-   *  botón. Si era el tema activo, preferences.js lo cambia a
-   *  «Automático» y limpia savedId al borrar. Tras repintar, mueve
-   *  el foco al primer radio de la lista o, si está vacía, al
-   *  interruptor «Modo edición», y anuncia el resultado en
-   *  #savedThemesStatus. */
+  /** Elimina el tema guardado cuyo botón «Eliminar» se ha pulsado. */
   removeSavedTheme(button) {
     const id = button.dataset.id;
     if (!id) return;
@@ -360,24 +299,12 @@ export class SettingsCard {
     this.markActiveThemeRadio();
     this.syncDraftStatus();
     this.$('#savedThemesStatus').textContent = `Tema «${theme.name}» eliminado.`;
-    // Mueve el foco: al primer radio del fieldset «Tema», o si ya no
-    // hay ninguno, al interruptor «Modo edición» para no perder el
-    // recorrido de teclado.
     const firstRadio = this.$('input[name="theme"]');
     if (firstRadio) firstRadio.focus();
     else this.$('#customEditToggle')?.focus();
   }
 
-  /** Pinta los temas guardados como radios del fieldset «Tema», después
-   *  de los oficiales. Cada uno es un <label class="settings-option">
-   *  con `name="theme"`, `value="saved:<id>"` y la marca
-   *  «(creado por ti)». En modo edición se le añade un botón
-   *  Eliminar hermano del label, dentro de un
-   *  <div class="saved-theme-row">, visible solo con el modo edición
-   *  activo. La marca `checked` la gestiona markActiveThemeRadio()
-   *  según prefs.theme y custom.savedId.
-   *  Tras repintar, también sincroniza los desplegables del modo
-   *  automático para que incluyan (o excluyan) los temas creados. */
+  /** Pinta los temas guardados como radios del fieldset «Tema». */
   renderSavedThemes() {
     const container = this.$('#savedThemeOptions');
     if (!container) return;
@@ -410,7 +337,6 @@ export class SettingsCard {
   }
 
   syncCustomTheme() {
-    this.syncNavIconSize();
     this.syncCustomScheme();
     this.syncColorInputs();
     this.renderContrast();
@@ -419,12 +345,7 @@ export class SettingsCard {
     this.syncDraftStatus();
   }
 
-  /** Marca el radio del fieldset «Tema» según el estado actual:
-   *  - Si `theme === 'custom'` y hay un `custom.savedId` válido,
-   *    marca el radio `value="saved:<savedId>"`.
-   *  - Si `theme === 'custom'` y no hay `savedId` (borrador), no
-   *    marca ninguno.
-   *  - En cualquier otro caso, marca el radio del tema oficial. */
+  /** Marca el radio del fieldset «Tema» según el estado actual. */
   markActiveThemeRadio() {
     const prefs = getPreferences();
     const radios = this.root.querySelectorAll('input[name="theme"]');
@@ -437,16 +358,13 @@ export class SettingsCard {
     radios.forEach(r => { r.checked = targetValue !== null && r.value === targetValue; });
   }
 
-  /** Pasa al estado de borrador: desmarca todos los radios del
-   *  fieldset «Tema» (sin repintar, para no romper el foco del
-   *  editor) y enseña el aviso de borrador. */
+  /** Pasa al estado de borrador: desmarca todos los radios. */
   enterDraft() {
     this.root.querySelectorAll('input[name="theme"]').forEach(r => { r.checked = false; });
     this.syncDraftStatus();
   }
 
-  /** Muestra u oculta el aviso «Tema sin guardar» según el estado:
-   *  solo si `theme === 'custom'` y no hay `custom.savedId`. */
+  /** Muestra u oculta el aviso «Tema sin guardar». */
   syncDraftStatus() {
     const prefs = getPreferences();
     const isDraft = prefs.theme === 'custom' && !prefs.custom.savedId;
@@ -454,30 +372,15 @@ export class SettingsCard {
     if (draft) draft.hidden = !isDraft;
   }
 
-  /** Muestra u oculta los bloques que dependen del modo edición.
-   *  - El editor de temas (sección «Crea tu tema» y formulario «Crear
-   *    un tema nuevo») se ve solo con modo edición activo, sea cual
-   *    sea el tema elegido.
-   *  - Las secciones de tamaño de letra (general y por partes) y la
-   *    vista previa se ven con modo edición activo en cualquier tema.
-   *  Antes de ocultar, si el foco del teclado está dentro de lo que se
-   *  va a ocultar, lo mueve al interruptor «Modo edición» para no
-   *  perderlo. El atributo `hidden` se usa (no una clase CSS) para que
-   *  los lectores de pantalla también lo oculten. Los botones Eliminar
-   *  de cada tema guardado se muestran/ocultan dentro de cada fila,
-   *  no aquí: ver renderSavedThemes(). */
+  /** Muestra u oculta los bloques que dependen del modo edición. */
   syncEditorVisibility() {
-    const edit       = this.editMode;
-    const showEditor = edit;                          // Crea tu tema + Crear un tema nuevo
-    const showSizes  = edit;                          // Tamaño general / por partes / vista previa
+    const edit = this.editMode;
+    const showEditor = edit;
+    const showPreview = edit;
     const editor   = this.$('#customTheme');
     const saveForm = this.$('#customSaveFieldset');
-    const textScaleGroup = this.$('#textScaleGroup');
-    const sizesGroup     = this.$('#sizesGroup');
-    const preview        = this.$('#settingsPreview');
-    // Si vamos a ocultar algo y el foco está dentro de ello, lo movemos
-    // al interruptor «Modo edición» para no perderlo.
-    const hidingSomething = !showEditor || !showSizes;
+    const preview  = this.$('#settingsPreview');
+    const hidingSomething = !showEditor || !showPreview;
     if (hidingSomething) {
       const active = document.activeElement;
       const insideEditor =
@@ -485,27 +388,19 @@ export class SettingsCard {
           (editor   && editor.contains(active)) ||
           (saveForm && saveForm.contains(active))
         );
-      const insideSizes =
-        active && active !== document.body && (
-          (textScaleGroup && textScaleGroup.contains(active)) ||
-          (sizesGroup     && sizesGroup.contains(active)) ||
-          (preview        && preview.contains(active))
-        );
-      if ((!showEditor && insideEditor) || (!showSizes && insideSizes)) {
+      const insidePreview =
+        active && active !== document.body && (preview && preview.contains(active));
+      if ((!showEditor && insideEditor) || (!showPreview && insidePreview)) {
         const toggle = this.$('#customEditToggle');
         if (toggle) toggle.focus();
       }
     }
     if (editor)   editor.hidden   = !showEditor;
     if (saveForm) saveForm.hidden = !showEditor;
-    if (textScaleGroup) textScaleGroup.hidden = !showSizes;
-    if (sizesGroup)     sizesGroup.hidden     = !showSizes;
-    if (preview)        preview.hidden        = !showSizes;
+    if (preview)  preview.hidden  = !showPreview;
   }
 
-  /** Marca el radio de esquema (Claro/Oscuro) según el borrador actual.
-   *  Si el usuario ya marcó un esquema explícito (custom.scheme), se
-   *  respeta; si no, se usa el del `base` seleccionado. */
+  /** Marca el radio de esquema (Claro/Oscuro) según el borrador. */
   syncCustomScheme() {
     const prefs = getPreferences();
     const scheme = prefs.custom.scheme
@@ -516,12 +411,7 @@ export class SettingsCard {
     });
   }
 
-  /** Sincroniza el bloque de mapeo del modo automático (visible solo
-   *  cuando el tema activo es «Automático»). Repinta las <option> de
-   *  los desplegables con los oficiales del esquema correspondiente y,
-   *  tras ellas, los temas guardados cuyo esquema coincida. Así, tras
-   *  guardar, sobrescribir o eliminar un tema, las opciones reflejan
-   *  al instante el estado real. */
+  /** Sincroniza el bloque de mapeo del modo automático. */
   syncAutoMapping() {
     const isAuto = getPreferences().theme === 'auto';
     const section = this.$('#autoMapping');
@@ -533,11 +423,6 @@ export class SettingsCard {
     }
   }
 
-  /** Rellena un <select> del modo automático con las opciones dadas
-   *  (oficiales + temas guardados), usando createElement + textContent
-   *  para que los nombres de usuario se escapen automáticamente y
-   *  queden a salvo de <, >, & y comillas. Conserva la selección si
-   *  el valor sigue disponible; si no, deja la primera opción. */
   populateAutoSelect(select, options, currentValue) {
     select.replaceChildren();
     for (const { value, label } of options) {
@@ -548,31 +433,6 @@ export class SettingsCard {
     }
     const hasCurrent = options.some(o => o.value === currentValue);
     select.value = hasCurrent ? currentValue : options[0]?.value ?? '';
-  }
-
-  /** Sincroniza el slider del tamaño de icono del menú lateral. */
-  syncNavIconSize() {
-    const prefs = getPreferences();
-    const value = prefs.custom.navIconSize ?? 64;
-    const input = this.$('#navIconSize');
-    const out   = this.$('#navIconSizeValue');
-    if (input.value !== String(value)) input.value = String(value);
-    out.textContent = `${value} px`;
-    out.setAttribute('aria-valuetext', `${value} píxeles`);
-  }
-
-  /** Cambia el tamaño del icono del menú lateral en el tema personalizado. */
-  setNavIconSize() {
-    const input = this.$('#navIconSize');
-    const value = Math.min(NAV_ICON_MAX, Math.max(NAV_ICON_MIN, Number(input.value) || 64));
-    const { theme, custom } = getPreferences();
-    if (theme !== 'custom') {
-      setPreferences({ theme: 'custom', custom: { ...custom, navIconSize: value, savedId: null } });
-      this.enterDraft();
-    } else {
-      setPreferences({ custom: { ...custom, navIconSize: value } });
-    }
-    this.$('#navIconSizeValue').textContent = `${value} px`;
   }
 
   syncColorInputs() {
@@ -646,181 +506,5 @@ export class SettingsCard {
     this.$('#contrastSummary').textContent = failures === 0
       ? 'Todos los textos se leen con contraste suficiente.'
       : `${failures} ${failures === 1 ? 'combinación tiene' : 'combinaciones tienen'} poco contraste. Cambia alguno de sus colores.`;
-  }
-
-  // ── Tamaño por partes ─────────────────────────────────────────────
-
-  renderSizeRows() {
-    this.$('#sizeRows').innerHTML = SIZE_ROLES.map(role => `
-      <div class="size-row">
-        <div class="size-row-head">
-          <label for="size-${role.id}">${role.label}</label>
-          <output id="size-${role.id}-value" for="size-${role.id}">100 %</output>
-        </div>
-        <input type="range" id="size-${role.id}" data-size="${role.id}"
-               min="${SIZE_MIN}" max="${SIZE_MAX}" step="${SIZE_STEP}" value="100">
-        <span class="size-sample${role.upper ? ' is-upper' : ''}"
-              style="font-size: calc(${role.base}rem * var(--fs-${role.id}))">${role.sample}</span>
-      </div>`).join('');
-
-    this.root.querySelectorAll('[data-size]').forEach(input =>
-      input.addEventListener('input', () => {
-        const { sizes } = getPreferences();
-        setPreferences({ sizes: { ...sizes, [input.dataset.size]: Number(input.value) } });
-        this.$(`#size-${input.dataset.size}-value`).textContent = `${input.value} %`;
-        input.setAttribute('aria-valuetext', `${input.value} por ciento`);
-      })
-    );
-  }
-
-  syncSizes() {
-    const { sizes } = getPreferences();
-    for (const role of SIZE_ROLES) {
-      const value = sizes[role.id] ?? 100;
-      const input = this.$(`#size-${role.id}`);
-      input.value = value;
-      input.setAttribute('aria-valuetext', `${value} por ciento`);
-      this.$(`#size-${role.id}-value`).textContent = `${value} %`;
-    }
-  }
-
-  // ── Control por asistente (MCP) ───────────────────────────────────
-  //
-  // Esta sección se oculta en Android (no hay servidor en móvil).
-  // El estado (activado, puerto, token) se guarda en localStorage
-  // para que la app lo restaure al rearrancar; el servidor se arranca
-  // al final de `index.js` si está activado.
-
-  bindMcp() {
-    const isMobile = /android/i.test(navigator.userAgent);
-    const notice = this.$('#mcpAndroidNotice');
-    if (isMobile) {
-      notice.hidden = false;
-      // En móvil no mostramos los controles (el servidor no existe).
-      this.$('#mcpEnabled').closest('.settings-option').hidden = true;
-      this.$('#mcpConfig').hidden = true;
-      return;
-    }
-
-    // Lee el estado guardado. Si no hay token, genera uno.
-    const saved = this.#readMcpState();
-    if (!saved.token) {
-      saved.token = this.#generateToken();
-      this.#writeMcpState(saved);
-    }
-    this.$('#mcpToken').value = saved.token;
-    this.$('#mcpPort').value  = saved.port ?? 41237;
-    this.$('#mcpEnabled').checked = !!saved.enabled;
-    this.#updateMcpUi();
-
-    this.$('#mcpEnabled').addEventListener('change', () => this.#applyMcp());
-    this.$('#mcpPort').addEventListener('change', () => this.#applyMcp());
-    this.$('#mcpRegenToken').addEventListener('click', () => {
-      const s = this.#readMcpState();
-      s.token = this.#generateToken();
-      this.#writeMcpState(s);
-      this.$('#mcpToken').value = s.token;
-      this.#updateMcpUi();
-      this.#applyMcp();
-    });
-    this.$('#mcpCopyToken').addEventListener('click', () => this.#copyField(this.$('#mcpToken'), 'Token'));
-    this.$('#mcpCopyCmd').addEventListener('click', () => this.#copyField(this.$('#mcpCmd'), 'Comando'));
-
-    // Si el estado guardado dice `enabled` pero el server no está
-    // corriendo (p. ej. porque el usuario acaba de desactivar y
-    // reactivar y el `change` no se procesó), lo arrancamos al montar
-    // la vista. Esto evita que la UI diga "activo" mintiendo.
-    if (saved.enabled && window.__TAURI__?.core?.invoke) {
-      this.#syncWithBackend();
-    }
-  }
-
-  /** Sincroniza el estado del checkbox con el estado real del backend:
-   *  si el localStorage dice `enabled` pero el server está parado, lo
-   *  levanta. Si dice `disabled` pero el server está activo, lo para.
-   *  Lo usa el `mount` del card y la app real cuando el driver o un
-   *  clic perdido no llegó a invocar `applyMcp`. */
-  async #syncWithBackend() {
-    try {
-      const status = await window.__TAURI__.core.invoke('mcp_status');
-      const saved = this.#readMcpState();
-      if (!!saved.enabled !== !!status.active) {
-        await this.#applyMcp();
-      }
-    } catch {
-      // Si `mcp_status` no existe (p. ej. en un navegador normal), no
-      // hacemos nada: el `change` del checkbox ya se ocupa.
-    }
-  }
-
-  /** Copia el contenido de un campo al portapapeles y muestra el
-   *  resultado en la zona de estado del MCP. */
-  async #copyField(input, label) {
-    try {
-      await navigator.clipboard.writeText(input.value);
-      this.#mcpStatus(`${label} copiado al portapapeles.`);
-    } catch {
-      this.#mcpStatus(`No se pudo copiar. Selecciónalo manualmente.`);
-    }
-  }
-
-  /** Estado del MCP en localStorage. */
-  #readMcpState() {
-    try {
-      return JSON.parse(localStorage.getItem('planner_mcp') || '{}');
-    } catch { return {}; }
-  }
-
-  #writeMcpState(s) {
-    localStorage.setItem('planner_mcp', JSON.stringify(s));
-  }
-
-  #generateToken() {
-    // 32 bytes hex = 64 chars. `crypto.getRandomValues` está en
-    // navegadores modernos y Tauri 2 (webview webkit/edge).
-    const bytes = new Uint8Array(32);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  /** Aplica el estado: arranca o para el servidor. */
-  async #applyMcp() {
-    const s = this.#readMcpState();
-    s.enabled = this.$('#mcpEnabled').checked;
-    s.port    = Number(this.$('#mcpPort').value) || 41237;
-    s.token   = this.$('#mcpToken').value;
-    this.#writeMcpState(s);
-    this.#updateMcpUi();
-
-    if (!window.__TAURI__?.core?.invoke) {
-      this.#mcpStatus('Solo disponible dentro de la app Tauri.');
-      return;
-    }
-    try {
-      if (s.enabled) {
-        await window.__TAURI__.core.invoke('mcp_start', { port: s.port, token: s.token });
-        this.#mcpStatus(`Servidor activo en 127.0.0.1:${s.port}/mcp`);
-      } else {
-        await window.__TAURI__.core.invoke('mcp_stop');
-        this.#mcpStatus('Servidor detenido.');
-      }
-    } catch (err) {
-      this.#mcpStatus(`Error: ${err.message || err}`);
-    }
-  }
-
-  #updateMcpUi() {
-    const enabled = this.$('#mcpEnabled').checked;
-    this.$('#mcpConfig').hidden = !enabled;
-    const port  = Number(this.$('#mcpPort').value) || 41237;
-    const token = this.$('#mcpToken').value;
-    this.$('#mcpCmd').value =
-      `claude mcp add --transport http planner http://127.0.0.1:${port}/mcp ` +
-      `--header "Authorization: Bearer ${token}"`;
-  }
-
-  #mcpStatus(text) {
-    const el = this.$('#mcpStatus');
-    if (el) el.textContent = text;
   }
 }

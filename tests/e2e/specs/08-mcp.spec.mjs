@@ -72,8 +72,28 @@ async function mcpClient(port, token) {
 }
 
 async function gotoMcpSettings() {
-  // Apariencia está en Alt+6.
+  // La sección "Control por asistente (MCP)" vive ahora en la pestaña
+  // "Asistente (MCP)" dentro de Ajustes (T-022). No hay atajo
+  // directo: abrimos Ajustes con Alt+6 (pestaña Apariencia) y luego
+  // clicamos la pestaña Asistente (MCP). En Android la pestaña no
+  // existe; este spec solo se ejecuta en escritorio donde sí está.
   await browser.keys(['Alt', '6']);
+  await browser.waitUntil(
+    async () => await browser.execute(
+      () => document.querySelector('#ajustes-panel-appearance')?.hidden === false,
+    ),
+    { timeout: 5_000, timeoutMsg: 'Ajustes no se abrió en Apariencia' },
+  );
+  await browser.execute(() => {
+    const tab = document.querySelector('.ajustes-tab[data-tab="mcp"]');
+    tab?.click();
+  });
+  await browser.waitUntil(
+    async () => await browser.execute(
+      () => document.querySelector('#ajustes-panel-mcp')?.hidden === false,
+    ),
+    { timeout: 5_000, timeoutMsg: 'La pestaña Asistente (MCP) no quedó visible' },
+  );
   await $('#mcpTitle').waitForDisplayed();
   // El servidor ya queda activo de la sesión anterior si estaba
   // guardado en localStorage, así que no tocamos el interruptor.

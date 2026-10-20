@@ -87,7 +87,7 @@ calendario del sistema, sensores biométricos, ni ningún permiso sensible.
 - Toda la información del usuario se guarda en formato JSON dentro del
   almacenamiento local.
 - El usuario puede **exportar** una copia de seguridad en JSON desde la
-  sección "Gestión de datos → Exportar JSON".
+  sección "Ajustes › Datos → Exportar JSON".
 - El usuario puede **importar** un JSON previamente exportado desde la
   misma sección.
 - Los JSON exportados **no salen del dispositivo** a menos que el propio
@@ -275,11 +275,11 @@ no tiene acceso a esos datos, ni siquiera de forma agregada.
 token puede leer, modificar y borrar todas las tareas y la fecha de
 inicio. **No lo compartas**, igual que no compartirías la contraseña de
 un servicio. Si sospechas que se ha filtrado, regenera el token desde
-**Apariencia → Control por asistente (MCP)**: el token viejo deja de
+**Ajustes › Asistente (MCP)**: el token viejo deja de
 funcionar en el siguiente request.
 
 El usuario puede desactivar el servidor en cualquier momento desde
-**Apariencia → Control por asistente (MCP)**. Mientras esté
+**Ajustes › Asistente (MCP)**. Mientras esté
 desactivado, el puerto está cerrado y ninguna herramienta del
 asistente puede hablar con la Aplicación.
 

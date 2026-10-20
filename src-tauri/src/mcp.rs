@@ -262,7 +262,7 @@ impl PlannerServer {
 
     /// `exportar_json` — devuelve el JSON exportable de todas las tareas.
     #[tool(
-        description = "Devuelve un string JSON con todas las tareas (mismo formato que 'Importar JSON' en Gestión de datos).",
+        description = "Devuelve un string JSON con todas las tareas (mismo formato que 'Importar JSON' en Ajustes › Datos).",
         annotations(read_only_hint = true)
     )]
     async fn exportar_json(&self) -> Result<CallToolResult, McpError> {

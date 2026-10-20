@@ -130,30 +130,51 @@ export async function irATareas() {
   );
 }
 
-/** Navega a la vista "Gestión de datos" (clic real sobre el botón del
- *  menú lateral, como lo haría una persona). Espera a que la tarjeta
- *  esté en pantalla (#dataStatus es uno de sus elementos). */
+/** Abre la pestaña "Datos" dentro de Ajustes (clic sobre el botón
+ *  "Ajustes" del menú lateral y luego sobre su pestaña "Datos"). El
+ *  bloque sigue exponiendo #dataStatus y los botones de importar /
+ *  exportar / borrar; antes vivía en una vista propia. */
 export async function irAGestionDatos() {
-  await $('button.nav-item[data-view="data"]').click();
+  await $('button.nav-item[data-view="ajustes"]').click();
   await browser.waitUntil(
     async () => await browser.execute(
-      () => document.getElementById('view-data').classList.contains('active')
+      () => document.getElementById('view-ajustes').classList.contains('active'),
+    ),
+    { timeout: 5_000, timeoutMsg: 'La vista Ajustes no se abrió' },
+  );
+  await browser.execute(() => {
+    const tab = document.querySelector('.ajustes-tab[data-tab="data"]');
+    tab?.click();
+  });
+  await browser.waitUntil(
+    async () => await browser.execute(
+      () => !document.getElementById('ajustes-panel-data').hidden
         && !!document.getElementById('dataStatus')
     ),
-    { timeout: 5_000, timeoutMsg: 'La vista Gestión de datos no se abrió' },
+    { timeout: 5_000, timeoutMsg: 'La pestaña Datos de Ajustes no se abrió' },
   );
 }
 
-/** Navega a la vista "Imprimir / PDF" (clic real sobre el botón del
- *  menú lateral). Espera a que #printStatus esté enganchado. */
+/** Abre la pestaña "Imprimir y PDF" dentro de Ajustes. Antes era la
+ *  vista Imprimir / PDF; ahora vive como pestaña de Ajustes. */
 export async function irAImprimir() {
-  await $('button.nav-item[data-view="print"]').click();
+  await $('button.nav-item[data-view="ajustes"]').click();
   await browser.waitUntil(
     async () => await browser.execute(
-      () => document.getElementById('view-print').classList.contains('active')
+      () => document.getElementById('view-ajustes').classList.contains('active'),
+    ),
+    { timeout: 5_000, timeoutMsg: 'La vista Ajustes no se abrió' },
+  );
+  await browser.execute(() => {
+    const tab = document.querySelector('.ajustes-tab[data-tab="print"]');
+    tab?.click();
+  });
+  await browser.waitUntil(
+    async () => await browser.execute(
+      () => !document.getElementById('ajustes-panel-print').hidden
         && !!document.getElementById('printStatus')
     ),
-    { timeout: 5_000, timeoutMsg: 'La vista Imprimir / PDF no se abrió' },
+    { timeout: 5_000, timeoutMsg: 'La pestaña Imprimir y PDF no se abrió' },
   );
 }
 
@@ -234,4 +255,51 @@ export async function celdasCon(nombre) {
   const objetivo = nombre.toUpperCase();
   const porCelda = await insigniasPorCelda();
   return porCelda.map(badges => badges.some(t => t.startsWith(objetivo)));
+}
+
+/** Fija el tamaño de la ventana a uno de móvil (por defecto 390×844,
+ *  iPhone 13/14). La app tiene minWidth 380, así que 390 deja un
+ *  margen mínimo. Tras cambiar el tamaño, espera a que
+ *  document.documentElement.clientWidth refleje el nuevo ancho
+ *  (algunos drivers no aplican el resize hasta el siguiente frame). */
+export async function ventanaMovil(ancho = 390, alto = 844) {
+  await browser.setWindowSize(ancho, alto);
+  await browser.waitUntil(
+    async () => {
+      const w = await browser.execute(
+        () => document.documentElement.clientWidth,
+      );
+      return Math.abs(w - ancho) <= 2;
+    },
+    { timeout: 5_000, timeoutMsg: `La ventana no se redimensionó a ${ancho} px` },
+  );
+}
+
+/** Cambia de vista con el atajo global Alt+N. Desde T-022:
+ *   1=tareas, 2=semana, 3=todas semanas,
+ *   4=Ajustes › Datos, 5=Ajustes › Imprimir y PDF,
+ *   6=Ajustes › Apariencia, 7=Ajustes › Legal,
+ *   8=Ajustes › Accesibilidad.
+ *  Espera a que la vista objetivo quede activa antes de devolver el
+ *  control. */
+export async function navegarVistaAlt(n) {
+  // Todas las vistas tienen un id `view-<name>` en el DOM. Ajustes
+  // también, aunque ahora Alt+4..8 llevan a pestañas concretas
+  // dentro de Ajustes.
+  const mapaVista = {
+    1: 'tasks',        2: 'week',     3: 'allWeeks',
+    4: 'ajustes',      5: 'ajustes',  6: 'ajustes',
+    7: 'ajustes',      8: 'ajustes',
+  };
+  const vista = mapaVista[n];
+  if (!vista) throw new Error(`Atajo de vista desconocido: Alt+${n}`);
+  const Key = (await import('webdriverio')).Key;
+  await browser.keys([Key.Alt, String(n)]);
+  await browser.waitUntil(
+    async () => await browser.execute(
+      (v) => document.getElementById('view-' + v).classList.contains('active'),
+      vista,
+    ),
+    { timeout: 5_000, timeoutMsg: `Alt+${n} no abrió la vista ${vista}` },
+  );
 }

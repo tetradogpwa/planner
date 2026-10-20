@@ -1605,11 +1605,11 @@
     {
       "id": "T-017",
       "title": "E2E: apariencia y letra al 200 % sin desbordar en móvil",
-      "status": "pendiente",
+      "status": "en_revision",
       "relatedTo": null,
       "created": "2026-10-19T05:42:04Z",
-      "updated": "2026-10-19T13:42:09Z",
-      "attempts": 1,
+      "updated": "2026-10-19T14:09:26Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-10-19T05:42:04Z",
@@ -1634,7 +1634,7 @@
           "note": "tests/e2e/specs/04-apariencia.spec.mjs ~línea 285: la prueba de desbordamiento no detecta nada. Añadí '#view-week{min-width:1500px}' a index.css y las 4 vistas siguieron en ✓. Causa: body tiene overflow-x:hidden (index.css:153) y quien desplaza es .content (overflow:auto, index.css:596), así que documentElement.scrollWidth nunca crece. Mide también .content (scrollWidth <= clientWidth + 1) y, si desborda, informa del elemento cuyo getBoundingClientRect().right sea mayor. Demuéstralo: con ese min-width la prueba de Semana debe ponerse en rojo (deshaz después el cambio). Hazlo sobre la versión de la spec que deje T-022 (que recorre cada pestaña de Ajustes)."
         }
       ],
-      "baseTree": "006055c17b89102b5989f6a13cb0c5ce92590234",
+      "baseTree": "50ee9b1fb3d3f9f8a208d356c21fcbe8c103112e",
       "history": [
         {
           "at": "2026-10-19T05:42:04Z",
@@ -1664,6 +1664,26 @@
           "at": "2026-10-19T13:42:09Z",
           "event": "devuelta a MiniMax",
           "note": "tests/e2e/specs/04-apariencia.spec.mjs ~línea 285: la prueba de desbordamiento no detecta nada. Añadí '#view-week{min-width:1500px}' a index.css y las 4 vistas siguieron en ✓. Causa: body tiene overflow-x:hidden (index.css:153) y quien desplaza es .content (overflow:auto, index.css:596), así que documentElement.scrollWidth nunca crece. Mide también .content (scrollWidth <= clientWidth + 1) y, si desborda, informa del elemento cuyo getBoundingClientRect().right sea mayor. Demuéstralo: con ese min-width la prueba de Semana debe ponerse en rojo (deshaz después el cambio). Hazlo sobre la versión de la spec que deje T-022 (que recorre cada pestaña de Ajustes)."
+        },
+        {
+          "at": "2026-10-19T14:02:11Z",
+          "event": "foto del árbol",
+          "note": "50ee9b1fb3"
+        },
+        {
+          "at": "2026-10-19T14:02:11Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-017-20261019-160211.log"
+        },
+        {
+          "at": "2026-10-19T14:09:04Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T14:09:26Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
         }
       ],
       "firstTree": "006055c17b89102b5989f6a13cb0c5ce92590234"
@@ -1856,11 +1876,11 @@
     {
       "id": "T-020",
       "title": "E2E en Wayland invisible: toda la suite en verde",
-      "status": "pendiente",
+      "status": "en_revision",
       "relatedTo": "T-010",
       "created": "2026-10-19T07:47:32Z",
-      "updated": "2026-10-19T12:48:01Z",
-      "attempts": 1,
+      "updated": "2026-10-20T09:39:35Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-10-19T07:47:32Z",
@@ -1883,7 +1903,7 @@
         "Supervisor (revisión T-010): con T-010 aprobada, en Xvfb la suite pasa entera; en weston siguen fallando las 3 mismas pruebas de la spec 09 (sidebar contraído ≥ 80 px; diferencia de 17 px con --fs-nav=2)."
       ],
       "feedback": [],
-      "baseTree": "02aa67994a8286264347de89243b8e39f123f41d",
+      "baseTree": "9d7b3b6d881c0f19126bcb44b21cf3e7f37d5926",
       "history": [
         {
           "at": "2026-10-19T07:47:32Z",
@@ -1908,6 +1928,21 @@
           "at": "2026-10-19T12:48:01Z",
           "event": "estado → pendiente",
           "note": "MiniMax falló (código 130); ver .tasks/logs/T-020-20261019-143532.log"
+        },
+        {
+          "at": "2026-10-20T09:39:28Z",
+          "event": "foto del árbol",
+          "note": "9d7b3b6d88"
+        },
+        {
+          "at": "2026-10-20T09:39:28Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-20T09:39:35Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
         }
       ],
       "firstTree": "02aa67994a8286264347de89243b8e39f123f41d"
@@ -1973,11 +2008,11 @@
     {
       "id": "T-022",
       "title": "Apartado Ajustes con pestañas, ordenado por temas",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": "T-019",
       "created": "2026-10-19T10:07:42Z",
-      "updated": "2026-10-19T13:42:09Z",
-      "attempts": 1,
+      "updated": "2026-10-20T14:20:12Z",
+      "attempts": 3,
       "requests": [
         {
           "at": "2026-10-19T10:07:42Z",
@@ -2015,7 +2050,8 @@
         "Reutiliza las tarjetas actuales (ui/dataManager, ui/print, ui/settings, ui/legal, ui/accessibility) montándolas en el tabpanel de cada pestaña, sin copiar su HTML. Nueva tarjeta ui/ajustes/ajustes-card.{js,html,css} con el patrón de CLAUDE.md. Cada tarjeta tiene hoy su propio h2 de vista: dentro de la pestaña debe bajar de nivel o servir de etiqueta del tabpanel, sin dos h2 iguales ni ids repetidos.",
         "api.js línea 35: VIEWS. Specs que navegan a esas vistas: tests/e2e/specs/06-accesibilidad, 07-api, 08-mcp (sección MCP en Apariencia?) y las de T-016/T-017/T-018 si ya existen.",
         "Al mover bloques entre tarjetas (MCP y tamaños de letra salen de ui/settings/settings-card.*), pasa su HTML, CSS y JS a la tarjeta de destino o a una tarjeta propia (p. ej. ui/mcp/mcp-card.*, ui/fontSizes/…), sin duplicarlo y sin dejar restos en settings-card. La lógica de preferencias sigue en ui/settings/preferences.js.",
-        "Supervisor: devuelta a la vez que T-017 (que corrige cómo se mide el desbordamiento en 04-apariencia); T-022 va primero. Al revisarla, comprobar también 11-edicion-gratuita (T-023) que depende de la pestaña Legal."
+        "Supervisor: devuelta a la vez que T-017 (que corrige cómo se mide el desbordamiento en 04-apariencia); T-022 va primero. Al revisarla, comprobar también 11-edicion-gratuita (T-023) que depende de la pestaña Legal.",
+        "Supervisor (revisión 2026-10-20): el resto del intento 2 está bien (navigate de api.js con vistas canónicas + prueba unitaria, 07-api y 08-mcp en verde). 02-editar-borrar 'borrar la tarea del medio…' en rojo es el fallo conocido de T-026 (Gestionar se apaga al volver a Tareas), no de T-022. 09-sidebar en rojo en weston es T-020. Falta comprobar tras el arreglo: 04-apariencia en verde y la UI de las pestañas a 390 px con letra al 200 % en tema claro y oscuro."
       ],
       "feedback": [
         {
@@ -2033,9 +2069,21 @@
         {
           "at": "2026-10-19T13:42:09Z",
           "note": "tests/e2e/specs/04-apariencia.spec.mjs: rebajaste la prueba de desbordamiento de 7 vistas a 4 (solo una pestaña de Ajustes). Debe comprobar cada pestaña de Ajustes (Apariencia, Accesibilidad, Datos, Imprimir y PDF, Asistente si existe, Legal) además de Tareas, Semana y Vista completa, abriendo cada pestaña antes de medir."
+        },
+        {
+          "at": "2026-10-20T13:55:36Z",
+          "note": "Fallo real con letra al 200 % en 390 px (04-apariencia, 'vista Ajustes › Accesibilidad no tiene desbordamiento horizontal'): .content desborda 165 px; el elemento que más se sale es <kbd>Flecha derecha</kbd> del dt 'Flecha izquierda / Flecha derecha'. Causa: ui/shortcuts/shortcuts-list.css:42 pone white-space:nowrap en .shortcuts-list dt, así que la combinación entera no puede partirse. Deja que el dt se parta entre teclas (quita el nowrap del dt o hazlo flex con flex-wrap y min-width:0; el nowrap solo dentro de cada kbd, y si aun así un kbd no cabe, overflow-wrap:anywhere en el kbd). Comprueba también el diálogo '?' con la misma lista. Ejecuta bash tools/test.sh e2e --spec tests/e2e/specs/04-apariencia.spec.mjs y debe pasar sin tocar la prueba."
+        },
+        {
+          "at": "2026-10-20T13:55:36Z",
+          "note": "tests/e2e/specs/10-ajustes.spec.mjs ~línea 463 (ayuda '?'): quitaste expect(text).toContain('Alt + 4') y ahora solo se leen los dd, así que la prueba ya no comprueba qué tecla lleva a cada pestaña. Empareja cada dt con su dd (dt.nextElementSibling) y comprueba que 'Alt + 4' → 'Ir a Ajustes › Datos', 'Alt + 5' → '… Imprimir y PDF', 'Alt + 6' → '… Apariencia', 'Alt + 7' → '… Legal', 'Alt + 8' → '… Accesibilidad' (normaliza espacios del textContent del dt)."
+        },
+        {
+          "at": "2026-10-20T13:55:36Z",
+          "note": "index.html:57 e index.css:531: el ⚙️ del menú pasó a un ::before de CSS solo por la prueba, y ya no hace falta porque la prueba lee el .nav-label. Vuelve a <span class=\"nav-icon\" aria-hidden=\"true\">⚙️</span> como los demás iconos del menú y borra la regla .nav-icon-ajustes::before. (El ::before de ui/mcp/mcp-card.css puede quedarse.)"
         }
       ],
-      "baseTree": "b73e4f5733eac3016ebf7dfdb5691b7b30ec1e22",
+      "baseTree": "25bc5b8da5bec324beae93d2e819409b9635722b",
       "history": [
         {
           "at": "2026-10-19T10:07:42Z",
@@ -2090,6 +2138,71 @@
           "at": "2026-10-19T13:42:09Z",
           "event": "modificada",
           "note": "nota"
+        },
+        {
+          "at": "2026-10-19T13:42:28Z",
+          "event": "foto del árbol",
+          "note": "cea212dd41"
+        },
+        {
+          "at": "2026-10-19T13:42:28Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-022-20261019-154228.log"
+        },
+        {
+          "at": "2026-10-19T14:01:30Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T14:02:11Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-20T13:55:36Z",
+          "event": "devuelta a MiniMax",
+          "note": "Fallo real con letra al 200 % en 390 px (04-apariencia, 'vista Ajustes › Accesibilidad no tiene desbordamiento horizontal'): .content desborda 165 px; el elemento que más se sale es <kbd>Flecha derecha</kbd> del dt 'Flecha izquierda / Flecha derecha'. Causa: ui/shortcuts/shortcuts-list.css:42 pone white-space:nowrap en .shortcuts-list dt, así que la combinación entera no puede partirse. Deja que el dt se parta entre teclas (quita el nowrap del dt o hazlo flex con flex-wrap y min-width:0; el nowrap solo dentro de cada kbd, y si aun así un kbd no cabe, overflow-wrap:anywhere en el kbd). Comprueba también el diálogo '?' con la misma lista. Ejecuta bash tools/test.sh e2e --spec tests/e2e/specs/04-apariencia.spec.mjs y debe pasar sin tocar la prueba."
+        },
+        {
+          "at": "2026-10-20T13:55:36Z",
+          "event": "devuelta a MiniMax",
+          "note": "tests/e2e/specs/10-ajustes.spec.mjs ~línea 463 (ayuda '?'): quitaste expect(text).toContain('Alt + 4') y ahora solo se leen los dd, así que la prueba ya no comprueba qué tecla lleva a cada pestaña. Empareja cada dt con su dd (dt.nextElementSibling) y comprueba que 'Alt + 4' → 'Ir a Ajustes › Datos', 'Alt + 5' → '… Imprimir y PDF', 'Alt + 6' → '… Apariencia', 'Alt + 7' → '… Legal', 'Alt + 8' → '… Accesibilidad' (normaliza espacios del textContent del dt)."
+        },
+        {
+          "at": "2026-10-20T13:55:36Z",
+          "event": "devuelta a MiniMax",
+          "note": "index.html:57 e index.css:531: el ⚙️ del menú pasó a un ::before de CSS solo por la prueba, y ya no hace falta porque la prueba lee el .nav-label. Vuelve a <span class=\"nav-icon\" aria-hidden=\"true\">⚙️</span> como los demás iconos del menú y borra la regla .nav-icon-ajustes::before. (El ::before de ui/mcp/mcp-card.css puede quedarse.)"
+        },
+        {
+          "at": "2026-10-20T13:55:36Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-20T13:55:44Z",
+          "event": "foto del árbol",
+          "note": "25bc5b8da5"
+        },
+        {
+          "at": "2026-10-20T13:55:44Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-022-20261020-155544.log"
+        },
+        {
+          "at": "2026-10-20T14:16:53Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-20T14:17:31Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-20T14:20:12Z",
+          "event": "estado → hecha",
+          "note": "Supervisor: intento 3 revisado. Arreglos: nowrap del dt de shortcuts-list.css (04-apariencia Ajustes › Accesibilidad en verde a 390 px y 200 %), prueba de '?' empareja dt/dd (comprobado en rojo intercambiando Alt+4/Alt+6), ⚙️ de vuelta al HTML. Comentario de mcp-card.css corregido por el supervisor. cargo check ✓, unit 123/123, E2E 10/12 specs: fallan solo 02-editar-borrar (T-026, en rojo a propósito) y 09-sidebar en weston (T-020). No comprobado a ojo el tema claro/oscuro (sin pantalla); el desbordamiento de cada pestaña lo mide 04-apariencia."
         }
       ],
       "firstTree": "b73e4f5733eac3016ebf7dfdb5691b7b30ec1e22"
@@ -2097,11 +2210,11 @@
     {
       "id": "T-023",
       "title": "Edición gratuita sin anuncios: ocultar monetización y datos de comerciante",
-      "status": "pendiente",
+      "status": "en_revision",
       "relatedTo": null,
       "created": "2026-10-19T11:26:47Z",
-      "updated": "2026-10-19T13:42:09Z",
-      "attempts": 1,
+      "updated": "2026-10-19T14:19:19Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-10-19T11:26:47Z",
@@ -2126,7 +2239,7 @@
           "note": "tests/e2e/specs/11-edicion-gratuita.spec.mjs: 'el módulo legal-card tampoco expone ADS_DISCLOSURE ni REFUNDS' falla con 'Expect takes at most one argument' (línea 146: expect(status, mensaje) no existe en expect-webdriverio; usa expect(status).toBe(200) y, para el mensaje, un if con throw). Quita además el código muerto del mismo test (import dinámico con 'void mod', 'claves' y 'void claves'). Añade la comprobación que sí demuestra el criterio: fetch('./legal/ADS_DISCLOSURE.md') y fetch('./legal/REFUNDS.md') no devuelven 200 en la app. Depende de T-022 (navega con Alt+7 a la pestaña Legal): ejecuta bash tools/test.sh e2e y pega su Resumen."
         }
       ],
-      "baseTree": "88239985db7a50e2b1c80e583f4824f5bd4c4112",
+      "baseTree": "31700e2cbb56ef62337d7d3912c37964652bf43d",
       "history": [
         {
           "at": "2026-10-19T11:26:47Z",
@@ -2156,6 +2269,26 @@
           "at": "2026-10-19T13:42:09Z",
           "event": "devuelta a MiniMax",
           "note": "tests/e2e/specs/11-edicion-gratuita.spec.mjs: 'el módulo legal-card tampoco expone ADS_DISCLOSURE ni REFUNDS' falla con 'Expect takes at most one argument' (línea 146: expect(status, mensaje) no existe en expect-webdriverio; usa expect(status).toBe(200) y, para el mensaje, un if con throw). Quita además el código muerto del mismo test (import dinámico con 'void mod', 'claves' y 'void claves'). Añade la comprobación que sí demuestra el criterio: fetch('./legal/ADS_DISCLOSURE.md') y fetch('./legal/REFUNDS.md') no devuelven 200 en la app. Depende de T-022 (navega con Alt+7 a la pestaña Legal): ejecuta bash tools/test.sh e2e y pega su Resumen."
+        },
+        {
+          "at": "2026-10-19T14:09:27Z",
+          "event": "foto del árbol",
+          "note": "31700e2cbb"
+        },
+        {
+          "at": "2026-10-19T14:09:27Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-023-20261019-160927.log"
+        },
+        {
+          "at": "2026-10-19T14:18:52Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-19T14:19:19Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
         }
       ],
       "firstTree": "88239985db7a50e2b1c80e583f4824f5bd4c4112"
@@ -2163,11 +2296,11 @@
     {
       "id": "T-024",
       "title": "Alt+N debe enfocar el campo de nueva tarea desde cualquier vista",
-      "status": "pendiente",
+      "status": "en_revision",
       "relatedTo": "T-018",
       "created": "2026-10-19T13:42:09Z",
-      "updated": "2026-10-19T13:42:09Z",
-      "attempts": 0,
+      "updated": "2026-10-20T09:38:00Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-10-19T13:42:09Z",
@@ -2183,22 +2316,38 @@
         "Causa probable (análisis de MiniMax en T-018): ui/taskManager/taskManager-card.js:32 hace add.init() sin await, así que setView('tasks').then(() => taskName.focus()) en index.js corre antes de que AddTaskCard inyecte #taskName, y setView enfoca después el encabezado. Espera a la tarjeta y enfoca #taskName después de que setView haya movido el foco al encabezado."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "01cc2d11aa88e664a4f90bfdc5643d828cf4fe24",
       "history": [
         {
           "at": "2026-10-19T13:42:09Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-19T14:19:20Z",
+          "event": "foto del árbol",
+          "note": "01cc2d11aa"
+        },
+        {
+          "at": "2026-10-19T14:19:20Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-024-20261019-161920.log"
+        },
+        {
+          "at": "2026-10-20T09:38:00Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
         }
-      ]
+      ],
+      "firstTree": "01cc2d11aa88e664a4f90bfdc5643d828cf4fe24"
     },
     {
       "id": "T-025",
       "title": "La trampa de foco de los diálogos no debe dejar salir el Tab",
-      "status": "pendiente",
+      "status": "en_revision",
       "relatedTo": "T-018",
       "created": "2026-10-19T13:42:09Z",
-      "updated": "2026-10-19T13:42:09Z",
-      "attempts": 0,
+      "updated": "2026-10-20T13:50:24Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-10-19T13:42:09Z",
@@ -2214,13 +2363,29 @@
         "Causa (análisis de MiniMax en T-018): ui/a11y.js:72-93, trapFocus solo hace preventDefault si active === first, active === last o active fuera del contenedor; al abrir, el foco está en el contenedor (.shortcuts-content) o en #legal-modal-title con tabindex=-1, que no es ni first ni last. Trata el caso en que active no esté en la lista de enfocables: Tab va a first y Shift+Tab a last."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "caff5efdad5f01cdd522ab9d9afe70941558bbea",
       "history": [
         {
           "at": "2026-10-19T13:42:09Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-20T13:28:33Z",
+          "event": "foto del árbol",
+          "note": "caff5efdad"
+        },
+        {
+          "at": "2026-10-20T13:28:33Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-20T13:50:24Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
         }
-      ]
+      ],
+      "firstTree": "caff5efdad5f01cdd522ab9d9afe70941558bbea"
     },
     {
       "id": "T-026",

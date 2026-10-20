@@ -37,7 +37,7 @@ Desarrollador:
 
 - Tus tareas y hábitos se almacenan en tu dispositivo. Eres responsable
   de hacer copias de seguridad si lo consideras necesario (la
-  Aplicación permite hacerlo desde "Gestión de datos").
+  Aplicación permite hacerlo desde "Ajustes › Datos").
 - El Desarrollador **no** tiene acceso a tus tareas, salvo que tú
   decidas compartirlas voluntariamente (por ejemplo, enviando un JSON
   al Desarrollador para soporte).

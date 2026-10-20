@@ -1,21 +1,25 @@
 // ────────────────────────────────────────────────────────────────────
 // accessibility-card.js
 //
-// Vista "Accesibilidad": la lista completa de atajos de teclado como
-// contenido de la página (no en un diálogo). Se abre desde el menú
-// lateral o con Alt+8; también está disponible como diálogo con la
-// tecla "?" en cualquier parte.
+// Pestaña "Accesibilidad" de Ajustes (T-022): la lista completa de
+// atajos de teclado como contenido de la página y, si
+// Ajustes pasa withFontSizes=true, también los tamaños de letra y
+// el tamaño del icono del menú contraído en pantallas táctiles
+// (ui/accessibility/fontSizes-card).
 //
-// La lista en sí se carga desde ui/shortcuts/shortcuts-list.html y sus
-// estilos de ui/shortcuts/shortcuts-list.css para no duplicar HTML: el
-// mismo archivo lo usa el diálogo modal (ui/shortcuts/shortcuts-card.js).
+// La lista en sí se carga desde ui/shortcuts/shortcuts-list.html y
+// sus estilos de ui/shortcuts/shortcuts-list.css para no duplicar
+// HTML: el mismo archivo lo usa el diálogo modal
+// (ui/shortcuts/shortcuts-card.js).
 // ────────────────────────────────────────────────────────────────────
 
 import { shortcuts } from '../shortcuts/shortcuts-card.js';
+import { AccessibilityFontSizesCard } from './fontSizes-card.js';
 
 export class AccessibilityCard {
-  constructor(root) {
+  constructor(root, { withFontSizes = false } = {}) {
     this.root = root;
+    this.withFontSizes = withFontSizes;
   }
 
   async init() {
@@ -26,11 +30,10 @@ export class AccessibilityCard {
       fetch('./ui/shortcuts/shortcuts-list.css').then(r => r.text()),
     ]);
     this.root.innerHTML = `<style>${css}${listCss}</style>${html}`;
-    this.mount(listHtml);
+    await this.mount(listHtml);
   }
 
-  mount(listHtml) {
-    // Inyectamos la lista compartida dentro del contenedor de la vista.
+  async mount(listHtml) {
     this.root.querySelector('#accessibility-shortcuts').innerHTML = listHtml;
 
     // Enlace para abrir la ayuda como diálogo modal.
@@ -40,6 +43,16 @@ export class AccessibilityCard {
         e.preventDefault();
         shortcuts.open(openHelp);
       });
+    }
+
+    // Bloque de tamaños de letra. Lo monta una tarjeta aparte para no
+    // duplicar lógica ni HTML entre Apariencia (vieja ubicación) y
+    // Accesibilidad (nueva). Solo se monta si Ajustes lo pidió.
+    if (this.withFontSizes) {
+      const mount = this.root.querySelector('#accessibility-fontsizes-mount');
+      if (mount) {
+        await new AccessibilityFontSizesCard(mount).init();
+      }
     }
   }
 }

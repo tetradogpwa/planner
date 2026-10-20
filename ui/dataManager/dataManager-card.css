@@ -8,11 +8,35 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
+.export-card[hidden] { display: none; }
 
 .export-card h3 {
   margin: 0;
-  font-size: calc(1.1rem * var(--fs-title));
+  font-size: calc(1.17rem * var(--fs-label));
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Bloque "Borrar": separado del resto, con borde de peligro y aviso. */
+.export-danger-title {
+  margin-top: 1.5rem !important;
+  color: var(--danger);
+  font-size: calc(1.17rem * var(--fs-label));
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.export-danger-help {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: calc(0.95rem * var(--fs-body));
+  max-width: 60ch;
+}
+.export-row-danger {
+  border-color: var(--danger);
+  background: var(--danger-soft);
 }
 
 /* ── Fila: siempre en columna, label arriba, acción abajo ── */

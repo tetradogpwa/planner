@@ -1,0 +1,55 @@
+/* Bloque "Tamaños de letra" + "Tamaño de los iconos del menú
+   contraído en pantallas táctiles" dentro de la pestaña Accesibilidad.
+   Antes vivían en ui/settings/settings-card.css; ahora las reglas
+   que siguen son las que necesitan estas secciones. Las clases
+   comunes (.settings-group, .settings-options, .settings-option,
+   .settings-btn, .settings-subtitle, .settings-help, .visually-hidden)
+   vienen de ui/settings/settings-shared.css. */
+
+.size-rows { display: grid; gap: 1rem; margin: 1rem 0; }
+.size-row {
+  display: grid;
+  gap: 0.35rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.size-row-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; }
+.size-row-head label { font-weight: 600; }
+.size-row-head output {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.size-row input[type="range"] {
+  width: 100%;
+  min-height: 2.75rem;
+  margin: 0;
+  accent-color: var(--primary);
+}
+.size-sample {
+  color: var(--text);
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.size-sample.is-upper { text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-secondary); }
+
+.custom-icon-size-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+.custom-icon-size-row input[type="range"] {
+  flex: 1 1 12rem;
+  accent-color: var(--primary);
+  min-height: 2.5rem;
+  margin: 0;
+}
+.custom-icon-size-row output {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  min-width: 4.5rem;
+  text-align: right;
+}

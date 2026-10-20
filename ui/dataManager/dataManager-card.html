@@ -1,5 +1,7 @@
 <div class="export-card">
-  <h3 id="view-data-heading" tabindex="-1">💾 Gestión de datos</h3>
+  <h3 class="export-title" id="settingsDataTitle">
+    <span aria-hidden="true">💾</span> Importar y exportar
+  </h3>
 
   <div class="export-row">
     <label class="export-label" for="importJsonInput">Importar tareas</label>
@@ -11,10 +13,16 @@
     <button id="exportJsonBtn" class="btn-primary">⬇️ Descargar</button>
   </div>
 
-  <div class="export-row">
-    <div class="export-label">Borrar todo</div>
+  <pre id="dataStatus" role="status"></pre>
+
+  <h3 class="export-danger-title" id="settingsDataDeleteTitle">
+    <span aria-hidden="true">⚠️</span> Borrar todas las tareas
+  </h3>
+  <p class="export-danger-help">
+    Esta acción no se puede deshacer: se eliminarán todas las tareas
+    guardadas. Haz una exportación si quieres conservar una copia.
+  </p>
+  <div class="export-row export-row-danger">
     <button id="clearAllBtn" class="btn-primary btn-danger">🗑️ Borrar</button>
   </div>
-
-  <pre id="dataStatus" role="status"></pre>
 </div>

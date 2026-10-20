@@ -1,6 +1,14 @@
+<!-- Pestaña "Apariencia" dentro de Ajustes (T-022). Antes esta
+     tarjeta era la vista completa de ui/settings; ahora solo cubre
+     tema + colores + vista previa. Los tamaños de letra (general y
+     por partes) y el tamaño del icono del menú contraído se han
+     movido a la pestaña Accesibilidad (ui/accessibility/fontSizes-card).
+     La sección de Control por asistente (MCP) está en
+     ui/mcp/mcp-card. La lógica de preferencias (leer/escribir
+     localStorage, aplicar al DOM) sigue en ui/settings/preferences.js. -->
+
 <div class="settings-card">
   <div class="settings-header">
-    <h2 class="settings-title" id="view-settings-heading" tabindex="-1">Apariencia</h2>
     <div class="custom-edit-toggle" id="customEditToggleSection">
       <label class="switch-row">
         <span>Modo edición</span>
@@ -12,8 +20,10 @@
     </div>
   </div>
 
-  <fieldset class="settings-group">
-    <legend>Tema</legend>
+  <section class="settings-group" aria-labelledby="settingsThemeTitle">
+    <h3 class="settings-subtitle" id="settingsThemeTitle">
+      <span aria-hidden="true">🎨</span> Tema
+    </h3>
     <div class="settings-options">
       <label class="settings-option">
         <input type="radio" name="theme" value="auto">
@@ -64,10 +74,12 @@
         </select>
       </div>
     </div>
-  </fieldset>
+  </section>
 
   <section class="settings-group custom-theme" id="customTheme" aria-labelledby="customThemeTitle">
-    <h3 class="settings-subtitle" id="customThemeTitle">Crea tu tema</h3>
+    <h3 class="settings-subtitle" id="customThemeTitle">
+      <span aria-hidden="true">🎨</span> Crea tu tema
+    </h3>
     <p class="settings-help" id="customHelp">
       Cambia cada color y verás el resultado al instante. Para guardarlo,
       escribe un nombre en <strong>Crear un tema nuevo</strong> (abajo);
@@ -82,20 +94,6 @@
         <button type="button" class="settings-btn" id="customBaseApply">Cargar estos colores</button>
       </div>
       <p class="settings-status" id="customBaseStatus" role="status"></p>
-    </div>
-
-    <div class="custom-icon-size">
-      <label for="navIconSize">Tamaño de los iconos del menú contraído en pantallas táctiles</label>
-      <div class="custom-icon-size-row">
-        <input type="range" id="navIconSize" min="32" max="128" step="4" value="64">
-        <output id="navIconSizeValue" for="navIconSize">64 px</output>
-      </div>
-      <p class="settings-help">
-        En los demás temas es fijo (64×64 px). En escritorio con ratón
-        el menú contraído usa el mismo tamaño que el expandido, así
-        que este control solo afecta al menú contraído en pantallas
-        táctiles.
-      </p>
     </div>
 
     <div class="color-groups" id="colorGroups"></div>
@@ -113,8 +111,10 @@
     </section>
   </section>
 
-  <fieldset class="settings-group custom-edit-only" id="customSaveFieldset">
-    <legend>Crear un tema nuevo</legend>
+  <section class="settings-group custom-edit-only" id="customSaveFieldset" aria-labelledby="customSaveTitle">
+    <h3 class="settings-subtitle" id="customSaveTitle">
+      <span aria-hidden="true">💾</span> Crear un tema nuevo
+    </h3>
     <div class="custom-save">
       <label for="customName">Nombre del tema</label>
       <div class="custom-save-row">
@@ -140,25 +140,12 @@
       </p>
       <p class="settings-status" id="customSaveStatus" role="status"></p>
     </div>
-  </fieldset>
-
-  <fieldset class="settings-group" id="textScaleGroup">
-    <legend>Tamaño de letra general</legend>
-    <div class="settings-options" id="textScaleOptions"></div>
-  </fieldset>
-
-  <section class="settings-group" id="sizesGroup" aria-labelledby="sizesTitle">
-    <h3 class="settings-subtitle" id="sizesTitle">Tamaño por partes</h3>
-    <p class="settings-help">
-      Ajusta cada parte por separado. Se suma al tamaño general y se
-      mantiene aunque cambies de tema.
-    </p>
-    <div class="size-rows" id="sizeRows"></div>
-    <button type="button" class="settings-btn" id="sizesReset">Restablecer todos los tamaños</button>
   </section>
 
   <section class="settings-preview" id="settingsPreview" aria-labelledby="settings-preview-title">
-    <h3 id="settings-preview-title">Vista previa</h3>
+    <h3 id="settings-preview-title">
+      <span aria-hidden="true">👀</span> Vista previa
+    </h3>
     <p>Así se verá el texto en la aplicación. Puedes cambiarlo cuando quieras.</p>
     <div class="settings-preview-badges">
       <span class="task-badge badge-odd">Gimnasio</span>
@@ -169,46 +156,6 @@
       <span class="preview-btn">Botón de ejemplo</span>
       <span class="preview-btn preview-btn-danger">Borrar</span>
       <span class="preview-link">Enlace de ejemplo</span>
-    </div>
-  </section>
-
-  <section class="settings-group" id="mcpGroup" aria-labelledby="mcpTitle">
-    <h3 class="settings-subtitle" id="mcpTitle">Control por asistente (MCP)</h3>
-    <p class="settings-help">
-      Permite que un asistente de IA controle la app por HTTP local.
-      Solo escucha en <code>127.0.0.1</code> y exige un token.
-      <span id="mcpAndroidNotice" hidden>No disponible en Android.</span>
-    </p>
-
-    <div class="settings-options">
-      <label class="settings-option">
-        <input type="checkbox" id="mcpEnabled">
-        <span>Activar servidor MCP</span>
-      </label>
-    </div>
-
-    <div class="mcp-config" id="mcpConfig" hidden>
-      <div class="mcp-row">
-        <label for="mcpPort">Puerto</label>
-        <input type="number" id="mcpPort" min="1024" max="65535" value="41237">
-      </div>
-      <div class="mcp-row">
-        <label for="mcpToken">Token</label>
-        <input type="text" id="mcpToken" readonly>
-        <button type="button" class="settings-btn" id="mcpCopyToken">Copiar</button>
-        <button type="button" class="settings-btn" id="mcpRegenToken">Regenerar</button>
-      </div>
-      <div class="mcp-row mcp-cmd-row">
-        <label for="mcpCmd">Comando para conectarlo</label>
-        <input type="text" id="mcpCmd" readonly aria-describedby="mcpCmdHelp">
-        <button type="button" class="settings-btn mcp-copy-cmd" id="mcpCopyCmd">Copiar comando</button>
-        <span id="mcpCmdHelp" class="visually-hidden">
-          Pega este comando en una terminal para registrar el servidor en tu
-          asistente. El comando incluye el token, que da acceso total al
-          plan: no lo compartas.
-        </span>
-      </div>
-      <p class="settings-status" id="mcpStatus" role="status"></p>
     </div>
   </section>
 </div>

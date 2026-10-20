@@ -3,9 +3,11 @@
   gap: 1.5rem;
   max-width: 600px;
 }
+.print-card[hidden] { display: none; }
 .print-card h3 {
   margin: 0;
-  font-size: calc(1.2rem * var(--fs-title));
+  font-size: calc(1.17rem * var(--fs-label));
+  font-weight: 700;
 }
 .print-section {
   background: var(--surface);
@@ -15,9 +17,9 @@
   display: grid;
   gap: 0.75rem;
 }
-.print-section h4 {
+.print-section h3 {
   margin: 0;
-  font-size: calc(0.9rem * var(--fs-label));
+  font-size: calc(0.95rem * var(--fs-label));
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;

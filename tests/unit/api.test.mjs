@@ -296,24 +296,98 @@ test('setStartDate: Date válido no muta el objeto recibido', () => {
 
 // ── listViews / navigate: vistas conocidas y desconocida ───────────────
 
-test('listViews incluye las 8 vistas, incluida "accessibility"', () => {
+test('listViews incluye las 4 vistas canónicas: tasks, week, allWeeks, ajustes', () => {
   const views = PlannerApi.listViews();
   assert.ok(Array.isArray(views));
-  assert.ok(views.includes('tasks', 'week', 'allWeeks', 'data',
-                          'print', 'legal', 'settings', 'accessibility'));
+  assert.ok(views.includes('tasks'));
+  assert.ok(views.includes('week'));
+  assert.ok(views.includes('allWeeks'));
+  assert.ok(views.includes('ajustes'));
+  // Las antiguas entradas del menú ahora son alias de Ajustes y no
+  // aparecen en listViews (que devuelve solo las vistas canónicas).
+  assert.ok(!views.includes('data'));
+  assert.ok(!views.includes('print'));
+  assert.ok(!views.includes('settings'));
+  assert.ok(!views.includes('legal'));
+  assert.ok(!views.includes('accessibility'));
 });
 
-test('navigate("accessibility") lanza planner:navigate con esa vista', () => {
+test('navigate("ajustes") lanza planner:navigate con esa vista', () => {
   const events = [];
   const navHandler = (e) => events.push(e.detail);
   window.addEventListener('planner:navigate', navHandler);
   try {
-    PlannerApi.navigate('accessibility');
+    PlannerApi.navigate('ajustes');
     assert.equal(events.length, 1);
-    assert.equal(events[0].view, 'accessibility');
+    assert.equal(events[0].view, 'ajustes');
   } finally {
     window.removeEventListener('planner:navigate', navHandler);
   }
+});
+
+test('navigate acepta las vistas canónicas y dispatch con su view', () => {
+  // Las vistas del menú (tasks/week/allWeeks/ajustes) navegan a su
+  // propio view, sin tocar Ajustes. Esto cambió en T-022: antes
+  // navigate() siempre dispatch con view='ajustes', lo que rompía
+  // el spec 07-api (navigate('week') no activaba la vista semana).
+  const cases = [
+    { view: 'tasks' },
+    { view: 'week' },
+    { view: 'allWeeks' },
+    { view: 'ajustes' },
+  ];
+  for (const { view } of cases) {
+    const events = [];
+    const handler = (e) => events.push(e.detail);
+    window.addEventListener('planner:navigate', handler);
+    try {
+      PlannerApi.navigate(view);
+      assert.equal(events.length, 1, `${view} no disparó un único evento`);
+      assert.equal(events[0].view, view, `${view} debe mapear a view="${view}"`);
+      assert.equal(events[0].tab, null, `${view} no debe llevar pestaña`);
+    } finally {
+      window.removeEventListener('planner:navigate', handler);
+    }
+  }
+});
+
+test('navigate acepta alias heredados y los traduce a Ajustes + pestaña', () => {
+  // Cada alias lleva asociado un nombre de pestaña en Ajustes: el
+  // evento `planner:navigate` lleva `view: "ajustes"` y `tab: <nombre>`.
+  const cases = [
+    { alias: 'accessibility', tab: 'accessibility' },
+    { alias: 'data',         tab: 'data' },
+    { alias: 'print',        tab: 'print' },
+    { alias: 'legal',        tab: 'legal' },
+    { alias: 'settings',     tab: 'appearance' },
+  ];
+  for (const { alias, tab } of cases) {
+    const events = [];
+    const handler = (e) => events.push(e.detail);
+    window.addEventListener('planner:navigate', handler);
+    try {
+      PlannerApi.navigate(alias);
+      assert.equal(events.length, 1, `alias ${alias} no disparó un único evento`);
+      assert.equal(events[0].view, 'ajustes',
+        `alias ${alias} debe mapear a view="ajustes"`);
+      assert.equal(events[0].tab, tab,
+        `alias ${alias} debe mapear a tab="${tab}"`);
+    } finally {
+      window.removeEventListener('planner:navigate', handler);
+    }
+  }
+});
+
+test('listAjustesTabs devuelve las pestañas accesibles por navigate()', () => {
+  const tabs = PlannerApi.listAjustesTabs();
+  assert.ok(Array.isArray(tabs));
+  // Debe incluir los nombres de pestaña, sin el canónico "ajustes".
+  assert.ok(tabs.includes('data'));
+  assert.ok(tabs.includes('print'));
+  assert.ok(tabs.includes('legal'));
+  assert.ok(tabs.includes('accessibility'));
+  assert.ok(tabs.includes('appearance'));
+  assert.ok(!tabs.includes('ajustes'));
 });
 
 test('navigate: vista desconocida lanza "Vista inválida"', () => {

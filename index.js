@@ -1,12 +1,8 @@
 import { Context }         from './context.js';
 import { GetNWeeks }       from './back/calendar.js';
 import { TaskManagerCard } from './ui/taskManager/taskManager-card.js';
-import { DataManagerCard } from './ui/dataManager/dataManager-card.js';
-import { PrintCard }       from './ui/print/print-card.js';
 import { WeekCard }        from './ui/week/week-card.js';
-import { LegalCard }       from './ui/legal/legal-card.js';
-import { SettingsCard }    from './ui/settings/settings-card.js';
-import { AccessibilityCard } from './ui/accessibility/accessibility-card.js';
+import { AjustesCard }     from './ui/ajustes/ajustes-card.js';
 import { applyPreferences } from './ui/settings/preferences.js';
 import { ConsentCard }     from './ui/consent/consent-card.js';
 import { TermsCard, termsAccepted } from './ui/terms/terms-card.js';
@@ -59,24 +55,20 @@ removeAdsBtn.addEventListener('click', async () => {
 });
 
 // ── Vistas ───────────────────────────────────────────────
-const VIEW_KEYS = ['tasks', 'week', 'allWeeks', 'data', 'print', 'legal', 'settings', 'accessibility'];
+const VIEW_KEYS = ['tasks', 'week', 'allWeeks', 'ajustes'];
 const views = {
   tasks:        document.getElementById('view-tasks'),
   week:         document.getElementById('view-week'),
   allWeeks:     document.getElementById('view-allWeeks'),
-  data:         document.getElementById('view-data'),
-  print:        document.getElementById('view-print'),
-  legal:        document.getElementById('view-legal'),
-  settings:     document.getElementById('view-settings'),
-  accessibility: document.getElementById('view-accessibility'),
+  ajustes:      document.getElementById('view-ajustes'),
 };
 
 const navButtons = () => Array.from(document.querySelectorAll('.nav-item[data-view]'));
 
-async function setView(name, { focus = true } = {}) {
+async function setView(name, { focus = true, tab = null, focusTab = false } = {}) {
   Object.values(views).forEach(v => v.classList.remove('active'));
   views[name].classList.add('active');
-  await render(name);
+  await render(name, { tab });
   closeSidebarMobile();
 
   // aria-current="page" en el botón de menú activo y lo quitamos
@@ -95,7 +87,22 @@ async function setView(name, { focus = true } = {}) {
   // interactivo (no es alcanzable con Tab). En la carga inicial lo
   // saltamos para que el primer Tab de la sesión caiga en el enlace
   // "Saltar al contenido".
-  if (focus) focusHeading(views[name]);
+  if (focus) {
+    // Para Ajustes, si focusTab=true llevamos el foco a la pestaña
+    // activa (patrón ARIA tablist: al cambiar de pestaña con flechas,
+    // Inicio/Fin o al abrir con un atajo directo). Sin focusTab, al
+    // encabezado de la vista (lo que pasa cuando se abre desde el
+    // menú).
+    if (name === 'ajustes' && focusTab && currentAjustesCard) {
+      const tabBtn = currentAjustesCard.root.querySelector(
+        `.ajustes-tab[aria-selected="true"]`
+      );
+      if (tabBtn) tabBtn.focus();
+      else focusHeading(views[name]);
+    } else {
+      focusHeading(views[name]);
+    }
+  }
 }
 
 document.querySelectorAll('.nav-item[data-view]').forEach(b =>
@@ -170,7 +177,8 @@ function syncNavTabindex() {
 syncNavTabindex();
 
 // ── Render ───────────────────────────────────────────────
-async function render(view) {
+let currentAjustesCard = null;
+async function render(view, { tab = null } = {}) {
   switch (view) {
     case 'tasks':
       await new TaskManagerCard(views.tasks, Context).init();
@@ -204,25 +212,22 @@ async function render(view) {
       break;
     }
 
-    case 'data':
-      await new DataManagerCard(views.data, Context).init();
+    case 'ajustes': {
+      // Reutilizamos la misma instancia mientras la vista no cambie
+      // (los ajustes viven en localStorage y reinicializar rompería
+      // el foco del usuario). Al volver desde el menú sin pestaña,
+      // reseteamos a la pestaña por defecto (Apariencia) para que
+      // abrir Ajustes siempre muestre la misma entrada.
+      if (!currentAjustesCard) {
+        currentAjustesCard = new AjustesCard(views.ajustes, { tab });
+        await currentAjustesCard.init();
+      } else if (tab) {
+        await currentAjustesCard.showTab(tab);
+      } else {
+        await currentAjustesCard.showTab('appearance');
+      }
       break;
-
-    case 'print':
-      await new PrintCard(views.print, Context).init();
-      break;
-
-    case 'legal':
-      await new LegalCard(views.legal).init();
-      break;
-
-    case 'settings':
-      await new SettingsCard(views.settings).init();
-      break;
-
-    case 'accessibility':
-      await new AccessibilityCard(views.accessibility).init();
-      break;
+    }
   }
 }
 
@@ -259,8 +264,8 @@ window.addEventListener('planner:navigate', (e) => {
   const view = e.detail?.view;
   if (!view) return;
   // setView ya actualiza aria-current, tabindex y mueve el foco al
-  // encabezado de la nueva vista.
-  setView(view);
+  // encabezado de la nueva vista (o a la pestaña si se pidió una).
+  setView(view, { tab: e.detail?.tab ?? null });
 });
 await requireTerms();
 await startMonetization();
@@ -292,24 +297,36 @@ if (window.__TAURI__?.core?.invoke && !/android/i.test(navigator.userAgent)) {
 // Alt+1…7 y '?' no actúen sobre las pantallas de términos y
 // consentimiento (solo deben hacerlo una vez la app está cargada).
 document.addEventListener('keydown', (e) => {
-  // Alt+1..Alt+7 cambian de vista. Funciona aunque el foco esté en un
-  // campo de texto (Alt es modificador y no se usa para escribir
+  // Alt+1..Alt+3 cambian a las vistas de tareas. Alt+4..Alt+8 abren
+  // Ajustes en una pestaña concreta (Datos, Imprimir y PDF,
+  // Apariencia, Legal, Accesibilidad). Funciona aunque el foco esté
+  // en un campo de texto (Alt es modificador y no se usa para escribir
   // dentro del formulario). También pulsamos preventDefault para que
   // no se active el menú nativo del navegador.
   if (e.altKey && !e.ctrlKey && !e.metaKey) {
-    const map = {
+    const viewMap = {
       '1': 'tasks',
       '2': 'week',
       '3': 'allWeeks',
+    };
+    if (viewMap[e.key]) {
+      e.preventDefault();
+      setView(viewMap[e.key]);
+      return;
+    }
+    // Alt+4..Alt+8 → Ajustes en una pestaña concreta, con el foco
+    // en la pestaña activa (criterio de T-022: "foco en la pestaña
+    // activa" cuando se entra por atajo).
+    const tabMap = {
       '4': 'data',
       '5': 'print',
-      '6': 'settings',
+      '6': 'appearance',
       '7': 'legal',
       '8': 'accessibility',
     };
-    if (map[e.key]) {
+    if (tabMap[e.key]) {
       e.preventDefault();
-      setView(map[e.key]);
+      setView('ajustes', { tab: tabMap[e.key], focusTab: true });
       return;
     }
     if (e.key === 'n' || e.key === 'N') {

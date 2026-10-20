@@ -32,7 +32,24 @@ import { ToJson }    from './back/serializer.js';
 import { GetNWeeks } from './back/calendar.js';
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-const VIEWS = ['tasks', 'week', 'allWeeks', 'data', 'print', 'legal', 'settings', 'accessibility'];
+// Vistas válidas para `navigate(view)` (T-022). Los antiguos nombres
+// ('data' | 'print' | 'legal' | 'accessibility' | 'settings') se
+// conservan como alias: cada uno abre Ajustes en la pestaña
+// correspondiente para no romper integraciones ya publicadas
+// (servidor MCP, atajos de teclado externos, automatizaciones).
+const VIEWS = ['tasks', 'week', 'allWeeks', 'ajustes'];
+// Mapeo de alias → pestaña dentro de Ajustes. 'settings' (alias
+// histórico) y 'ajustes' abren la pestaña Apariencia.
+// Nombre canónico de la vista al que apunta cada alias (todos acaban
+// en 'ajustes' excepto los alias históricos que ya eran Ajustes).
+const VIEW_TAB_ALIAS = {
+  'settings':     { view: 'ajustes', tab: 'appearance' },
+  'ajustes':      { view: 'ajustes', tab: 'appearance' },
+  'data':         { view: 'ajustes', tab: 'data' },
+  'print':        { view: 'ajustes', tab: 'print' },
+  'legal':        { view: 'ajustes', tab: 'legal' },
+  'accessibility':{ view: 'ajustes', tab: 'accessibility' },
+};
 
 /** Fecha en formato YYYY-MM-DD usando la zona horaria LOCAL (no UTC,
  *  como haría `Date.toISOString().slice(0,10)`). Lo comparten getStartDate
@@ -294,14 +311,45 @@ export const PlannerApi = {
 
   /** Pide a la app que navegue a `view`. Dispara un evento `planner:navigate`
    *  en window para que index.js haga el cambio de vista (no tocamos
-   *  directamente las clases del DOM desde aquí). */
+   *  directamente las clases del DOM desde aquí).
+   *
+   *  Acepta los alias heredados ('settings', 'data', 'print', 'legal',
+   *  'accessibility') además del nombre canónico 'ajustes'. Los alias
+   *  abren Ajustes en la pestaña adecuada para no romper integraciones
+   *  ya publicadas (MCP, automatizaciones). Si el alias lleva
+   *  asociada una pestaña, el evento `planner:navigate` lleva
+   *  también `tab` para que la app abra Ajustes directamente ahí. */
   navigate(view) {
-    if (!VIEWS.includes(view)) throw new Error('Vista inválida');
-    window.dispatchEvent(new CustomEvent('planner:navigate', { detail: { view } }));
+    if (VIEWS.includes(view)) {
+      // Vista canónica (tasks / week / allWeeks / ajustes): navegar a
+      // esa vista. Si es 'ajustes' la app abrirá la pestaña por defecto.
+      window.dispatchEvent(new CustomEvent('planner:navigate', {
+        detail: { view, tab: null },
+      }));
+      return;
+    }
+    if (view in VIEW_TAB_ALIAS) {
+      const { view: target, tab } = VIEW_TAB_ALIAS[view];
+      window.dispatchEvent(new CustomEvent('planner:navigate', {
+        detail: { view: target, tab },
+      }));
+      return;
+    }
+    throw new Error('Vista inválida');
+  },
+
+  /** Devuelve las pestañas disponibles dentro de Ajustes. Lo usa el
+   *  servidor MCP (`abrir_vista`) y futuras integraciones que
+   *  quieran saltar a una sección concreta de Ajustes sin tener que
+   *  recordar el mapeo de la UI. */
+  listAjustesTabs() {
+    return Object.entries(VIEW_TAB_ALIAS)
+      .filter(([k]) => k !== 'ajustes')
+      .map(([, v]) => v.tab);
   },
 
   /** Devuelve un string JSON con todas las tareas (el mismo formato
-   *  que `Importar JSON` en Gestión de datos). */
+   *  que `Importar JSON` en Ajustes › Datos). */
   exportJson() {
     return ToJson(Context.Tasks);
   },
