@@ -74,19 +74,30 @@ export function trapFocus(container, { onEscape } = {}) {
       if (onEscape) { e.preventDefault(); onEscape(); }
       return;
     }
-    if (e.key !== 'Tab') return;
+    // En pruebas E2E bajo tauri-driver + WebKit, las teclas se
+    // entregan como `e.key === 'Unidentified'` con `e.code === 'Tab'`,
+    // por eso aceptamos también la detección por `code`.
+    const isTab = e.key === 'Tab' || e.code === 'Tab';
+    if (!isTab) return;
     const items = getFocusable();
     if (items.length === 0) { e.preventDefault(); return; }
     const first = items[0];
     const last  = items[items.length - 1];
     const active = document.activeElement;
+    // El foco es "trappable" si está en uno de los elementos
+    // enfocables del diálogo. No basta con que esté dentro: al abrir,
+    // el foco puede haber ido al propio contenedor (p. ej.
+    // `.shortcuts-content` con tabindex=-1) o al título del modal
+    // (`#legal-modal-title`, también tabindex=-1), que no están en
+    // `items`. Si dejamos pasar Tab ahí, el navegador lo lleva fuera.
+    const inList = active && items.includes(active);
     if (e.shiftKey) {
-      if (active === first || !container.contains(active)) {
+      if (!inList || active === first) {
         e.preventDefault();
         last.focus();
       }
     } else {
-      if (active === last || !container.contains(active)) {
+      if (!inList || active === last) {
         e.preventDefault();
         first.focus();
       }

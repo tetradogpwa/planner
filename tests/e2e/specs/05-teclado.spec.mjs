@@ -472,6 +472,87 @@ describe('Uso completo con teclado', () => {
     );
   });
 
+  it('en el modal legal, Tab y Shift+Tab no salen del diálogo al abrirlo con el foco en el título', async () => {
+    // Vamos a la pestaña Legal de Ajustes (Alt+7 desde T-022).
+    await browser.keys([Key.Alt, '7']);
+    await $('a[data-doc="PRIVACY"]').waitForDisplayed();
+
+    // Abrimos el modal con un clic real sobre el primer enlace (como
+    // lo haría una persona). El foco va a #legal-modal-title, que
+    // tiene tabindex=-1 y NO está en la lista de enfocables de la
+    // trampa: este es el caso que la trampa de foco debe cubrir.
+    await $('a[data-doc="PRIVACY"]').click();
+    await porId('legal-modal').waitForDisplayed();
+    await browser.waitUntil(
+      async () => (await focoId()) === 'legal-modal-title',
+      { timeout: 3_000, timeoutMsg: 'El modal legal no enfocó su título' },
+    );
+
+    // Confirmamos que hay al menos un elemento enfocable dentro.
+    const totalEnDialogo = await browser.execute(() => {
+      const dlg = document.getElementById('legal-modal');
+      const sel = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      return Array.from(dlg.querySelectorAll(sel))
+        .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null)
+        .length;
+    });
+    expect(totalEnDialogo).toBeGreaterThanOrEqual(1);
+
+    // Shift+Tab nada más abrir, con el foco en el título: lo anterior
+    // al título en el DOM está fuera del modal, así que sin la trampa
+    // el foco escaparía.
+    await browser.keys([Key.Shift, Key.Tab]);
+    const dentroShiftAlAbrir = await browser.execute(() =>
+      document.getElementById('legal-modal').contains(document.activeElement),
+    );
+    expect(dentroShiftAlAbrir).toBe(true);
+
+    // Devolvemos el foco al título para probar también Tab desde ahí.
+    await browser.execute(() => document.getElementById('legal-modal-title').focus());
+
+    // Inmediatamente después de abrir, el foco está en el título
+    // (tabindex=-1, fuera de la lista de enfocables). Tab debe llevar
+    // al primer control del modal, no a nada fuera.
+    await browser.keys([Key.Tab]);
+    const dentroTab1 = await browser.execute(() =>
+      document.getElementById('legal-modal').contains(document.activeElement),
+    );
+    expect(dentroTab1).toBe(true);
+
+    // Shift+Tab desde ese primer control debe volver a un control
+    // DENTRO del modal, no salir.
+    await browser.keys([Key.Shift, Key.Tab]);
+    const dentroShiftTab1 = await browser.execute(() =>
+      document.getElementById('legal-modal').contains(document.activeElement),
+    );
+    expect(dentroShiftTab1).toBe(true);
+
+    // Y un buen recorrido de Tabs / Shift+Tabs no debe escapar nunca.
+    for (let i = 0; i < totalEnDialogo + 4; i++) {
+      await browser.keys([Key.Tab]);
+      const dentro = await browser.execute(() =>
+        document.getElementById('legal-modal').contains(document.activeElement),
+      );
+      expect(dentro).toBe(true);
+    }
+    for (let i = 0; i < totalEnDialogo + 4; i++) {
+      await browser.keys([Key.Shift, Key.Tab]);
+      const dentro = await browser.execute(() =>
+        document.getElementById('legal-modal').contains(document.activeElement),
+      );
+      expect(dentro).toBe(true);
+    }
+
+    // Cerramos para no contaminar pruebas siguientes.
+    await browser.keys(Key.Escape);
+    await browser.waitUntil(
+      async () => (await browser.execute(
+        () => document.getElementById('legal-modal').hidden,
+      )) === true,
+      { timeout: 3_000, timeoutMsg: 'El modal legal no se cerró con Escape' },
+    );
+  });
+
   // ── Vista Semana: flechas entre cabeceras de día ──────────────
   it('en Semana, flecha abajo/arriba mueve el foco entre cabeceras de día', async () => {
     // Vamos a la vista Semana.

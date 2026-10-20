@@ -1881,10 +1881,10 @@
     {
       "id": "T-020",
       "title": "E2E en Wayland invisible: toda la suite en verde",
-      "status": "en_revision",
+      "status": "pendiente",
       "relatedTo": "T-010",
       "created": "2026-10-19T07:47:32Z",
-      "updated": "2026-10-20T09:39:35Z",
+      "updated": "2026-10-20T14:37:33Z",
       "attempts": 2,
       "requests": [
         {
@@ -1905,9 +1905,15 @@
         "Hipótesis a comprobar primero (no está medida): el weston sin pantalla no tiene ratón, así que WebKit da matchMedia('(hover: hover) and (pointer: fine)') = false y no se aplica el bloque de escritorio con ratón de index.css (~línea 416). Mídelo con browser.execute en la spec antes de tocar nada.",
         "Depende de T-010 (en revisión): hazla después de que T-010 esté aprobada, sobre su CSS y su spec 09.",
         "MiniMax no puede editar tools/test.sh ni tests/e2e/wdio.conf.mjs (opencode.json). Si la solución exige cambiar cómo se arranca weston (p. ej. un dispositivo de ratón virtual), no lo rodees: explica en la entrega el cambio exacto y el supervisor lo aplica.",
-        "Supervisor (revisión T-010): con T-010 aprobada, en Xvfb la suite pasa entera; en weston siguen fallando las 3 mismas pruebas de la spec 09 (sidebar contraído ≥ 80 px; diferencia de 17 px con --fs-nav=2)."
+        "Supervisor (revisión T-010): con T-010 aprobada, en Xvfb la suite pasa entera; en weston siguen fallando las 3 mismas pruebas de la spec 09 (sidebar contraído ≥ 80 px; diferencia de 17 px con --fs-nav=2).",
+        "Supervisor (2026-10-20, revisión de T-024): el segundo intento (09:39) no cambió nada. En weston siguen fallando las 3 pruebas de la spec 09; además 02-editar-borrar está en rojo por el bug de Gestionar (T-026). Las fotos de T-020/T-023/T-025 incluyen los commits de T-017/T-022, así que su diff trae cambios ajenos: compara con git diff HEAD."
       ],
-      "feedback": [],
+      "feedback": [
+        {
+          "at": "2026-10-20T14:37:33Z",
+          "note": "El intento del 2026-10-20 09:39 no entregó cambios: tests/e2e/specs/09-sidebar-colapsado.spec.mjs e index.css siguen igual y en weston fallan las mismas 3 pruebas de la spec 09 (sidebar contraído ≥ 80 px; 17 px de diferencia con --fs-nav=2). Empieza midiendo con browser.execute en la spec 09 matchMedia('(hover: hover) and (pointer: fine)') y el ancho real del sidebar en weston frente a Xvfb, y arregla la causa. Hazla después de T-026 (02-editar-borrar está en rojo por ese bug)."
+        }
+      ],
       "baseTree": "9d7b3b6d881c0f19126bcb44b21cf3e7f37d5926",
       "history": [
         {
@@ -1948,6 +1954,16 @@
           "at": "2026-10-20T09:39:35Z",
           "event": "estado → en_revision",
           "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-20T14:35:34Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-10-20T14:37:33Z",
+          "event": "devuelta a MiniMax",
+          "note": "El intento del 2026-10-20 09:39 no entregó cambios: tests/e2e/specs/09-sidebar-colapsado.spec.mjs e index.css siguen igual y en weston fallan las mismas 3 pruebas de la spec 09 (sidebar contraído ≥ 80 px; 17 px de diferencia con --fs-nav=2). Empieza midiendo con browser.execute en la spec 09 matchMedia('(hover: hover) and (pointer: fine)') y el ancho real del sidebar en weston frente a Xvfb, y arregla la causa. Hazla después de T-026 (02-editar-borrar está en rojo por ese bug)."
         }
       ],
       "firstTree": "02aa67994a8286264347de89243b8e39f123f41d"
@@ -2353,10 +2369,10 @@
     {
       "id": "T-025",
       "title": "La trampa de foco de los diálogos no debe dejar salir el Tab",
-      "status": "en_revision",
+      "status": "hecha",
       "relatedTo": "T-018",
       "created": "2026-10-19T13:42:09Z",
-      "updated": "2026-10-20T13:50:24Z",
+      "updated": "2026-10-20T14:40:42Z",
       "attempts": 1,
       "requests": [
         {
@@ -2393,6 +2409,11 @@
           "at": "2026-10-20T13:50:24Z",
           "event": "estado → en_revision",
           "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-20T14:40:42Z",
+          "event": "estado → hecha",
+          "note": "Supervisor: trapFocus acepta e.code==='Tab' (con tauri-driver Tab no llega como e.key 'Tab'; quitarlo pone en rojo las dos pruebas) y lleva Tab/Shift+Tab a first/last si el foco no está en un enfocable. Añadí a la prueba del modal legal un Shift+Tab justo al abrir, que falla con la condición antigua. Spec 05 en verde; test.sh: unit ✓, e2e solo rojo en 02 (T-026) y 09 en weston (T-020)."
         }
       ],
       "firstTree": "caff5efdad5f01cdd522ab9d9afe70941558bbea"
