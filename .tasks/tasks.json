@@ -2301,10 +2301,10 @@
     {
       "id": "T-024",
       "title": "Alt+N debe enfocar el campo de nueva tarea desde cualquier vista",
-      "status": "en_revision",
+      "status": "hecha",
       "relatedTo": "T-018",
       "created": "2026-10-19T13:42:09Z",
-      "updated": "2026-10-20T09:38:00Z",
+      "updated": "2026-10-20T14:35:30Z",
       "attempts": 1,
       "requests": [
         {
@@ -2341,6 +2341,11 @@
           "at": "2026-10-20T09:38:00Z",
           "event": "estado → en_revision",
           "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-10-20T14:35:30Z",
+          "event": "estado → hecha",
+          "note": "Supervisor: TaskManagerCard.mount() espera a AddTaskCard.init(); spec 05 entera en ✓ y 'Alt+N enfoca #taskName' se pone en rojo al quitar el await. Suite: unit ✓; e2e solo falla 02 (T-026) y 09 (T-020, Wayland), ajenas."
         }
       ],
       "firstTree": "01cc2d11aa88e664a4f90bfdc5643d828cf4fe24"

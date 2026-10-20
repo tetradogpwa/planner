@@ -13,10 +13,13 @@ export class TaskManagerCard {
       fetch('./ui/taskManager/taskManager-card.css').then(r => r.text()),
     ]);
     this.root.innerHTML = `<style>${css}</style>${html}`;
-    this.mount();
+    // `mount()` es async (espera a AddTaskCard para garantizar que
+    // #taskName ya esté inyectado cuando el atajo Alt+N lo busca,
+    // T-024): hay que esperar a su promesa aquí.
+    await this.mount();
   }
 
-  mount() {
+  async mount() {
     const addRoot = this.root.querySelector('#addTaskMount');
     this.listRoot = this.root.querySelector('#taskListMount');
     this.countEl  = this.root.querySelector('#taskCount');
@@ -29,7 +32,12 @@ export class TaskManagerCard {
     });
 
     const add = new AddTaskCard(addRoot);
-    add.init();
+    // Esperar a que AddTaskCard termine de inyectar su HTML (incluido
+    // #taskName) antes de devolver el control: el atajo Alt+N hace
+    // `setView('tasks').then(() => taskName.focus())` y, si esto
+    // siguiera sin await, la promesa de `add.init()` quedaría
+    // pendiente y el `.then()` no encontraría el campo (T-024).
+    await add.init();
 
     addRoot.addEventListener('task-create', (e) => {
       this.context.Tasks.push(e.detail);
