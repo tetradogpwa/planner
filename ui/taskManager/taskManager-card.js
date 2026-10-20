@@ -1,6 +1,13 @@
 import { AddTaskCard }  from './addTask/addTask-card.js';
 import { EditTaskCard } from './editTask/editTask-card.js';
 
+// Estado del interruptor "Gestionar" (T-026). `index.js` recrea la
+// TaskManagerCard en cada navegación a la vista 'tasks', así que sin
+// esto el interruptor se apagaba solo al ir a Semana y volver. Lo
+// guardamos en memoria del módulo (no en localStorage) porque es un
+// estado de UI de la sesión: al recargar la app vuelve a estar apagado.
+let editMode = false;
+
 export class TaskManagerCard {
   constructor(root, context) {
     this.root    = root;
@@ -26,10 +33,19 @@ export class TaskManagerCard {
     const toggle  = this.root.querySelector('#editToggle');
 
     toggle.addEventListener('change', () => {
+      // Guardamos el estado en memoria del módulo para que la tarjeta
+      // se pueda recrear al navegar sin perderlo (T-026).
+      editMode = toggle.checked;
       this.listRoot.classList.toggle('edit-mode', toggle.checked);
       // Cerrar cualquier panel abierto al salir del modo edición
       if (!toggle.checked) this.#closeAllPanels();
     });
+
+    // Restauramos el estado que hubiera antes de que la tarjeta se
+    // recreara: marcado el interruptor y la clase en la lista, para
+    // que la UI sea coherente desde el primer pintado (T-026).
+    toggle.checked = editMode;
+    this.listRoot.classList.toggle('edit-mode', editMode);
 
     const add = new AddTaskCard(addRoot);
     // Esperar a que AddTaskCard termine de inyectar su HTML (incluido

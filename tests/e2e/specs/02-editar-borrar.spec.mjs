@@ -215,16 +215,25 @@ describe('Vista Tareas: editar y borrar (interruptor Gestionar)', () => {
     await irASemana();
     expect(await celdasCon('Tarea B')).toEqual([false, false, false, false, false, false, false]);
     await irATareas();
+
+    // Tras navegar a Semana y volver, Gestionar debe seguir activo
+    // (T-026): TaskManagerCard se recrea en cada navegación a 'tasks'
+    // y guarda el estado del interruptor en memoria del módulo.
+    const gestor = await browser.execute(() => ({
+      editMode:      document.getElementById('taskListMount').classList.contains('edit-mode'),
+      toggleChecked: document.getElementById('editToggle').checked,
+    }));
+    expect(gestor.editMode).toBe(true);
+    expect(gestor.toggleChecked).toBe(true);
   });
 
   it('borrar la última tarea lleva el foco al botón Eliminar de la anterior', async () => {
     // Estado actual: [Tarea A editada, Tarea C]. Borramos la última
     // (índice 1). El foco debe caer al botón Eliminar de la fila
     // anterior (la única que queda), no a <body>.
-    // Tras la navegación Semana → Tareas del test anterior, Gestionar
-    // queda apagado (la tarjeta se reconstruye en cada navegación a
-    // 'tasks'); re-encendemos Gestionar para seguir borrando, igual
-    // que haría una persona.
+    // Gestionar sigue activo tras la navegación del test anterior
+    // (T-026); activarGestionar() no hace nada si ya está encendido y
+    // deja este test independiente de ese comportamiento.
     await activarGestionar();
     await btnTrash(1).click();
 

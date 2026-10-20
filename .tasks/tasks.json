@@ -2426,11 +2426,11 @@
     {
       "id": "T-026",
       "title": "Gestionar debe seguir activo al volver a la vista Tareas",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": "T-015",
       "created": "2026-10-19T13:42:09Z",
-      "updated": "2026-10-19T13:42:09Z",
-      "attempts": 0,
+      "updated": "2026-10-20T14:54:54Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-10-19T13:42:09Z",
@@ -2446,13 +2446,34 @@
         "TaskManagerCard se recrea en cada navegación a 'tasks' (index.js render) y pierde el estado de Gestionar. Guárdalo en memoria del módulo (no en localStorage) o no reconstruyas la tarjeta."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "6768a9ce9ba678de712c67a10fdea8cc0df597f9",
       "history": [
         {
           "at": "2026-10-19T13:42:09Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-10-20T14:48:29Z",
+          "event": "foto del árbol",
+          "note": "6768a9ce9b"
+        },
+        {
+          "at": "2026-10-20T14:48:29Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-026-20261020-164829.log"
+        },
+        {
+          "at": "2026-10-20T14:52:16Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-10-20T14:54:54Z",
+          "event": "estado → hecha",
+          "note": "Gestionar se guarda en memoria del módulo de TaskManagerCard. Spec 02 'borrar la del medio' en verde; con el arreglo roto pasa a rojo. test.sh: unit ✓, e2e ✓ en Xvfb; en weston solo fallan las 3 de la spec 09 (T-020, preexistentes)."
         }
-      ]
+      ],
+      "firstTree": "6768a9ce9ba678de712c67a10fdea8cc0df597f9"
     }
   ]
 }
