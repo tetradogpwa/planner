@@ -154,6 +154,28 @@ sidebarCollapseBtn.addEventListener('click', () => {
   localStorage.setItem(COLLAPSED_KEY, sidebar.classList.contains('collapsed') ? '1' : '0');
 });
 
+// ── Sidebar: tipo de dispositivo ──────────────────────────
+// Los iconos grandes del menú contraído están pensados para tocarlos
+// con el dedo, así que solo se usan si hay algo que tocar. WebKitGTK
+// responde a '(pointer: coarse)' cuando la sesión gráfica no tiene
+// ningún dispositivo de puntero (por ejemplo un Wayland sin ratón),
+// aunque no exista ninguna pantalla táctil; en ese caso el contraído
+// se dibuja como en escritorio (icono del tamaño del expandido).
+// Para distinguirlo de una pantalla táctil de verdad miramos los
+// puntos de contacto: si no hay ninguno, no hay dedo ni ratón.
+// El atributo data-entrada="sin-puntero" lo lee index.css.
+function marcarTipoEntrada() {
+  const root = document.documentElement;
+  const hayPunteroFino      = window.matchMedia('(pointer: fine)').matches;
+  const hayPantallaTactil   = (navigator.maxTouchPoints || 0) > 0;
+  if (!hayPunteroFino && !hayPantallaTactil) root.setAttribute('data-entrada', 'sin-puntero');
+  else root.removeAttribute('data-entrada');
+}
+
+marcarTipoEntrada();
+// Si conectan un ratón o aparece una pantalla táctil, se recalcula.
+window.matchMedia('(pointer: fine)').addEventListener('change', marcarTipoEntrada);
+
 // ── Sidebar: navegación por teclado (Flechas, Inicio/Fin) ──
 // El contenedor .sidebar-nav actúa como un grupo de opciones tipo
 // "menubar": flechas arriba/abajo mueven el foco entre .nav-item,

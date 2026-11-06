@@ -1,12 +1,12 @@
 ---
 name: test
-description: Ejecuta las pruebas del Planificador con tools/test.sh — unitarias de back/ (node:test) y E2E contra la app real (WebdriverIO + tauri-driver en un Xvfb invisible) — y resume el resultado. Úsala cuando el usuario escriba /test [unit|e2e|all] [--spec ruta], pida pasar las pruebas, o al revisar una tarea de MiniMax.
+description: Ejecuta las pruebas del Planificador con tools/test.sh — unitarias de back/ (node:test) y E2E contra la app real (WebdriverIO + tauri-driver en un Wayland invisible, weston sin pantalla) — y resume el resultado. Úsala cuando el usuario escriba /test [unit|e2e|all] [--spec ruta], pida pasar las pruebas, o al revisar una tarea de MiniMax.
 ---
 
 # Pruebas del Planificador
 
 Todo pasa por `tools/test.sh`. **Nunca lances `wdio` ni `npx wdio` a
-pelo**: el script es el que pone el Xvfb (si no, la ventana sale en el
+pelo**: el script es el que pone el weston sin pantalla (si no, la ventana sale en el
 escritorio del usuario y le roba el foco), la carpeta de datos aislada
 (si no, las pruebas borrarían sus tareas reales) y el binario sin
 anuncios.

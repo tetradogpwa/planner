@@ -1,14 +1,23 @@
-// Recorrido del menú lateral contraído en escritorio con ratón
-// (Xvfb con WebKitGTK, que reporta hover: hover y pointer: fine).
+// Recorrido del menú lateral contraído en escritorio.
 //
-// El criterio de T-010 es que, en ese entorno, el botón del menú
+// El criterio de T-010 es que, en escritorio, el botón del menú
 // contraído tenga el mismo tamaño que el del expandido: el icono
-// pasa de 64 px (configurado en :root) al tamaño del icono
-// expandido (1.4em sobre calc(1.1rem * var(--fs-nav))) y el
-// padding del item vuelve al 0.7rem. Aquí se mide con
-// getBoundingClientRect y se exige diferencia ≤ 1 px. El ancho
-// del sidebar se reduce exactamente al icono + 1.5rem (padding
-// horizontal del .nav-item) + 1rem (padding del .sidebar-nav).
+// pasa de 64 px (configurado en :root, para pantallas táctiles) al
+// tamaño del icono expandido (1.4em sobre calc(1.1rem * var(--fs-nav)))
+// y el padding del item vuelve al 0.7rem. Aquí se mide con
+// getBoundingClientRect y se exige diferencia ≤ 1 px. El ancho del
+// sidebar se reduce exactamente al icono + 1.5rem (padding horizontal
+// del .nav-item) + 1rem (padding del .sidebar-nav).
+//
+// Hay dos entornos de escritorio y los dos deben dar lo mismo:
+//   · con ratón (Xvfb): se aplica la media query (hover: hover) and
+//     (pointer: fine) de index.css;
+//   · sin ningún dispositivo de puntero (weston sin pantalla, que es
+//     como se ejecutan los E2E por defecto): WebKitGTK responde
+//     '(pointer: coarse)' aunque no haya pantalla táctil, así que
+//     index.js marca <html data-entrada="sin-puntero"> e index.css
+//     aplica el mismo tamaño de escritorio. El último test comprueba
+//     esa detección.
 
 import { aceptarTerminos } from '../helpers.mjs';
 
@@ -237,5 +246,23 @@ describe('Menú lateral contraído en escritorio', () => {
     // 14rem * fs-nav (1) = 224 px, limitado por 40vw = 512 px.
     expect(w).toBeGreaterThanOrEqual(220);
     expect(w).toBeLessThanOrEqual(230);
+  });
+
+  it('sin puntero fino ni pantalla táctil el contraído se marca como escritorio', async () => {
+    // Los iconos grandes del contraído están pensados para tocarlos
+    // con el dedo, así que solo se usan si hay algo que tocar.
+    // WebKitGTK responde '(pointer: coarse)' en las sesiones sin
+    // dispositivo de puntero (un Wayland sin ratón), pero sin puntos de
+    // contacto no hay dedo ni ratón: entonces el contraído se dibuja
+    // como el expandido. index.js lo marca con el atributo
+    // data-entrada="sin-puntero" y index.css lo lee.
+    const m = await browser.execute(() => ({
+      fino: matchMedia('(pointer: fine)').matches,
+      tactil: (navigator.maxTouchPoints || 0) > 0,
+      atributo: document.documentElement.getAttribute('data-entrada'),
+    }));
+    // El atributo se pone solo cuando no hay puntero fino ni pantalla
+    // táctil; con ratón (o con una pantalla táctil) no se pone.
+    expect(m.atributo).toBe(!m.fino && !m.tactil ? 'sin-puntero' : null);
   });
 });

@@ -4,7 +4,8 @@
 #
 #   unit  Lógica de back/ con node:test (sin DOM ni dependencias).
 #   e2e   La app REAL: compila el binario de Tauri y lo maneja con
-#         WebdriverIO + tauri-driver dentro de un Xvfb invisible.
+#         WebdriverIO + tauri-driver dentro de un Wayland invisible
+#         (weston sin pantalla) o, si se pide, de un Xvfb.
 # ─────────────────────────────────────────────────────────────────────
 # Uso:
 #   bash tools/test.sh                    → unit + e2e
@@ -12,13 +13,17 @@
 #   bash tools/test.sh e2e                → solo E2E
 #   bash tools/test.sh e2e --spec tests/e2e/specs/00-arranque.spec.mjs
 #   bash tools/test.sh --help
+#   PLANNER_E2E_DISPLAY=x11 bash tools/test.sh e2e   → E2E en Xvfb
 #
 # La salida completa va a logs/test-<objetivo>-<fecha>.log (ignorada
 # por git); por pantalla solo sale el resumen y los fallos.
 #
 # Garantías de los E2E:
-#   * La ventana se abre solo en el Xvfb: se quita el acceso a Wayland,
-#     que en otro caso la mostraría en el escritorio y robaría el foco.
+#   * La ventana se abre en segundo plano, nunca en el escritorio:
+#     por defecto en un weston sin pantalla (--backend=headless) con
+#     su propio socket Wayland; con PLANNER_E2E_DISPLAY=x11, en un
+#     Xvfb. En ambos casos se apunta GTK solo a ese servidor (el
+#     WAYLAND_DISPLAY del escritorio no llega a la app).
 #   * Datos aislados en tests/e2e/.tmp/ (XDG_DATA_HOME): nunca se tocan
 #     las tareas reales del usuario. Cada spec empieza con datos vacíos.
 #   * Binario propio en src-tauri/target-e2e/, compilado sin anuncios
@@ -26,7 +31,7 @@
 #   * Puerto propio (4446) para no chocar con otros proyectos.
 #
 # Requisitos de los E2E (el script dice qué falta):
-#   sudo apt install -y xvfb webkit2gtk-driver
+#   sudo apt install -y weston webkit2gtk-driver   (xvfb si usas x11)
 #   cargo install tauri-driver --locked
 #   cargo install tauri-cli --version "^2.0" --locked
 # Las dependencias npm de tests/e2e/ se instalan solas la primera vez.
@@ -45,6 +50,8 @@ E2E_NATIVE_PORT=4447
 E2E_TARGET_DIR="$ROOT/src-tauri/target-e2e"
 E2E_BIN="$E2E_TARGET_DIR/debug/planner"
 E2E_TMP="$ROOT/tests/e2e/.tmp"
+# wayland (weston sin pantalla, por defecto) o x11 (Xvfb).
+E2E_DISPLAY="${PLANNER_E2E_DISPLAY:-wayland}"
 
 # ─────────────── Argumentos ──────────────────────────────────────────
 TARGETS=()
@@ -87,7 +94,11 @@ TAURI_DRIVER="$(command -v tauri-driver || echo "$HOME/.cargo/bin/tauri-driver")
 
 check_e2e_reqs() {
   local ok=0
-  command -v xvfb-run        >/dev/null || { echo "✗ Falta xvfb-run → sudo apt install -y xvfb"; ok=1; }
+  case "$E2E_DISPLAY" in
+    wayland) command -v weston   >/dev/null || { echo "✗ Falta weston → sudo apt install -y weston (o PLANNER_E2E_DISPLAY=x11)"; ok=1; } ;;
+    x11)     command -v xvfb-run >/dev/null || { echo "✗ Falta xvfb-run → sudo apt install -y xvfb"; ok=1; } ;;
+    *)       echo "✗ PLANNER_E2E_DISPLAY debe ser wayland o x11 (es \"$E2E_DISPLAY\")"; ok=1 ;;
+  esac
   command -v WebKitWebDriver >/dev/null || { echo "✗ Falta WebKitWebDriver → sudo apt install -y webkit2gtk-driver"; ok=1; }
   [[ -x "$TAURI_DRIVER" ]]              || { echo "✗ Falta tauri-driver → cargo install tauri-driver --locked"; ok=1; }
   cargo tauri --version >/dev/null 2>&1 || { echo "✗ Falta cargo-tauri → cargo install tauri-cli --version \"^2.0\" --locked"; ok=1; }
@@ -114,10 +125,6 @@ run_e2e() {
     cargo tauri build --debug --no-bundle || return 1
   [[ -x "$E2E_BIN" ]] || { echo "✗ No se encontró el binario $E2E_BIN"; return 1; }
 
-  # Solo el Xvfb: sin Wayland, GTK abriría la ventana en el escritorio.
-  unset WAYLAND_DISPLAY WAYLAND_SOCKET
-  export GDK_BACKEND=x11 XDG_SESSION_TYPE=x11
-
   # Datos, configuración y caché aislados de los del usuario.
   rm -rf "$E2E_TMP"
   export XDG_DATA_HOME="$E2E_TMP/datos"
@@ -135,8 +142,8 @@ run_e2e() {
   export PLANNER_E2E_PORT="$E2E_PORT"
   export TAURI_DRIVER E2E_PORT E2E_NATIVE_PORT SPEC
 
-  echo "▸ Ejecutando WebdriverIO en Xvfb (tauri-driver en el puerto $E2E_PORT)"
-  xvfb-run -a --server-args='-screen 0 1280x800x24' bash -c '
+  # Lo que corre dentro del servidor gráfico invisible.
+  local inner='
     "$TAURI_DRIVER" --port "$E2E_PORT" --native-port "$E2E_NATIVE_PORT" &
     TD_PID=$!
     trap "kill $TD_PID 2>/dev/null" EXIT
@@ -151,6 +158,53 @@ run_e2e() {
       npx wdio run wdio.conf.mjs
     fi
   '
+
+  if [[ "$E2E_DISPLAY" == x11 ]]; then
+    # Solo el Xvfb: con Wayland, GTK abriría la ventana en el escritorio.
+    unset WAYLAND_DISPLAY WAYLAND_SOCKET
+    export GDK_BACKEND=x11 XDG_SESSION_TYPE=x11
+    echo "▸ Ejecutando WebdriverIO en Xvfb (tauri-driver en el puerto $E2E_PORT)"
+    xvfb-run -a --server-args='-screen 0 1280x800x24' bash -c "$inner"
+  else
+    run_in_weston "$inner"
+  fi
+}
+
+# Arranca un weston sin pantalla con un socket propio, ejecuta $1
+# dentro de él y lo cierra al terminar. Nada se ve en el escritorio.
+run_in_weston() {
+  local sock="planner-e2e-$$"
+  local wlog="$E2E_TMP/weston.log"
+  : "${XDG_RUNTIME_DIR:=/run/user/$(id -u)}"
+  export XDG_RUNTIME_DIR
+
+  # Sin X ni el Wayland del escritorio: solo el socket de este weston.
+  unset DISPLAY WAYLAND_SOCKET
+  WAYLAND_DISPLAY= weston --backend=headless --renderer=pixman --no-config \
+    --socket="$sock" --width=1280 --height=800 --idle-time=0 \
+    >"$wlog" 2>&1 &
+  local wpid=$!
+
+  local i
+  for i in $(seq 50); do
+    [[ -S "$XDG_RUNTIME_DIR/$sock" ]] && break
+    kill -0 "$wpid" 2>/dev/null || break
+    sleep 0.1
+  done
+  if [[ ! -S "$XDG_RUNTIME_DIR/$sock" ]]; then
+    echo "✗ weston no arrancó (log en $wlog):"; sed 's/^/    /' "$wlog" | tail -20
+    kill "$wpid" 2>/dev/null
+    return 1
+  fi
+
+  echo "▸ Ejecutando WebdriverIO en un Wayland invisible (weston, socket $sock; tauri-driver en el puerto $E2E_PORT)"
+  local rc
+  WAYLAND_DISPLAY="$sock" GDK_BACKEND=wayland XDG_SESSION_TYPE=wayland \
+    bash -c "$1"
+  rc=$?
+  kill "$wpid" 2>/dev/null
+  wait "$wpid" 2>/dev/null
+  return $rc
 }
 
 summary_e2e() {

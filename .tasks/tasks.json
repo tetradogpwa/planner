@@ -1881,11 +1881,11 @@
     {
       "id": "T-020",
       "title": "E2E en Wayland invisible: toda la suite en verde",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": "T-010",
       "created": "2026-10-19T07:47:32Z",
-      "updated": "2026-10-20T14:37:33Z",
-      "attempts": 2,
+      "updated": "2026-11-06T07:01:03Z",
+      "attempts": 3,
       "requests": [
         {
           "at": "2026-10-19T07:47:32Z",
@@ -1906,7 +1906,8 @@
         "Depende de T-010 (en revisión): hazla después de que T-010 esté aprobada, sobre su CSS y su spec 09.",
         "MiniMax no puede editar tools/test.sh ni tests/e2e/wdio.conf.mjs (opencode.json). Si la solución exige cambiar cómo se arranca weston (p. ej. un dispositivo de ratón virtual), no lo rodees: explica en la entrega el cambio exacto y el supervisor lo aplica.",
         "Supervisor (revisión T-010): con T-010 aprobada, en Xvfb la suite pasa entera; en weston siguen fallando las 3 mismas pruebas de la spec 09 (sidebar contraído ≥ 80 px; diferencia de 17 px con --fs-nav=2).",
-        "Supervisor (2026-10-20, revisión de T-024): el segundo intento (09:39) no cambió nada. En weston siguen fallando las 3 pruebas de la spec 09; además 02-editar-borrar está en rojo por el bug de Gestionar (T-026). Las fotos de T-020/T-023/T-025 incluyen los commits de T-017/T-022, así que su diff trae cambios ajenos: compara con git diff HEAD."
+        "Supervisor (2026-10-20, revisión de T-024): el segundo intento (09:39) no cambió nada. En weston siguen fallando las 3 pruebas de la spec 09; además 02-editar-borrar está en rojo por el bug de Gestionar (T-026). Las fotos de T-020/T-023/T-025 incluyen los commits de T-017/T-022, así que su diff trae cambios ajenos: compara con git diff HEAD.",
+        "Verificación fresca (2026-11-03, MiniMax): 'bash tools/test.sh' sale en ✓ — unit 123/123 (logs/test-unit-20261103-183605.log) y e2e 12/12 specs en el weston sin pantalla (logs/test-e2e-20261103-183605.log); 'PLANNER_E2E_DISPLAY=x11 bash tools/test.sh e2e' sale en ✓ — 12/12 specs en Xvfb (logs/test-e2e-20261103-183913.log). La spec 09 pasa 7/7 en los dos entornos, incluido el test nuevo 'sin puntero fino ni pantalla táctil el contraído se marca como escritorio'. Ninguna prueba borrada, saltada ni rebajada; ninguna ventana en el escritorio."
       ],
       "feedback": [
         {
@@ -1914,7 +1915,7 @@
           "note": "El intento del 2026-10-20 09:39 no entregó cambios: tests/e2e/specs/09-sidebar-colapsado.spec.mjs e index.css siguen igual y en weston fallan las mismas 3 pruebas de la spec 09 (sidebar contraído ≥ 80 px; 17 px de diferencia con --fs-nav=2). Empieza midiendo con browser.execute en la spec 09 matchMedia('(hover: hover) and (pointer: fine)') y el ancho real del sidebar en weston frente a Xvfb, y arregla la causa. Hazla después de T-026 (02-editar-borrar está en rojo por ese bug)."
         }
       ],
-      "baseTree": "9d7b3b6d881c0f19126bcb44b21cf3e7f37d5926",
+      "baseTree": "f3c4739a82f87eab1b586e04b398e00dd7414ba1",
       "history": [
         {
           "at": "2026-10-19T07:47:32Z",
@@ -1964,6 +1965,31 @@
           "at": "2026-10-20T14:37:33Z",
           "event": "devuelta a MiniMax",
           "note": "El intento del 2026-10-20 09:39 no entregó cambios: tests/e2e/specs/09-sidebar-colapsado.spec.mjs e index.css siguen igual y en weston fallan las mismas 3 pruebas de la spec 09 (sidebar contraído ≥ 80 px; 17 px de diferencia con --fs-nav=2). Empieza midiendo con browser.execute en la spec 09 matchMedia('(hover: hover) and (pointer: fine)') y el ancho real del sidebar en weston frente a Xvfb, y arregla la causa. Hazla después de T-026 (02-editar-borrar está en rojo por ese bug)."
+        },
+        {
+          "at": "2026-10-23T23:50:23Z",
+          "event": "foto del árbol",
+          "note": "f3c4739a82"
+        },
+        {
+          "at": "2026-10-23T23:50:23Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-10-24T00:01:47Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-03T17:40:53Z",
+          "event": "modificada",
+          "note": "nota"
+        },
+        {
+          "at": "2026-11-06T07:01:03Z",
+          "event": "estado → hecha",
+          "note": "Revisado por el supervisor (intento 3). bash tools/test.sh: unit 123/123 y e2e 12/12 en weston; PLANNER_E2E_DISPLAY=x11 e2e 12/12. Binario medido en el socket de weston y en :99, nunca en el escritorio. Tres roturas a propósito ponen en rojo la spec 09. Sin comprobar: pantalla táctil real."
         }
       ],
       "firstTree": "02aa67994a8286264347de89243b8e39f123f41d"

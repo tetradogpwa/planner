@@ -87,6 +87,21 @@
   --nav-icon-size-collapsed:   var(--nav-icon-size);
   --sidebar-w-collapsed: calc(var(--nav-icon-size-collapsed) + 1.5rem);
   --topbar-h:            3.5rem;
+
+  /* Menú contraído: estos valores son los de pantalla táctil (el icono
+     grande, pensado para tocarlo con el dedo, y el botón sin padding).
+     En escritorio el contraído usa el mismo icono que el expandido
+     (1.4em sobre calc(1.1rem * var(--fs-nav))) y el botón conserva el
+     padding del expandido: lo ponen el bloque @media (hover: hover) and
+     (pointer: fine) (escritorio con ratón) y el atributo
+     data-entrada="sin-puntero" que pone index.js (sesión sin ningún
+     dispositivo de puntero), más abajo. */
+  --nav-collapsed-icon-font:     var(--nav-icon-size-collapsed);
+  --nav-collapsed-icon-box:      var(--nav-icon-size-collapsed);
+  --nav-collapsed-collapse-font: calc(var(--nav-icon-size-collapsed) * 0.5);
+  --nav-collapsed-collapse-box:  var(--nav-icon-size-collapsed);
+  --nav-collapsed-item-pad:      0.15rem 0;
+  --nav-collapsed-btn-pad:       0.15rem 0;
 }
 
 /* Tema claro: lo fija ui/settings/preferences.js (manual o según el
@@ -377,8 +392,8 @@ body.sidebar-open .hamburger span:nth-child(3) {
      ya se calcula desde --nav-icon-size-collapsed + padding del
      .sidebar-nav. El padding 0.15rem se anula en escritorio con ratón
      (más abajo) para igualar el alto al del expandido. */
-  .sidebar.collapsed .nav-item     { justify-content: center; padding: 0.15rem 0; }
-  .sidebar.collapsed .sidebar-collapse-btn { justify-content: center; padding: 0.15rem 0; }
+  .sidebar.collapsed .nav-item     { justify-content: center; padding: var(--nav-collapsed-item-pad); }
+  .sidebar.collapsed .sidebar-collapse-btn { justify-content: center; padding: var(--nav-collapsed-btn-pad); }
   .sidebar.collapsed .collapse-icon { transform: rotate(180deg); }
   /* Icono: 64×64 px (o el valor que el usuario haya definido en el
      tema personalizado) solo cuando el menú está colapsado Y la
@@ -386,14 +401,14 @@ body.sidebar-open .hamburger span:nth-child(3) {
      .nav-icon se sobreescribe a la caja del icono expandido (más
      abajo). */
   .sidebar.collapsed .nav-icon {
-    width:  var(--nav-icon-size-collapsed);
-    height: var(--nav-icon-size-collapsed);
-    font-size: var(--nav-icon-size-collapsed);
+    width:  var(--nav-collapsed-icon-box);
+    height: var(--nav-collapsed-icon-box);
+    font-size: var(--nav-collapsed-icon-font);
   }
   .sidebar.collapsed .collapse-icon {
-    width:  var(--nav-icon-size-collapsed);
-    height: var(--nav-icon-size-collapsed);
-    font-size: calc(var(--nav-icon-size-collapsed) * 0.5);
+    width:  var(--nav-collapsed-collapse-box);
+    height: var(--nav-collapsed-collapse-box);
+    font-size: var(--nav-collapsed-collapse-font);
   }
 
   /* Ajustar contenido cuando sidebar expandida/colapsada */
@@ -428,27 +443,41 @@ body.sidebar-open .hamburger span:nth-child(3) {
       --sidebar-w-collapsed: calc(
         (1.54rem * var(--fs-nav)) + 1.5rem + 1rem
       );
+      /* Icono del item: misma letra y misma caja que el expandido. */
+      --nav-collapsed-icon-font:     calc(1.1rem * var(--fs-nav));
+      --nav-collapsed-icon-box:      1.4em;
+      /* Icono del botón de colapso: misma caja que en expandido
+         (1.4rem, igual que .collapse-icon por defecto). */
+      --nav-collapsed-collapse-font: calc(0.8rem * var(--fs-nav));
+      --nav-collapsed-collapse-box:  1.4rem;
+      /* Mismo padding vertical que un .nav-item: en expandido el botón
+         trae padding-left: 1.25rem heredado de la regla base para
+         alinear la etiqueta con el icono de los nav-item, pero en
+         colapsado la etiqueta está oculta y ese 1.25rem descentra el
+         icono (que va centrado con justify-content). */
+      --nav-collapsed-item-pad: 0.7rem 0.75rem;
+      --nav-collapsed-btn-pad:  0.7rem 0.75rem;
     }
-    /* Icono del item: misma letra y misma caja que el expandido. */
-    .sidebar.collapsed .nav-icon {
-      width:  1.4em;
-      height: 1.4em;
-      font-size: calc(1.1rem * var(--fs-nav));
-    }
-    /* Icono del botón de colapso: misma caja que en expandido
-       (1.4rem, igual que .collapse-icon por defecto). */
-    .sidebar.collapsed .collapse-icon {
-      width:  1.4rem;
-      height: 1.4rem;
-      font-size: calc(0.8rem * var(--fs-nav));
-    }
-    .sidebar.collapsed .nav-item     { padding: 0.7rem 0.75rem; }
-    /* Mismo padding que un .nav-item: en expandido el botón trae
-       padding-left: 1.25rem heredado de la regla base para alinear la
-       etiqueta con el icono de los nav-item, pero en colapsado la
-       etiqueta está oculta y ese 1.25rem descentra el icono (que va
-       centrado con justify-content). */
-    .sidebar.collapsed .sidebar-collapse-btn { padding: 0.7rem 0.75rem; }
+  }
+
+  /* Sesión sin ningún dispositivo de puntero (por ejemplo un Wayland
+     sin ratón): WebKitGTK responde entonces a '(pointer: coarse)' igual
+     que en una pantalla táctil, pero no hay nada que tocar con el dedo.
+     index.js marca <html data-entrada="sin-puntero"> cuando no hay
+     puntero fino ni puntos de contacto, y el contraído se dibuja como
+     en escritorio con ratón (icono del tamaño del expandido). Los
+     valores son los mismos que en el bloque anterior. */
+  html[data-entrada="sin-puntero"] {
+    --nav-icon-size-collapsed: calc(1.54rem * var(--fs-nav));
+    --sidebar-w-collapsed: calc(
+      (1.54rem * var(--fs-nav)) + 1.5rem + 1rem
+    );
+    --nav-collapsed-icon-font:     calc(1.1rem * var(--fs-nav));
+    --nav-collapsed-icon-box:      1.4em;
+    --nav-collapsed-collapse-font: calc(0.8rem * var(--fs-nav));
+    --nav-collapsed-collapse-box:  1.4rem;
+    --nav-collapsed-item-pad: 0.7rem 0.75rem;
+    --nav-collapsed-btn-pad:  0.7rem 0.75rem;
   }
 }
 
@@ -458,10 +487,13 @@ body.sidebar-open .hamburger span:nth-child(3) {
    marca el alto del botón. Solo aplica al caso táctil; en escritorio
    con ratón el icono ya es del tamaño expandido y el item lleva su
    padding (0.7rem). La negación `not (...)` exige Media Queries
-   Level 4 (soportado por WebKitGTK y Chromium recientes). */
+   Level 4 (soportado por WebKitGTK y Chromium recientes).
+   El selector también excluye la sesión sin dispositivo de puntero
+   (data-entrada="sin-puntero"), donde los iconos son pequeños y no
+   hace falta ahorrar espacio. */
 @media (min-width: 768px) and (max-height: 720px) and (not ((hover: hover) and (pointer: fine))) {
-  .sidebar.collapsed .nav-item           { padding: 0; }
-  .sidebar.collapsed .sidebar-collapse-btn { padding: 0; }
+  html:not([data-entrada="sin-puntero"]) .sidebar.collapsed .nav-item           { --nav-collapsed-item-pad: 0; }
+  html:not([data-entrada="sin-puntero"]) .sidebar.collapsed .sidebar-collapse-btn { --nav-collapsed-btn-pad: 0; }
 }
 
 /* ── Nav items ── */

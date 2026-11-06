@@ -2,7 +2,8 @@
 // wdio.conf.mjs — WebdriverIO contra la app REAL (binario de Tauri).
 //
 // No se ejecuta a pelo: lo lanza `bash tools/test.sh e2e`, que compila
-// el binario, abre un Xvfb invisible, arranca tauri-driver y define
+// el binario, abre un Wayland invisible (weston sin pantalla, o
+// Xvfb con PLANNER_E2E_DISPLAY=x11), arranca tauri-driver y define
 // estas variables:
 //   PLANNER_E2E_BIN    ruta absoluta al binario de pruebas
 //   PLANNER_E2E_DATOS  carpeta de datos aislada (XDG_DATA_HOME); nunca

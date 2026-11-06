@@ -103,7 +103,8 @@ bash tools/test.sh [unit|e2e|all]          # pruebas (skill y comando /test)
 `bash tools/test.sh` ejecuta las unitarias (`tests/unit/`, `node:test`,
 sin dependencias) y las E2E (`tests/e2e/`), que compilan un binario de
 pruebas sin anuncios en `src-tauri/target-e2e/` y lo manejan con
-WebdriverIO + `tauri-driver` dentro de un Xvfb invisible, con datos
+WebdriverIO + `tauri-driver` dentro de un Wayland invisible (weston
+sin pantalla; `PLANNER_E2E_DISPLAY=x11` para usar Xvfb), con datos
 aislados en `tests/e2e/.tmp/`. Las dependencias npm de los E2E viven en
 `tests/e2e/package.json`, separadas de la app (que sigue sin npm).
 
