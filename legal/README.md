@@ -84,6 +84,25 @@ mostrar la última versión del `.md` correspondiente:
 - accesibilidad → `legal/ACCESSIBILITY.md`
 - contacto → `legal/CONTACT.md`
 
+Estas son las direcciones que publica la app y que abre en el navegador
+del sistema desde **Ajustes › Legal** (la app no descarga nada: solo
+pide al sistema que abra la URL). Viven en un único sitio, el archivo
+`ui/legal/legal-urls.js`:
+
+| Documento | URL pública |
+|-----------|------------|
+| `PRIVACY` | https://gabrielcatdeveloper.github.io/papeleo/planner/PRIVACY |
+| `TERMS` | https://gabrielcatdeveloper.github.io/papeleo/planner/TERMS |
+| `EULA` | https://gabrielcatdeveloper.github.io/papeleo/planner/EULA |
+| `COOKIES` | https://gabrielcatdeveloper.github.io/papeleo/planner/COOKIES |
+| `ACCESSIBILITY` | https://gabrielcatdeveloper.github.io/papeleo/planner/ACCESSIBILITY |
+| `ACCEPTABLE_USE` | https://gabrielcatdeveloper.github.io/papeleo/planner/ACCEPTABLE_USE |
+| `DMCA` | https://gabrielcatdeveloper.github.io/papeleo/planner/DMCA |
+| `CONTACT` | https://gabrielcatdeveloper.github.io/papeleo/planner/CONTACT |
+
+`THIRD_PARTY_LICENSES.md` **no** se publica: es un inventario interno y
+la app lo muestra siempre desde su copia local, en un modal.
+
 ---
 
 *Estos textos son modelos informativos, no sustituyen al

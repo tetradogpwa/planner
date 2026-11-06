@@ -4,14 +4,21 @@
 // Muestra los textos legales dentro de la app.
 //
 // Estrategia:
-//   1. El frontend intenta leer cada archivo .md del directorio `legal/`
-//      desde el WebView (rutas relativas). Esto funciona en Tauri porque
+//   1. Los documentos que están publicados (ver `legal-urls.js`) se
+//      abren en el navegador del sistema, en su dirección pública.
+//      La app no descarga nada: solo pide al sistema que abra la URL.
+//   2. Si no se puede abrir el navegador (no hay Tauri, el sistema no
+//      tiene navegador, etc.), se muestra la copia local del documento
+//      —la que va incluida en la app— dentro del modal.
+//   3. `THIRD_PARTY_LICENSES` no se publica: siempre se muestra su
+//      copia local en el modal.
+//   4. La copia local se lee del directorio `legal/` del WebView
+//      (rutas relativas). Esto funciona en Tauri porque
 //      `bundle.resources` los incluye en el binario.
-//   2. Si la lectura falla (por ejemplo, en PWA sin bundle), se
-//      muestra un mensaje claro y un enlace a la URL pública.
 // ────────────────────────────────────────────────────────────────────
 
 import { trapFocus } from '../a11y.js';
+import { publicUrlFor, isHttpsUrl } from './legal-urls.js';
 
 const DOCS = {
   PRIVACY:               { title: 'Política de privacidad',   file: './legal/PRIVACY.md' },
@@ -57,7 +64,7 @@ export class LegalCard {
     this.root.querySelectorAll('a[data-doc]').forEach(a => {
       a.addEventListener('click', async (e) => {
         e.preventDefault();
-        await this.openDoc(a, a.dataset.doc);
+        await this.onDocClick(a, a.dataset.doc);
       });
     });
 
@@ -72,7 +79,49 @@ export class LegalCard {
     } catch { /* sin Tauri; dejamos placeholders */ }
   }
 
-  async openDoc(triggerEl, key) {
+  /** Clic en un documento de la lista.
+   *
+   *  - Si el documento está publicado, se pide al sistema que abra su
+   *    dirección pública en el navegador. La app no descarga nada.
+   *  - Si no se publica (THIRD_PARTY_LICENSES) o si el navegador no
+   *    se puede abrir, se muestra la copia local en el modal.
+   */
+  async onDocClick(triggerEl, key) {
+    const url = publicUrlFor(key);
+    if (url) {
+      const abierto = await this.abrirEnNavegador(url);
+      if (abierto) return;
+    }
+    // O el documento no se publica, o el navegador no se pudo abrir:
+    // en ambos casos mostramos la copia local incluida en la app.
+    await this.openDoc(triggerEl, key, true);
+  }
+
+  /** Abre `url` en el navegador del sistema.
+   *
+   * Devuelve `true` si el navegador aceptó abrirla, `false` si no
+   * hay Tauri, si la URL no es https o si el sistema falló.
+   */
+  async abrirEnNavegador(url) {
+    // Solo https: ni siquiera una URL manipulada podría abrir otro
+    // tipo de esquema (file:, javascript:…).
+    if (!isHttpsUrl(url)) return false;
+    const shell = window.__TAURI__?.shell;
+    if (!shell?.open) return false;
+    try {
+      await shell.open(url);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Muestra la copia local del documento en el modal.
+   *
+   * `copiaLocal` marca que el texto es la copia incluida en la app
+   * (porque no se pudo abrir la versión publicada).
+   */
+  async openDoc(triggerEl, key, copiaLocal = false) {
     const doc = DOCS[key];
     if (!doc) return;
     this.modalTitle.textContent = doc.title;
@@ -93,7 +142,10 @@ export class LegalCard {
     try {
       const text = this.cache[key] ?? await (await fetch(doc.file)).text();
       this.cache[key] = text;
-      this.modalBody.innerHTML = renderMarkdown(text);
+      const aviso = copiaLocal
+        ? '<p class="legal-modal-note">Esta es la copia del documento incluida en la app.</p>'
+        : '';
+      this.modalBody.innerHTML = aviso + renderMarkdown(text);
     } catch (err) {
       this.modalBody.innerHTML =
         `<p style="color:var(--danger)">No se ha podido cargar el documento (${err.message}).</p>

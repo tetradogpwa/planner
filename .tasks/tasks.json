@@ -1,5 +1,5 @@
 {
-  "next": 29,
+  "next": 31,
   "tasks": [
     {
       "id": "T-001",
@@ -2570,6 +2570,102 @@
           "at": "2026-10-20T15:00:03Z",
           "event": "estado → hecha",
           "note": "Sección 5 de CONTACT.md movida a legal/README.md (Direcciones públicas, sin dominio propio); homepage .example quitado de tauri.conf.json. cargo check ✓; test.sh: unit ✓, e2e ✓ (Xvfb)."
+        }
+      ]
+    },
+    {
+      "id": "T-029",
+      "title": "Ajustes › Legal: abrir los documentos en su URL pública",
+      "status": "hecha",
+      "relatedTo": null,
+      "created": "2026-11-06T19:17:26Z",
+      "updated": "2026-11-06T19:40:59Z",
+      "attempts": 1,
+      "requests": [
+        {
+          "at": "2026-11-06T19:17:26Z",
+          "text": "subelo y usa la url publica en las apps para obtener acceso a dichos documentos"
+        }
+      ],
+      "criteria": [
+        "En Ajustes › Legal, PRIVACY, TERMS, EULA, COOKIES, ACCESSIBILITY, ACCEPTABLE_USE, DMCA y CONTACT abren en el navegador del sistema https://gabrielcatdeveloper.github.io/papeleo/planner/<CLAVE> (mismo nombre, sin .md), definidas en un único sitio",
+        "Si abrir el navegador falla o no hay Tauri, se muestra el documento local en el modal actual, con su foco y trampa de foco; el texto indica que es la copia incluida en la app",
+        "THIRD_PARTY_LICENSES sigue abriendo la copia local en el modal, porque no se publica",
+        "La app no hace fetch a la URL pública ni amplía el CSP: sigue funcionando sin red, y la pantalla de términos (ui/terms) sigue leyendo legal/ local",
+        "Funciona en escritorio y Android: comprobar los permisos del plugin shell en src-tauri/capabilities/default.json y mobile.json (mobile.json no menciona shell hoy) y limitar la apertura a https",
+        "Los enlaces avisan de que se abren en el navegador, de forma accesible (texto o aria-label) y sin colores fijos",
+        "No cambia la fecha de Última actualización de TERMS.md ni EULA.md ni ningún texto de legal/ salvo la sección 'Direcciones públicas' de legal/README.md, que debe listar estas URL",
+        "Cumple las convenciones de accesibilidad de CLAUDE.md (tokens de color, rem con --fs-*, contraste AA en tema claro y oscuro)",
+        "No se sale de la pantalla con letra al 200 % en móvil",
+        "Spec E2E nueva o ampliada (sustituyendo el abridor con browser.execute) que comprueba: URL exacta por documento, sin modal al abrir bien, modal local si la apertura falla, THIRD_PARTY_LICENSES local. Las pruebas existentes de la spec 11 no se rebajan. bash tools/test.sh sale en ✓"
+      ],
+      "notes": [
+        "Supervisor: ui/legal/legal-card.js abre hoy los enlaces a[data-doc] con openDoc(), que hace fetch de ./legal/*.md y pinta el modal. tauri.conf.json tiene withGlobalTauri: true; lib.rs registra tauri_plugin_shell; default.json tiene shell:allow-open; mobile.json no. La política de privacidad promete no abrir conexiones de red hacia terceros para anuncios, datos o rastreo: abrir el navegador a petición del usuario no la contradice, pero la app no debe descargar nada. Comprueba si conviene un comando Rust o window.__TAURI__.shell.open.",
+        "Supervisor: las páginas están en el repositorio público GabrielCatDeveloper/papeleo; Pages puede no estar activado aún (404), así que no pruebes la URL en red en los E2E."
+      ],
+      "feedback": [],
+      "baseTree": "f7c39624f725d2efc26d88ff7e836088532d9813",
+      "history": [
+        {
+          "at": "2026-11-06T19:17:26Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-11-06T19:17:31Z",
+          "event": "foto del árbol",
+          "note": "f7c39624f7"
+        },
+        {
+          "at": "2026-11-06T19:17:31Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-029-20261106-201731.log"
+        },
+        {
+          "at": "2026-11-06T19:32:27Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-06T19:32:45Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-11-06T19:40:59Z",
+          "event": "estado → hecha",
+          "note": "Revisado por el supervisor. bash tools/test.sh: unit 131/131 y e2e 13/13 en weston; Xvfb 13/13 en 3 de 4 suites (fallo intermitente de 03-datos, registrado aparte). Binario real: shell.open existe y el alcance rechaza http y file. Tres roturas a propósito ponen la spec 12 en rojo. Las 9 URL públicas responden 200. Sin comprobar: Android real y abrir un navegador real."
+        }
+      ],
+      "firstTree": "f7c39624f725d2efc26d88ff7e836088532d9813"
+    },
+    {
+      "id": "T-030",
+      "title": "E2E: fallo intermitente en 03-datos al cancelar Borrar",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-06T19:40:59Z",
+      "updated": "2026-11-06T19:40:59Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-06T19:40:59Z",
+          "text": "Detectado por el supervisor al revisar T-029"
+        }
+      ],
+      "criteria": [
+        "Causa medida: 'cancelar el confirm de Borrar no elimina las tareas' falla a veces con la lista vacía (esperadas 3 tareas)",
+        "Si la causa es la prueba, se corrige sin rebajarla; si es la app, se corrige la app. Cada caso sigue fallando al romper lo que prueba",
+        "Diez ejecuciones seguidas de la suite E2E completa en ✓ (weston y Xvfb)"
+      ],
+      "notes": [
+        "Supervisor (6/11/2026): 1 de 4 suites en Xvfb (logs/test-e2e-20261106-203359.log, tests/e2e/specs/03-datos.spec.mjs:128) con 'no such alert'; pasa sola 4 de 4. MiniMax vio fallar 'ida y vuelta: exportar, borrar y reimportar' de la misma spec en 2 de 5 suites y dice que también pasa sin T-029 (no comprobado por el supervisor). Sospecha sin medir: estado compartido entre pruebas o el polyfill de confirm."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-06T19:40:59Z",
+          "event": "creada"
         }
       ]
     }

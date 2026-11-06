@@ -425,19 +425,24 @@ describe('Uso completo con teclado', () => {
   });
 
   // ── Modal legal: foco en título, trampa, retorno al enlace ─────
+  // Desde T-029 los documentos publicados (PRIVACY, TERMS, EULA…)
+  // se abren en el navegador del sistema, así que el modal ya no es
+  // lo que muestran. Para seguir probando la trampa de foco del
+  // modal usamos THIRD_PARTY_LICENSES, que no se publica y siempre
+  // se muestra en el modal con su copia local.
   it('abrir un documento desde Legal enfoca el título del modal y devuelve el foco al enlace', async () => {
     // Vamos a la pestaña Legal de Ajustes (Alt+7 desde T-022).
     await browser.keys([Key.Alt, '7']);
     // La pestaña Legal está dentro de #view-ajustes; esperamos al
     // primer enlace de documento como señal de que la pestaña pintó.
-    await $('a[data-doc="PRIVACY"]').waitForDisplayed();
+    await $('a[data-doc="THIRD_PARTY_LICENSES"]').waitForDisplayed();
 
-    // Identificamos el primer enlace de documento (PRIVACY) y
-    // pulsamos Enter sobre él (ya debe estar en el orden del DOM).
-    // Movemos el foco al primer enlace de documento con un clic de
-    // WebdriverIO (lo haría un usuario con ratón) y luego probamos
-    // el cierre.
-    const enlace = $('a[data-doc="PRIVACY"]');
+    // Identificamos el enlace de THIRD_PARTY_LICENSES (el único
+    // documento que la app muestra siempre en el modal) y pulsamos
+    // Enter sobre él (ya debe estar en el orden del DOM).
+    // Movemos el foco al enlace con un clic de WebdriverIO (lo haría
+    // un usuario con ratón) y luego probamos el cierre.
+    const enlace = $('a[data-doc="THIRD_PARTY_LICENSES"]');
     await enlace.click();
     await porId('legal-modal').waitForDisplayed();
 
@@ -467,7 +472,7 @@ describe('Uso completo con teclado', () => {
     await browser.waitUntil(
       async () => (await browser.execute(
         () => document.activeElement?.getAttribute('data-doc') || '',
-      )) === 'PRIVACY',
+      )) === 'THIRD_PARTY_LICENSES',
       { timeout: 3_000, timeoutMsg: 'El foco no volvió al enlace que abrió el modal' },
     );
   });
@@ -475,13 +480,13 @@ describe('Uso completo con teclado', () => {
   it('en el modal legal, Tab y Shift+Tab no salen del diálogo al abrirlo con el foco en el título', async () => {
     // Vamos a la pestaña Legal de Ajustes (Alt+7 desde T-022).
     await browser.keys([Key.Alt, '7']);
-    await $('a[data-doc="PRIVACY"]').waitForDisplayed();
+    await $('a[data-doc="THIRD_PARTY_LICENSES"]').waitForDisplayed();
 
-    // Abrimos el modal con un clic real sobre el primer enlace (como
+    // Abrimos el modal con un clic real sobre el enlace (como
     // lo haría una persona). El foco va a #legal-modal-title, que
     // tiene tabindex=-1 y NO está en la lista de enfocables de la
     // trampa: este es el caso que la trampa de foco debe cubrir.
-    await $('a[data-doc="PRIVACY"]').click();
+    await $('a[data-doc="THIRD_PARTY_LICENSES"]').click();
     await porId('legal-modal').waitForDisplayed();
     await browser.waitUntil(
       async () => (await focoId()) === 'legal-modal-title',

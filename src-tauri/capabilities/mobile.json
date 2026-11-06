@@ -5,6 +5,8 @@
   "platforms": ["android"],
   "windows": ["main"],
   "permissions": [
-    "admob:default"
+    "admob:default",
+
+    "shell:allow-open"
   ]
 }

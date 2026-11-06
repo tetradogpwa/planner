@@ -11,6 +11,22 @@
 .legal-modal-content header h3 { font-size: calc(1.17rem * var(--fs-title)); }
 .legal-links { list-style: none; padding-left: 0; }
 .legal-links li { margin: 0.35rem 0; }
+.legal-hint {
+  color: var(--muted);
+  font-size: calc(0.875rem * var(--fs-meta));
+  margin: 0 0 0.6rem;
+  max-width: 60ch;
+}
+.legal-modal-note {
+  color: var(--muted);
+  font-size: calc(0.875rem * var(--fs-meta));
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--surface-alt);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
 .legal-links a {
   color: var(--link);
   text-decoration: underline;
