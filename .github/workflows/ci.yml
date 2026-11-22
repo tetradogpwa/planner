@@ -218,6 +218,10 @@ jobs:
       # (solo "exit code 1"): el motivo real está en el log que
       # tools/test.sh deja en logs/. Se imprime aquí para no tener que
       # ir a los artefactos a buscarlo.
+      #
+      # Además se publica como anotación del check (`::error::`), que
+      # sí se puede leer sin permisos de admin: así el motivo del
+      # fallo queda accesible desde la API del repositorio.
       - name: Por qué falló el E2E (si falló)
         if: failure()
         run: |
@@ -228,11 +232,6 @@ jobs:
             echo "=== $f (últimas 200 líneas) ==="
             tail -n 200 "$f"
           done
-          for f in tests/e2e/.tmp/weston.log; do
-            [ -f "$f" ] || continue
-            echo "=== $f (últimas 50 líneas) ==="
-            tail -n 50 "$f"
-          done
           echo "::endgroup::"
           echo "::group::estado del entorno"
           echo "xvfb-run: $(command -v xvfb-run || echo NO)"
@@ -240,6 +239,17 @@ jobs:
           echo "tauri-driver: $(command -v tauri-driver || echo NO)"
           echo "cargo-tauri: $(command -v cargo-tauri || echo NO)"
           echo "==endgroup::"
+          # Las últimas líneas del log, como anotación del check.
+          ultimo=""
+          for f in logs/test-e2e-*.log; do
+            [ -f "$f" ] || continue
+            ultimo="$(tail -n 25 "$f" | grep -v '^[[:space:]]*$' | tr '\n' '|' | cut -c1-6000)"
+          done
+          if [ -n "$ultimo" ]; then
+            echo "::error title=E2E falló::${ultimo}"
+          else
+            echo "::error title=E2E falló::No hay log de E2E en logs/"
+          fi
 
       - name: Subir los logs de las pruebas
         if: always()
