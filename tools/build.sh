@@ -49,6 +49,14 @@
 # Variables de entorno:
 #   .env (si existe) se carga automáticamente para que build.rs y la
 #   firma de Android reciban las variables sin imprimir sus valores.
+#
+#   ALLOW_NO_ADS=1  Solo para builds internas que van SIN anuncios de
+#                   verdad (la versión de pago, o una build de pruebas).
+#                   Sin claves de anuncios, el build FALLA: no se publica
+#                   una app sin monetizar ni sin aviso, y en Android no
+#                   se lleva el App ID de prueba de Google. Este script
+#                   NO lo pone a propósito: publica sin anuncios por
+#                   accidente es justo lo que hay que evitar.
 # ─────────────────────────────────────────────────────────────────────
 set -euo pipefail
 

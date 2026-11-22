@@ -42,10 +42,19 @@ pub struct AdsConfig {
     pub paid_version_url: &'static str,
 }
 
+/// Variables de anuncios incrustadas en compilación por `build.rs`.
+///
+/// Van en un fichero generado (`OUT_DIR/ads_env.rs`) y no en el entorno
+/// del proceso: `cargo:rustc-env` imprimiría el valor en el log de
+/// cargo (`cargo build -vv`) y en la línea de comandos de rustc.
+mod ads_env {
+    include!(concat!(env!("OUT_DIR"), "/ads_env.rs"));
+}
+
 /// Lee una variable incrustada por `build.rs` (vacía = no definida).
 macro_rules! build_env {
-    ($key:literal) => {
-        option_env!($key).unwrap_or("")
+    ($key:ident) => {
+        ads_env::$key
     };
 }
 
@@ -58,13 +67,13 @@ fn flag(value: &str) -> Option<bool> {
 
 /// Configuración para la plataforma para la que se ha compilado.
 pub fn current() -> AdsConfig {
-    let test_mode = flag(build_env!("ADS_TEST_MODE")).unwrap_or(cfg!(debug_assertions));
-    let ads_removed_default = flag(build_env!("ADS_REMOVED_DEFAULT")).unwrap_or(false);
+    let test_mode = flag(build_env!(ADS_TEST_MODE)).unwrap_or(cfg!(debug_assertions));
+    let ads_removed_default = flag(build_env!(ADS_REMOVED_DEFAULT)).unwrap_or(false);
 
     #[cfg(target_os = "android")]
-    let paid_version_url = build_env!("PAID_VERSION_URL_ANDROID");
+    let paid_version_url = build_env!(PAID_VERSION_URL_ANDROID);
     #[cfg(desktop)]
-    let paid_version_url = build_env!("PAID_VERSION_URL_DESKTOP");
+    let paid_version_url = build_env!(PAID_VERSION_URL_DESKTOP);
     #[cfg(target_os = "ios")]
     let paid_version_url = "";
 
@@ -80,7 +89,7 @@ pub fn current() -> AdsConfig {
 
     #[cfg(target_os = "android")]
     {
-        let app_id = build_env!("GOOGLE_ADMOB_APP_ID");
+        let app_id = build_env!(GOOGLE_ADMOB_APP_ID);
         if app_id.is_empty() {
             return none;
         }
@@ -88,8 +97,8 @@ pub fn current() -> AdsConfig {
             (ADMOB_TEST_BANNER, ADMOB_TEST_INTERSTITIAL)
         } else {
             (
-                build_env!("GOOGLE_ADMOB_BANNER_ID"),
-                build_env!("GOOGLE_ADMOB_INTERSTITIAL_ID"),
+                build_env!(GOOGLE_ADMOB_BANNER_ID),
+                build_env!(GOOGLE_ADMOB_INTERSTITIAL_ID),
             )
         };
         AdsConfig {
@@ -103,14 +112,14 @@ pub fn current() -> AdsConfig {
 
     #[cfg(desktop)]
     {
-        let client_id = build_env!("GOOGLE_ADSENSE_CLIENT");
+        let client_id = build_env!(GOOGLE_ADSENSE_CLIENT);
         if client_id.is_empty() {
             return none;
         }
         AdsConfig {
             provider: "adsense",
             client_id,
-            banner_unit: build_env!("GOOGLE_ADSENSE_SLOT"),
+            banner_unit: build_env!(GOOGLE_ADSENSE_SLOT),
             ..none
         }
     }

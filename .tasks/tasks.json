@@ -2847,11 +2847,11 @@
     {
       "id": "T-034",
       "title": "Un build de release no puede salir sin .env ni con el App ID de test",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-22T05:00:46Z",
-      "updated": "2026-11-22T05:00:46Z",
-      "attempts": 0,
+      "updated": "2026-11-22T06:10:59Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-22T05:00:46Z",
@@ -2868,13 +2868,34 @@
         "Toca src-tauri/build.rs, src-tauri/src/ads.rs y el plugin de AdMob (plugins/tauri-plugin-admob/android/build.gradle.kts:9-11). Las 9 variables de AD_VARS de build.rs:9-19 son IDs públicos de AdSense/AdMob, no secretos: el problema es la degradación silenciosa, no la fuga."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "f781a6733fcf9e1e4d920d88134b8d805ccbdab2",
       "history": [
         {
           "at": "2026-11-22T05:00:46Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-11-22T05:43:30Z",
+          "event": "foto del árbol",
+          "note": "f781a6733f"
+        },
+        {
+          "at": "2026-11-22T05:43:30Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-11-22T06:10:59Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-22T06:10:59Z",
+          "event": "estado → hecha",
+          "note": "Revisado y aprobado (MiniMax M3): refinado para que cargo check siga funcionando en un clon limpio; suite completa en verde"
         }
-      ]
+      ],
+      "firstTree": "f781a6733fcf9e1e4d920d88134b8d805ccbdab2"
     },
     {
       "id": "T-035",

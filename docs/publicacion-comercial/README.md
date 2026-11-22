@@ -94,8 +94,18 @@ Cada build solo lee las de su plataforma (ver `ads.rs`):
 - **Android:** AdMob
 
 Si las claves de la plataforma están vacías, esa build sale como
-`provider: "none"` (la pantalla de consentimiento y el botón
-*Quitar anuncios* no aparecen).
+`provider: "none"` (la pantalla de consentimiento y el botón *Quitar
+anuncios* no aparecen).
+
+**Ojo:** si NO hay ninguna clave de anuncios (ni de AdSense ni de AdMob),
+el build **falla** (`src-tauri/build.rs`): no se publica una app sin
+monetizar ni sin aviso, y en Android no se lleva el App ID de prueba de
+Google. Si de verdad quieres una build sin anuncios (la versión de pago,
+por ejemplo), compílala con `ALLOW_NO_ADS=1`:
+
+```bash
+ALLOW_NO_ADS=1 cargo tauri build
+```
 
 Añade también los enlaces a la versión de pago, que la app ofrece
 al usuario cuando rechaza los anuncios:

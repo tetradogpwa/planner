@@ -203,8 +203,19 @@ GOOGLE_ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
 
 - `GOOGLE_ADSENSE_CLIENT` → habilita anuncios en Linux/Windows WebView.
 - `GOOGLE_ADMOB_APP_ID`    → habilita anuncios en Android.
-- Ambas vacías → la app funciona sin anuncios, aunque el usuario no
-  haya comprado la versión premium.
+
+**Sin claves, el build FALLA** (`src-tauri/build.rs`): no se publica una
+app sin monetizar ni sin aviso, y en Android no se lleva el App ID de
+prueba de Google. Si de verdad quieres una build sin anuncios (la versión
+de pago, las pruebas o una build interna), pon `ALLOW_NO_ADS=1`:
+
+```bash
+ALLOW_NO_ADS=1 cargo tauri build
+```
+
+Los valores de las claves **no se imprimen** en el log de compilación
+(solo su nombre): van incrustados en el binario desde un fichero
+generado por `build.rs`.
 
 El flujo de "quitar anuncios" es un **producto in-app**:
 

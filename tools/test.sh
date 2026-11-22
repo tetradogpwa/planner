@@ -27,7 +27,9 @@
 #   * Datos aislados en tests/e2e/.tmp/ (XDG_DATA_HOME): nunca se tocan
 #     las tareas reales del usuario. Cada spec empieza con datos vacíos.
 #   * Binario propio en src-tauri/target-e2e/, compilado sin anuncios
-#     (no aparece la pantalla de consentimiento).
+#     (no aparece la pantalla de consentimiento). El build lleva
+#     ALLOW_NO_ADS=1: sin claves de anuncios, el build falla salvo que
+#     se pida explícitamente (T-034).
 #   * Puerto propio (4446) para no chocar con otros proyectos.
 #
 # Requisitos de los E2E (el script dice qué falta):
@@ -119,11 +121,19 @@ run_e2e() {
   echo "▸ Compilando el binario de pruebas (debug, sin anuncios)"
   # Variables vacías: build.rs da prioridad al entorno sobre .env, así
   # que el binario de pruebas no lleva claves de anuncios.
+  # ALLOW_NO_ADS=1: el build falla si no hay claves de anuncios y no se
+  # pide explícitamente (T-034). Las pruebas son una de esas builds.
   GOOGLE_ADSENSE_CLIENT= GOOGLE_ADSENSE_SLOT= \
   GOOGLE_ADMOB_APP_ID= GOOGLE_ADMOB_BANNER_ID= GOOGLE_ADMOB_INTERSTITIAL_ID= \
+  ALLOW_NO_ADS=1 \
   CARGO_TARGET_DIR="$E2E_TARGET_DIR" \
     cargo tauri build --debug --no-bundle || return 1
   [[ -x "$E2E_BIN" ]] || { echo "✗ No se encontró el binario $E2E_BIN"; return 1; }
+
+  # El guard de build: sin claves de anuncios y sin ALLOW_NO_ADS=1, el
+  # build tiene que FALLAR y decir qué hacer; y con claves, no puede
+  # imprimir sus valores. Se comprueba con el propio build script.
+  check_guard_de_build || return 1
 
   # Datos, configuración y caché aislados de los del usuario.
   rm -rf "$E2E_TMP"
@@ -205,6 +215,118 @@ run_in_weston() {
   kill "$wpid" 2>/dev/null
   wait "$wpid" 2>/dev/null
   return $rc
+}
+
+# ── Guard de build (T-034) ───────────────────────────────────────────
+# Sin claves de anuncios y sin ALLOW_NO_ADS=1, el build tiene que
+# FALLAR: si no, se podría publicar una app sin monetizar (y en Android
+# con el App ID de prueba de Google) sin que nadie se entere.
+#
+# Y con claves, el build NO puede imprimir sus valores: solo el nombre
+# de cada variable (los valores no son secretos, pero tampoco tienen
+# por qué enseñarse en el log).
+#
+# Las dos cosas se comprueban con el propio build script del proyecto:
+# se ejecuta con un CARGO_MANIFEST_DIR de mentira, para que no encuentre
+# el .env de la raíz ni herede las variables de anuncios del entorno.
+check_guard_de_build() {
+  local script
+  script=$(ls -td "$E2E_TARGET_DIR"/debug/build/planner-*/build-script-build 2>/dev/null | head -1)
+  if [[ -z "$script" || ! -x "$script" ]]; then
+    echo "✗ No se encontró el build script en $E2E_TARGET_DIR/debug/build" >&2
+    return 1
+  fi
+
+  local tmp salida rc
+  tmp=$(mktemp -d)
+  mkdir -p "$tmp/out"
+
+  # 1. Sin claves y sin ALLOW_NO_ADS: el build tiene que fallar y
+  #    decir qué hacer.
+  salida=$(
+    env -u ALLOW_NO_ADS \
+        -u GOOGLE_ADSENSE_CLIENT -u GOOGLE_ADSENSE_SLOT \
+        -u GOOGLE_ADMOB_APP_ID -u GOOGLE_ADMOB_BANNER_ID \
+        -u GOOGLE_ADMOB_INTERSTITIAL_ID \
+        CARGO_MANIFEST_DIR="$tmp/src-tauri" OUT_DIR="$tmp/out" \
+        "$script" 2>&1
+  )
+  rc=$?
+
+  if [[ "$rc" -eq 0 ]]; then
+    echo "✗ El build sin claves de anuncios NO falló: una build publicable" >&2
+    echo "  podría salir sin monetizar y sin aviso." >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  # El fallo tiene que ser el del guard (no cualquier otro error) y
+  # tiene que decir cómo arreglarlo.
+  if ! grep -q "no tiene claves de anuncios" <<<"$salida"; then
+    echo "✗ El build no falló por falta de claves de anuncios:" >&2
+    sed 's/^/    /' <<<"$salida" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  if ! grep -q "ALLOW_NO_ADS" <<<"$salida"; then
+    echo "✗ El build falló, pero el error no dice cómo arreglarlo:" >&2
+    sed 's/^/    /' <<<"$salida" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  echo "✓ Sin claves de anuncios y sin ALLOW_NO_ADS=1, el build falla y lo explica"
+
+  # 1b. Con PROFILE=debug (lo que ve `cargo check` y `cargo build
+  #     --debug`): el build NO puede fallar. Si fallara, un clon
+  #     limpio sin `.env` no compilaria y el flujo de trabajo de
+  #     desarrollo se romperia.
+  salida=$(
+    env -u ALLOW_NO_ADS \
+        -u GOOGLE_ADSENSE_CLIENT -u GOOGLE_ADSENSE_SLOT \
+        -u GOOGLE_ADMOB_APP_ID -u GOOGLE_ADMOB_BANNER_ID \
+        -u GOOGLE_ADMOB_INTERSTITIAL_ID \
+        PROFILE=debug \
+        CARGO_MANIFEST_DIR="$tmp/src-tauri" OUT_DIR="$tmp/out" \
+        "$script" 2>&1
+  )
+  # Ojo: el script se ejecuta con un CARGO_MANIFEST_DIR de mentira, así
+  # que al final falla al buscar el Cargo.toml real. Lo que no puede
+  # pasar es que falle POR EL GUARD: en depuración no se exigen claves.
+  if grep -q "no tiene claves de anuncios" <<<"$salida"; then
+    echo "✗ El build de depuración (PROFILE=debug) exigió claves de anuncios:" >&2
+    echo "  en un clon limpio sin .env, `cargo check` tiene que funcionar." >&2
+    sed 's/^/    /' <<<"$salida" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  echo "✓ El build de depuración (cargo check) no exige claves de anuncios"
+
+  # 2. Con claves: el guard deja pasar y el log NO enseña sus valores.
+  salida=$(
+    env -u ALLOW_NO_ADS \
+        GOOGLE_ADSENSE_CLIENT=ca-pub-PRUEBA000000000000 \
+        GOOGLE_ADSENSE_SLOT=9999999999 \
+        CARGO_MANIFEST_DIR="$tmp/src-tauri" OUT_DIR="$tmp/out" \
+        "$script" 2>&1
+  )
+  rm -rf "$tmp"
+
+  if grep -q "no tiene claves de anuncios" <<<"$salida"; then
+    echo "✗ El build con claves de anuncios no pasó el guard:" >&2
+    sed 's/^/    /' <<<"$salida" >&2
+    return 1
+  fi
+  if grep -qE "ca-pub-PRUEBA000000000000|9999999999" <<<"$salida"; then
+    echo "✗ El build imprimió el valor de una variable de anuncios:" >&2
+    sed 's/^/    /' <<<"$salida" >&2
+    return 1
+  fi
+  if ! grep -q "GOOGLE_ADSENSE_CLIENT" <<<"$salida"; then
+    echo "✗ El build no dijo ni el nombre de las variables de anuncios:" >&2
+    sed 's/^/    /' <<<"$salida" >&2
+    return 1
+  fi
+  echo "✓ Con claves de anuncios, el build dice solo el nombre de las variables"
+  return 0
 }
 
 summary_e2e() {
