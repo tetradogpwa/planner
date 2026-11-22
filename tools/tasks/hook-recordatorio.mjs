@@ -30,6 +30,8 @@ const context = [
   'regístralo como tarea antes de nada con node tools/tasks/tasks.mjs. Si modifica o amplía una tarea',
   'abierta, usa "amend" sobre esa tarea en vez de crear otra. Si es una pregunta o habla del propio flujo,',
   'no crees tarea.',
+  'El ciclo delegar → revisar → devolver/aprobar lo encadena el supervisor sin esperar al usuario;',
+  'tras un /clear el estado está solo en la cola: para retomarlo usa la skill avanzar.',
   'Tareas abiertas:',
   list,
 ].join('\n');

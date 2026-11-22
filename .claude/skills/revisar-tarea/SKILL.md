@@ -15,8 +15,15 @@ las correcciones.
 node tools/tasks/tasks.mjs show T-00X          # petición, criterios y modificaciones
 node tools/tasks/tasks.mjs diff T-00X --stat   # archivos tocados desde la foto
 node tools/tasks/tasks.mjs diff T-00X          # diff completo
+node tools/tasks/tasks.mjs diff T-00X --total  # toda la tarea, desde el primer intento
 tail -n 60 "$(ls -t .tasks/logs/T-00X-*.log | head -1)"   # resumen de MiniMax
 ```
+
+**Revisión tras una devolución** (hay `feedback` en `show`): el diff
+normal solo trae el último intento. Comprueba que cada corrección
+devuelta está resuelta, y juzga el resultado entero con `--total`. Ten
+en cuenta las notas `Supervisor: falta comprobar …` de revisiones
+anteriores: pueden venir de antes de un `/clear`.
 
 **No te fíes del resumen de MiniMax**: en las pruebas afirmó que un
 comando había fallado cuando sí se había ejecutado. La verdad está en el
@@ -72,7 +79,7 @@ node tools/tasks/tasks.mjs status T-00X hecha --note "Qué se comprobó"
 
 **Y hacer commit en el acto** (regla del proyecto: un commit por
 funcionalidad implementada y probada):
-- Solo los archivos de esa tarea (los de `tasks.mjs diff T-00X --stat`)
+- Solo los archivos de esa tarea (los de `tasks.mjs diff T-00X --total --stat`)
   más `.tasks/tasks.json`. Nunca `git add -A` ni `git add .`: puede
   haber trabajo de otras tareas sin revisar en el árbol.
 - Revisa con `git status` lo que va a entrar antes de confirmar.
@@ -84,7 +91,14 @@ funcionalidad implementada y probada):
 ```bash
 node tools/tasks/tasks.mjs feedback T-00X --note "ui/x/x-card.css:42 usa #fff; usa var(--on-btn)"
 ```
-Después vuelve a lanzarla con la skill `delegar-minimax`.
+Si algo quedó sin comprobar (por ejemplo, porque falta antes otra
+corrección), anótalo para la próxima revisión, que puede venir después
+de un `/clear`:
+```bash
+node tools/tasks/tasks.mjs amend T-00X --nota "Supervisor: falta comprobar …"
+```
+Después vuelve a lanzarla en el acto con la skill `delegar-minimax`, sin
+esperar al usuario.
 
 - **Arreglos triviales** (un token, una errata): puedes corregirlos tú y
   aprobar, anotándolo en la nota.
@@ -100,3 +114,6 @@ Breve:
 - Qué comprobaste y qué no pudiste comprobar.
 - Si se aprobó, el hash del commit.
 - Si se devolvió, por qué.
+- Si se aprobó, termina con: "Puedes hacer `/clear` y escribir
+  `/avanzar` para seguir con la siguiente tarea". No empieces otra tarea
+  en la misma conversación.

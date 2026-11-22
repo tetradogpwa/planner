@@ -1,0 +1,8 @@
+{
+  "name": "planner-tools",
+  "private": true,
+  "description": "Solo expone 'npx status' para ver la cola de tareas desde la terminal. La app (index.html, index.js...) sigue sin npm ni dependencias; esto no se empaqueta (no está en WEB_ASSETS).",
+  "bin": {
+    "status": "./tools/tasks/status.mjs"
+  }
+}

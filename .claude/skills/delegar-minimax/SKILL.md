@@ -42,8 +42,13 @@ Ejecuta con la herramienta Bash en segundo plano (`run_in_background`),
 porque puede tardar varios minutos:
 
 ```bash
-bash tools/minimax/run-task.sh T-00X
+bash tools/minimax/lanzar.sh T-00X
 ```
+
+`lanzar.sh` arranca `run-task.sh` desacoplado (`setsid`), de modo que un
+`/clear` del usuario no corta a MiniMax, y se queda esperando hasta que
+acaba. Nunca lances `run-task.sh` directamente desde la sesión: moriría
+con ella.
 
 El script hace una foto del árbol de archivos, pone la tarea en
 `en_curso`, ejecuta MiniMax y, al acabar, la deja en `en_revision` (o en
@@ -51,7 +56,8 @@ El script hace una foto del árbol de archivos, pone la tarea en
 `.tasks/logs/T-00X-<fecha>.log`.
 
 Dile al usuario en una línea que MiniMax está con T-00X. No esperes
-activamente: recibirás una notificación al terminar.
+activamente: recibirás una notificación al terminar. Si hay un `/clear`
+mientras tanto, la skill `avanzar` retoma el ciclo desde la cola.
 
 ## 4. Al terminar
 

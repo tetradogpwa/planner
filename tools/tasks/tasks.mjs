@@ -16,7 +16,9 @@
 //   status   T-001 <estado> [--note N]
 //   feedback T-001 --note N    el supervisor la devuelve a MiniMax
 //   snapshot T-001             foto del árbol antes de que trabaje MiniMax
-//   diff     T-001 [--stat]    cambios desde la foto (excluye .tasks/)
+//   diff     T-001 [--stat] [--total]
+//                              cambios desde la foto del último intento
+//                              (--total: desde el primer intento; excluye .tasks/)
 //   prompt   T-001             instrucciones para MiniMax
 //   busy                       sale con código 1 si hay una tarea en curso
 //   empezar  [T-001]           MiniMax toma la tarea (o la siguiente pendiente):
@@ -276,6 +278,7 @@ switch (cmd) {
   case 'snapshot': {
     const task = find(db, rest[0]);
     task.baseTree = workingTree(task.id);
+    task.firstTree ??= task.baseTree;   // foto del primer intento, para diff --total
     log(task, 'foto del árbol', task.baseTree.slice(0, 10));
     save(db);
     console.log(task.baseTree);
@@ -285,8 +288,9 @@ switch (cmd) {
   case 'diff': {
     const task = find(db, rest[0]);
     if (!task.baseTree) fail(`${task.id} no tiene foto: ejecútala con tools/minimax/run-task.sh`);
+    const base = opts.total ? (task.firstTree ?? task.baseTree) : task.baseTree;
     const current = workingTree(`${task.id}-now`);
-    const args = ['diff', ...(opts.stat ? ['--stat'] : []), task.baseTree, current, ...EXCLUDE];
+    const args = ['diff', ...(opts.stat ? ['--stat'] : []), base, current, ...EXCLUDE];
     const out = git(args);
     console.log(out.trim() || 'Sin cambios desde la foto.');
     break;
@@ -319,6 +323,7 @@ switch (cmd) {
     }
     if (task.status === 'pendiente') {
       task.baseTree = workingTree(task.id);
+      task.firstTree ??= task.baseTree;
       log(task, 'foto del árbol', task.baseTree.slice(0, 10));
       task.status = 'en_curso';
       task.attempts++;

@@ -31,6 +31,17 @@ los comentarios y la documentación van en **español**.
   con los archivos de esa tarea y el mensaje `T-00X: título`. MiniMax
   nunca hace commits, y nadie hace `git push` sin que lo pida el
   usuario.
+- **Ciclo autónomo, una tarea por conversación.** Claude lanza MiniMax
+  con `tools/minimax/lanzar.sh` (desacoplado: sobrevive a `/clear`) y
+  encadena revisar → devolver y relanzar, o aprobar
+  y hacer commit, sin esperar al usuario entre pasos. Al cerrar la tarea
+  se para: el usuario hace `/clear` y escribe `/avanzar` (skill
+  `avanzar`), que retoma desde la cola. Por eso nada del ciclo puede
+  depender de la conversación: correcciones, notas pendientes
+  (`amend --nota "Supervisor: falta comprobar …"`) y fotos del árbol
+  (`diff --total` cubre todos los intentos) viven en `.tasks/`. La línea
+  de estado de Claude Code (`tools/tasks/statusline.mjs`) le dice al
+  usuario cuándo la tarea está cerrada y ya puede hacer `/clear`.
 
 ## Estructura
 

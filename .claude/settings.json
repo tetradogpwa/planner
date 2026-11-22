@@ -2,8 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(node tools/tasks/tasks.mjs *)",
-      "Bash(bash tools/minimax/run-task.sh *)"
+      "Bash(bash tools/minimax/run-task.sh *)",
+      "Bash(bash tools/minimax/lanzar.sh *)"
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/tools/tasks/statusline.mjs\""
   },
   "hooks": {
     "UserPromptSubmit": [
