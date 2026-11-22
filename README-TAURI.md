@@ -333,6 +333,38 @@ Android la CSP va siempre sin hosts remotos.
 
 ---
 
+## 🤖 Servidor MCP local y su token
+
+En **Ajustes › Asistente (MCP)** se puede encender un servidor MCP
+local (solo escritorio) para que un asistente (Claude, u otro cliente
+MCP) lea y modifique el plan del usuario.
+
+### Dónde vive el token
+
+El token Bearer es lo único que da acceso al plan, así que **no lo
+genera ni lo guarda el navegador**:
+
+- Lo genera la **capa nativa** con entropía criptográfica
+  (`getrandom`) y lo guarda en un fichero dentro del directorio de
+  datos de la app, con permisos **0600** (solo el usuario).
+- El frontend lo **pide** a Rust (`invoke('mcp_token')`) para poder
+  mostrarlo en el campo de la pestaña y para arrancarlo con
+  `mcp_start`. En el `localStorage` solo queda el interruptor y el
+  puerto: **ni el token ni una copia de él**.
+- El botón "Regenerar" crea uno nuevo; el anterior deja de servir al
+  instante (el servidor vivo cambia de token sin reiniciarse).
+
+El token se guarda **en disco a propósito**: el usuario lo pega en un
+comando `claude mcp add … --header "Authorization: Bearer <token>"`, y
+si al reiniciar la app el token fuera otro, su cliente dejaría de
+funcionar.
+
+> **Al actualizar a una versión con el token nativo, hay que volver a
+> copiar el comando**: el token antiguo estaba en el `localStorage` del
+> navegador y se descarta (se borra al migrar el estado guardado).
+
+---
+
 ## 📜 Licencia
 
 El código fuente se distribuye bajo los términos del archivo

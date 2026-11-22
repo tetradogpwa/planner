@@ -443,6 +443,12 @@ describe('Vista Ajustes con pestañas', () => {
       expect(existe).toBe(true);
     }
     // El comando para conectar está formado con el token y el puerto.
+    // El token lo pide la capa nativa (T-033), así que puede tardar un
+    // momento en aparecer: esperamos a que tenga el formato completo.
+    await browser.waitUntil(
+      async () => /^[0-9a-f]{64}$/.test(await $('#mcpToken').getValue()),
+      { timeout: 5000, timeoutMsg: 'El token del MCP no apareció en el campo' },
+    );
     const port  = await $('#mcpPort').getValue();
     const token = await $('#mcpToken').getValue();
     const cmd   = await $('#mcpCmd').getValue();

@@ -127,6 +127,8 @@ pub fn run() {
                 mcp_start,
                 mcp_stop,
                 mcp_status,
+                mcp::mcp_token,
+                mcp::mcp_token_regenerate,
                 mcp::mcp_reply,
             ]);
     }

@@ -9,8 +9,37 @@
 // el "cliente" es `fetch` desde el webview siguiendo el protocolo
 // JSON-RPC de MCP, que es lo mismo que haría un cliente MCP real
 // hablando con un transporte Streamable HTTP.
+//
+// La última parte comprueba dónde vive el token (T-033): lo genera y
+// lo guarda la capa nativa en un fichero con permisos 0600, y NO en el
+// `localStorage` del webview. Además, el token sobrevive a un reinicio
+// de la app (si no, el `claude mcp add` del usuario dejaría de
+// funcionar).
 
-import { aceptarTerminos, nombresDeTareas } from '../helpers.mjs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { aceptarTerminos, esperarArranque, nombresDeTareas, recargar } from '../helpers.mjs';
+
+// tests/e2e/specs/ → tests/e2e/ → tests/ → raíz del repo.
+const RAIZ = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
+
+/** Identificador de la app: el directorio de datos que usa Tauri. */
+const IDENTIFICADOR = JSON.parse(
+  readFileSync(join(RAIZ, 'src-tauri', 'tauri.conf.json'), 'utf8'),
+).identifier;
+
+/** Ruta del fichero donde la capa nativa guarda el token del MCP.
+ *  `PLANNER_E2E_DATOS` es el `XDG_DATA_HOME` aislado de los E2E, así
+ *  que nunca se tocan los datos reales del usuario. */
+function rutaTokenMcp() {
+  const datos = process.env.PLANNER_E2E_DATOS;
+  if (!datos) {
+    throw new Error('Falta PLANNER_E2E_DATOS: lanza los E2E con "bash tools/test.sh e2e".');
+  }
+  return join(datos, IDENTIFICADOR, 'mcp-token');
+}
 
 /** El servidor MCP (rmcp 0.5) devuelve sus respuestas como
  *  Server-Sent Events: cada evento es `data: <json>\n\n`. Esta función
@@ -326,5 +355,91 @@ describe('Servidor MCP local', () => {
       },
       { timeout: 5000, timeoutMsg: 'El puerto sigue abierto tras desactivar MCP' },
     );
+  });
+
+  // ── Dónde vive el token (T-033) ───────────────────────────────────
+
+  it('el token no está en el localStorage: lo guarda la capa nativa', async () => {
+    const token = await $('#mcpToken').getValue();
+    expect(token).toMatch(/^[0-9a-f]{64}$/);
+
+    // 1) El estado del MCP guardado en el navegador no lleva token.
+    const estado = await browser.execute(() => localStorage.getItem('planner_mcp'));
+    expect(estado).not.toBeNull();
+    expect(estado).not.toContain(token);
+    const parsed = JSON.parse(estado);
+    expect(Object.keys(parsed).sort()).toEqual(['enabled', 'port']);
+    expect(parsed.token).toBeUndefined();
+
+    // 2) Ningún valor del localStorage contiene el token.
+    const conToken = await browser.execute((t) => {
+      const claves = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const clave = localStorage.key(i);
+        const valor = localStorage.getItem(clave);
+        if (valor && valor.includes(t)) claves.push(clave);
+      }
+      return claves;
+    }, token);
+    expect(conToken).toEqual([]);
+
+    // 3) El token está en un fichero de la capa nativa, con permisos 0600.
+    const ruta = rutaTokenMcp();
+    expect(existsSync(ruta)).toBe(true);
+    expect(readFileSync(ruta, 'utf8').trim()).toBe(token);
+    const modo = statSync(ruta).mode & 0o777;
+    expect(modo).toBe(0o600);
+  });
+
+  it('el token sigue ahí después de reiniciar la app', async () => {
+    const token = await $('#mcpToken').getValue();
+    const ruta  = rutaTokenMcp();
+
+    // Reiniciamos la app de verdad: se cierra el proceso y se vuelve
+    // a abrir. El token tiene que seguir siendo el mismo, porque el
+    // usuario lo pegó en un `claude mcp add`.
+    await browser.reloadSession();
+    expect(await esperarArranque()).toBe('app');
+
+    // El fichero de la capa nativa sigue ahí y con el mismo token.
+    expect(existsSync(ruta)).toBe(true);
+    expect(readFileSync(ruta, 'utf8').trim()).toBe(token);
+
+    // Y la UI vuelve a mostrar ese mismo token (no uno nuevo).
+    await gotoMcpSettings();
+    await browser.waitUntil(
+      async () => (await $('#mcpToken').getValue()).length === 64,
+      { timeout: 5000, timeoutMsg: 'El token no volvió a aparecer tras reiniciar' },
+    );
+    expect(await $('#mcpToken').getValue()).toBe(token);
+  });
+
+  it('migración: el token antiguo del localStorage se borra y se ignora', async () => {
+    // Simulamos una instalación de la versión anterior, que guardaba
+    // el token en claro en el navegador.
+    const tokenViejo = 'f'.repeat(64);
+    await browser.execute((t) => {
+      localStorage.setItem('planner_mcp', JSON.stringify({
+        enabled: false, port: 41237, token: t,
+      }));
+    }, tokenViejo);
+
+    // Al arrancar, el frontend lee el estado y migra el formato viejo.
+    await recargar();
+    await gotoMcpSettings();
+
+    // El token antiguo desaparece del almacenamiento…
+    const estado = await browser.execute(() => localStorage.getItem('planner_mcp'));
+    expect(estado).not.toContain(tokenViejo);
+    expect(JSON.parse(estado).token).toBeUndefined();
+
+    // …y el token que se muestra es el de la capa nativa.
+    await browser.waitUntil(
+      async () => /^[0-9a-f]{64}$/.test(await $('#mcpToken').getValue()),
+      { timeout: 5000, timeoutMsg: 'El token no apareció tras la migración' },
+    );
+    const token = await $('#mcpToken').getValue();
+    expect(token).not.toBe(tokenViejo);
+    expect(readFileSync(rutaTokenMcp(), 'utf8').trim()).toBe(token);
   });
 });

@@ -10,6 +10,7 @@ import { initMonetization, needsConsent, hasAds } from './monetization.js';
 import { shortcuts }       from './ui/shortcuts/shortcuts-card.js';
 import { isEditable, focusHeading, bindRovingTabindex } from './ui/a11y.js';
 import { startMcpBridge }  from './mcp-bridge.js';
+import { leerEstadoMcp }   from './ui/mcp/mcp-state.js';
 import './api.js';   // monta window.PlannerApi
 
 // ── Service Worker ────────────────────────────────────────
@@ -313,12 +314,19 @@ startMcpBridge().catch(err => console.warn('[mcp] bridge no iniciado:', err));
 
 // Arranca el servidor MCP si el usuario lo dejó activado. Solo en
 // escritorio (en Android no existe `mcp_start`).
+//
+// El token NO está en el `localStorage`: lo genera y guarda la capa
+// nativa (fichero con permisos 0600 en el directorio de datos de la
+// app), así que lo pedimos con 'mcp_token' (T-033). Gracias a eso el
+// token sobrevive a un reinicio de la app y el comando `claude mcp add`
+// del usuario sigue funcionando.
 if (window.__TAURI__?.core?.invoke && !/android/i.test(navigator.userAgent)) {
   try {
-    const saved = JSON.parse(localStorage.getItem('planner_mcp') || '{}');
-    if (saved.enabled && saved.token) {
-      const port = Number(saved.port) || 41237;
-      await window.__TAURI__.core.invoke('mcp_start', { port, token: saved.token });
+    const saved = leerEstadoMcp();
+    if (saved.enabled) {
+      const port  = Number(saved.port) || 41237;
+      const token = await window.__TAURI__.core.invoke('mcp_token');
+      await window.__TAURI__.core.invoke('mcp_start', { port, token });
     }
   } catch (err) {
     console.warn('[mcp] no se pudo reiniciar el servidor:', err);

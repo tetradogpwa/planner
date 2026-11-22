@@ -24,6 +24,21 @@
 //
 // El servidor escucha solo en 127.0.0.1, exige un token Bearer en
 // `Authorization`, y rechaza todo lo demás con 401.
+//
+// ## Dónde vive el token
+//
+// El token NO lo genera el navegador ni se guarda en su `localStorage`
+// (hallazgo R-03 de `docs/revision-senior.md`): cualquier script que
+// se ejecutara en el WebView podría leerlo de ahí. Lo genera esta
+// capa nativa con entropía criptográfica y lo guarda en un fichero
+// dentro del directorio de datos de la app, con permisos 0600 (Unix).
+// El frontend solo lo pide con `invoke('mcp_token')` para poder
+// mostrarlo (el usuario lo copia a un `claude mcp add`) y para
+// arrancarlo con `mcp_start`.
+//
+// El token se guarda en disco a propósito: el usuario lo pega en un
+// comando `claude mcp add`, así que si al reiniciar la app el token
+// fuera otro, su cliente MCP dejaría de funcionar.
 // ────────────────────────────────────────────────────────────────────
 
 use axum::middleware::{self, Next};
@@ -40,8 +55,12 @@ use rmcp::transport::streamable_http_server::{StreamableHttpServerConfig, Stream
 use rmcp::ErrorData as McpError;
 use rmcp::ServerHandler;
 use serde::{Deserialize, Serialize};
+use std::fmt::Write as _;
+use std::fs;
 use std::future::Future;
+use std::io::Write as _;
 use std::net::SocketAddr;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::Mutex;
 use tauri::AppHandle;
@@ -543,4 +562,158 @@ pub fn mcp_reply(
         }
         None => Err(format!("id de respuesta MCP desconocido: {id}")),
     }
+}
+
+// ── Almacén del token Bearer ──────────────────────────────────────────
+//
+// El token se guarda en un fichero (no solo en memoria) para que
+// sobreviva a un reinicio de la app: el usuario lo pega en un comando
+// `claude mcp add` y su cliente MCP debe seguir funcionando después
+// de que la app se cierre y vuelva a abrir.
+//
+// El fichero vive en el directorio de datos de la app
+// (`app.path().app_data_dir()`), que se crea si no existe, y se
+// escribe con permisos 0600 (solo el usuario) en Unix.
+
+/// Nombre del fichero donde se guarda el token.
+pub const FICHERO_TOKEN: &str = "mcp-token";
+
+/// Bytes de entropía por token (32 bytes → 64 caracteres hex).
+const BYTES_TOKEN: usize = 32;
+
+/// Ruta del fichero del token. Crea el directorio de datos de la app
+/// si no existe (la primera vez, o tras reinstalar la app).
+pub fn ruta_token(app: &AppHandle<Wry>) -> Result<PathBuf, String> {
+    let dir = app.path().app_data_dir().map_err(|e| {
+        format!("No se pudo localizar el directorio de datos de la app: {e}")
+    })?;
+    crear_directorio(&dir)?;
+    Ok(dir.join(FICHERO_TOKEN))
+}
+
+/// Devuelve el token actual. Si no hay ninguno guardado, o el fichero
+/// no se puede leer, genera uno nuevo y lo guarda: la app nunca se
+/// queda sin token.
+pub fn token_actual(app: &AppHandle<Wry>) -> Result<String, String> {
+    let ruta = ruta_token(app)?;
+    if let Some(token) = leer_token(&ruta) {
+        return Ok(token);
+    }
+    let token = generar_token()?;
+    guardar_token(&ruta, &token)?;
+    Ok(token)
+}
+
+/// Genera un token nuevo, lo guarda (el anterior deja de servir) y lo
+/// devuelve.
+pub fn token_nuevo(app: &AppHandle<Wry>) -> Result<String, String> {
+    let ruta = ruta_token(app)?;
+    let token = generar_token()?;
+    guardar_token(&ruta, &token)?;
+    Ok(token)
+}
+
+/// 32 bytes aleatorios con calidad criptográfica → 64 hex en minúsculas.
+fn generar_token() -> Result<String, String> {
+    let mut bytes = [0u8; BYTES_TOKEN];
+    getrandom::fill(&mut bytes)
+        .map_err(|e| format!("No se pudo generar un token aleatorio: {e}"))?;
+    let mut token = String::with_capacity(BYTES_TOKEN * 2);
+    for b in bytes {
+        // Escribir en un String nunca falla.
+        let _ = write!(token, "{b:02x}");
+    }
+    Ok(token)
+}
+
+/// Lee el token del fichero. Devuelve `None` si no existe, si no se
+/// puede leer o si no tiene el formato esperado (64 hex en minúsculas).
+fn leer_token(ruta: &Path) -> Option<String> {
+    let texto = fs::read_to_string(ruta).ok()?;
+    let token = texto.trim();
+    let valido = token.len() == BYTES_TOKEN * 2
+        && token
+            .chars()
+            .all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c));
+    if valido {
+        Some(token.to_string())
+    } else {
+        None
+    }
+}
+
+/// Guarda el token en el fichero, con permisos 0600 (solo el usuario).
+fn guardar_token(ruta: &Path, token: &str) -> Result<(), String> {
+    let mut opciones = fs::OpenOptions::new();
+    opciones.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    {
+        // 0600: el token solo lo puede leer el usuario de la app.
+        use std::os::unix::fs::OpenOptionsExt;
+        opciones.mode(0o600);
+    }
+    let mut archivo = opciones.open(ruta).map_err(|e| {
+        format!("No se pudo escribir el token en {}: {e}", ruta.display())
+    })?;
+    archivo.write_all(token.as_bytes()).map_err(|e| {
+        format!("No se pudo escribir el token en {}: {e}", ruta.display())
+    })?;
+    #[cfg(unix)]
+    {
+        // Si el fichero ya existía, se ajustan los permisos: podrían
+        // ser más abiertos de lo que queremos.
+        use std::os::unix::fs::PermissionsExt;
+        archivo
+            .set_permissions(fs::Permissions::from_mode(0o600))
+            .map_err(|e| format!("No se pudo proteger el token: {e}"))?;
+    }
+    Ok(())
+}
+
+/// Crea el directorio de datos de la app si no existe (0700 en Unix).
+fn crear_directorio(dir: &Path) -> Result<(), String> {
+    if dir.is_dir() {
+        return Ok(());
+    }
+    let mut constructor = fs::DirBuilder::new();
+    constructor.recursive(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::DirBuilderExt;
+        constructor.mode(0o700);
+    }
+    constructor.create(dir).map_err(|e| {
+        format!("No se pudo crear el directorio de datos {}: {e}", dir.display())
+    })
+}
+
+/// Cambia el token vivo del servidor (si está activo) sin reiniciarlo:
+/// tras regenerar el token, el viejo deja de servir al instante.
+pub fn set_token(app: &AppHandle<Wry>, token: &str) {
+    let state = app.state::<McpState>();
+    let mut slot = state.token.lock().unwrap();
+    if slot.is_some() {
+        *slot = Some(token.to_string());
+    }
+}
+
+// ── Comandos Tauri del token ──────────────────────────────────────────
+
+/// Devuelve el token Bearer del servidor MCP. Si todavía no hay uno,
+/// la capa nativa lo genera y lo guarda (fichero con permisos 0600 en
+/// el directorio de datos de la app). El frontend no lo persiste en el
+/// `localStorage`: solo lo muestra para que el usuario lo copie.
+#[tauri::command]
+pub fn mcp_token(app: AppHandle) -> Result<String, String> {
+    token_actual(&app)
+}
+
+/// Genera un token nuevo, lo guarda (el anterior deja de servir) y lo
+/// devuelve. Si el servidor está en marcha, su token vivo cambia al
+/// instante, sin necesidad de reiniciarlo.
+#[tauri::command]
+pub fn mcp_token_regenerate(app: AppHandle) -> Result<String, String> {
+    let token = token_nuevo(&app)?;
+    set_token(&app, &token);
+    Ok(token)
 }

@@ -2794,11 +2794,11 @@
     {
       "id": "T-033",
       "title": "El token del servidor MCP no vive en texto plano en el navegador",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-22T05:00:46Z",
-      "updated": "2026-11-22T05:00:46Z",
-      "attempts": 0,
+      "updated": "2026-11-22T05:43:18Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-22T05:00:46Z",
@@ -2815,13 +2815,34 @@
         "El binding a 127.0.0.1 y la comparación en tiempo constante (mcp.rs:371-376) NO se tocan. La UI puede seguir mostrando y copiando el token: el problema es la persistencia en claro en el navegador."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "627839066d6092e98a29312e101a37a26692e272",
       "history": [
         {
           "at": "2026-11-22T05:00:46Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-11-22T05:29:44Z",
+          "event": "foto del árbol",
+          "note": "627839066d"
+        },
+        {
+          "at": "2026-11-22T05:29:44Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-11-22T05:43:18Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-22T05:43:18Z",
+          "event": "estado → hecha",
+          "note": "Revisado y aprobado (MiniMax M3): cargo check verde, suite completa en verde, verificado en rojo que el token sobrevive al reinicio"
         }
-      ]
+      ],
+      "firstTree": "627839066d6092e98a29312e101a37a26692e272"
     },
     {
       "id": "T-034",
