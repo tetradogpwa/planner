@@ -214,6 +214,33 @@ jobs:
           PLANNER_E2E_DISPLAY: x11
         run: bash tools/test.sh e2e
 
+      # Si el E2E falla, el log del paso anterior no dice POR QUÉ
+      # (solo "exit code 1"): el motivo real está en el log que
+      # tools/test.sh deja en logs/. Se imprime aquí para no tener que
+      # ir a los artefactos a buscarlo.
+      - name: Por qué falló el E2E (si falló)
+        if: failure()
+        run: |
+          echo "::group::logs de las pruebas"
+          ls -la logs/ 2>/dev/null || echo "(no hay logs/)"
+          for f in logs/test-e2e-*.log; do
+            [ -f "$f" ] || continue
+            echo "=== $f (últimas 200 líneas) ==="
+            tail -n 200 "$f"
+          done
+          for f in tests/e2e/.tmp/weston.log; do
+            [ -f "$f" ] || continue
+            echo "=== $f (últimas 50 líneas) ==="
+            tail -n 50 "$f"
+          done
+          echo "::endgroup::"
+          echo "::group::estado del entorno"
+          echo "xvfb-run: $(command -v xvfb-run || echo NO)"
+          echo "WebKitWebDriver: $(command -v WebKitWebDriver || echo NO)"
+          echo "tauri-driver: $(command -v tauri-driver || echo NO)"
+          echo "cargo-tauri: $(command -v cargo-tauri || echo NO)"
+          echo "==endgroup::"
+
       - name: Subir los logs de las pruebas
         if: always()
         uses: actions/upload-artifact@v4
