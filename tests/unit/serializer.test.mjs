@@ -61,7 +61,29 @@ test('descarta las tareas de un tipo desconocido', () => {
   assert.deepEqual(FromJson(json).map(t => t.Name), ['Agua']);
 });
 
-test('JSON roto: devuelve una lista vacía en vez de lanzar', (t) => {
-  t.mock.method(console, 'error', () => {});   // el error esperado no ensucia la salida
-  assert.deepEqual(FromJson('{esto no es json'), []);
+test('JSON roto: lanza un error en vez de devolver una lista vacía', (t) => {
+  t.mock.method(console, 'warn', () => {});   // el aviso esperado no ensucia la salida
+  // Antes devolvía [] y quien importaba se quedaba sin tareas sin
+  // avisar (T-031 / R-01): ahora el error se ve.
+  assert.throws(() => FromJson('{esto no es json'), /JSON inválido/);
+  assert.throws(() => FromJson(''),              /JSON inválido/);
+});
+
+test('JSON que no es una lista de tareas: lanza un error', (t) => {
+  t.mock.method(console, 'warn', () => {});
+  assert.throws(() => FromJson('42'),       /JSON inválido/);
+  assert.throws(() => FromJson('"hola"'),   /JSON inválido/);
+  assert.throws(() => FromJson('null'),     /JSON inválido/);
+  assert.throws(() => FromJson('{"foo":1}'), /JSON inválido/);
+});
+
+test('JSON válido vacío: devuelve una lista vacía, sin error', () => {
+  assert.deepEqual(FromJson('[]'), []);
+});
+
+test('solo tareas de tipo desconocido: lista vacía y sin error', () => {
+  // Un className que no conocemos se descarta, pero el archivo es
+  // válido: no es un error y no invalida el resto del JSON.
+  const json = JSON.stringify([{ className: 'TipoQueNoExiste', name: 'X' }]);
+  assert.deepEqual(FromJson(json), []);
 });

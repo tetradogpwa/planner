@@ -1,5 +1,5 @@
 {
-  "next": 31,
+  "next": 41,
   "tasks": [
     {
       "id": "T-001",
@@ -2684,6 +2684,342 @@
         }
       ],
       "firstTree": "932fa9012948f1783656ce37d0272d989521becb"
+    },
+    {
+      "id": "T-031",
+      "title": "Importar un JSON inválido no debe borrar las tareas",
+      "status": "en_revision",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:45Z",
+      "updated": "2026-11-22T05:15:16Z",
+      "attempts": 1,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:45Z",
+          "text": "Detectado en la revisión senior (docs/revision-senior.md, R-01). Hoy FromJson se traga el error de parseo y devuelve [], así que importar un fichero corrupto borra la lista de tareas y la tarjeta muestra '✅ 0 tarea(s) importada(s)'. La rama '❌ JSON inválido' es código muerto. Es pérdida de datos del usuario sin aviso."
+        }
+      ],
+      "criteria": [
+        "Importar un JSON corrupto deja la lista de tareas intacta y muestra '❌ JSON inválido' (nunca '✅ 0 importada(s)')",
+        "Un JSON válido sustituye la lista como hasta ahora, y la importación despacha planner:changed para que las demás vistas se repinten y se anuncie",
+        "Prueba unitaria de FromJson con JSON roto, con [] y con className desconocido, y prueba E2E del flujo de import con un fixture corrupto",
+        "Cada caso nuevo se pone en rojo al romper el código que prueba (comprobado y contado en el resumen)"
+      ],
+      "notes": [
+        "Toca back/serializer.js y ui/dataManager/dataManager-card.js. Opciones: que FromJson lance con mensaje en español, o que devuelva un resultado {ok, tareas, error}; la tarjeta debe validar ANTES de tocar Context.Tasks. Añade también URL.revokeObjectURL tras la descarga (dataManager-card.js:23). Consulta docs/revision-senior.md R-01 y el roadmap docs/roadmap-mantenimiento.md T-031."
+      ],
+      "feedback": [],
+      "baseTree": "e368328321eb6ee9f4e8f65539dad0699b997fcf",
+      "history": [
+        {
+          "at": "2026-11-22T05:00:45Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-11-22T05:00:50Z",
+          "event": "foto del árbol",
+          "note": "e368328321"
+        },
+        {
+          "at": "2026-11-22T05:00:50Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-11-22T05:15:16Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        }
+      ],
+      "firstTree": "e368328321eb6ee9f4e8f65539dad0699b997fcf"
+    },
+    {
+      "id": "T-032",
+      "title": "Quitar los permisos que la app no usa",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:46Z",
+      "updated": "2026-11-22T05:00:46Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "text": "Detectado en la revisión senior (R-02). src-tauri/capabilities/default.json concede fs:allow-read-text-file, fs:allow-write-text-file sobre $DOCUMENT/**, $DOWNLOAD/**, $DESKTOP/** y registra el plugin fs, que la app NO usa en ninguna parte (el import/export usa Blob/FileReader). En la misma app conviven scripts remotos de AdSense (permitidos por la CSP) y la API Tauri completa (withGlobalTauri: true). Un fallo en la cadena de anuncios = lectura/escritura del disco del usuario + acceso al token MCP."
+        }
+      ],
+      "criteria": [
+        "El plugin fs y el plugin dialog (tampoco se usan) desaparecen de capabilities/default.json y de lib.rs",
+        "La CSP solo permite los hosts de AdSense si la build lleva anuncios, y el criterio queda escrito",
+        "cargo check en verde, la app arranca y exporta/importa igual, la pestaña Legal y el MCP siguen funcionando",
+        "Una comprobación automática falla si vuelve a aparecer un permiso concedido sin usar"
+      ],
+      "notes": [
+        "Toca src-tauri/capabilities/default.json, src-tauri/src/lib.rs y src-tauri/tauri.conf.json. Comprueba con grep que no hay llamadas a plugin:fs| ni plugin:dialog| en el frontend. El plugin admob sí se usa (Android) y se queda."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-033",
+      "title": "El token del servidor MCP no vive en texto plano en el navegador",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:46Z",
+      "updated": "2026-11-22T05:00:46Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "text": "Detectado en la revisión senior (R-03). Hoy el token se genera en el frontend (ui/mcp/mcp-card.js:113-119), se guarda en localStorage en claro (:109-111), se copia al portapapeles (:62-64) y se incrusta en una línea de comandos 'claude mcp add … --header Authorization: Bearer <token>' (:151-153), con lo que acaba en el historial del shell y en ~/.claude.json. Quien lo posea lee, crea, edita y borra todo el plan."
+        }
+      ],
+      "criteria": [
+        "El token lo genera y lo guarda la capa nativa; el frontend no lo persiste en localStorage",
+        "El servidor MCP sigue funcionando igual: arrancar, consultar estado, rotar el token y que el token viejo dé 401",
+        "El token no aparece en localStorage ni en el log del webview",
+        "La E2E del MCP (08-mcp.spec.mjs) sigue en verde"
+      ],
+      "notes": [
+        "El binding a 127.0.0.1 y la comparación en tiempo constante (mcp.rs:371-376) NO se tocan. La UI puede seguir mostrando y copiando el token: el problema es la persistencia en claro en el navegador."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-034",
+      "title": "Un build de release no puede salir sin .env ni con el App ID de test",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:46Z",
+      "updated": "2026-11-22T05:00:46Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "text": "Detectado en la revisión senior (R-16). src-tauri/build.rs:88-90 usa unwrap_or_default() sobre la lectura de .env: si falta, degrada en silencio a 'sin anuncios' (ads.rs:107 → provider none) sin ningún aviso. En Android el mismo fallo deja el App ID de test de Google (ca-app-pub-3940256099942544~3347511713) en un APK publicable. Además build.rs:98 imprime los valores de las variables en el log de cargo (visible con -vv), lo que contradice lo que promete tools/build.sh:50-51."
+        }
+      ],
+      "criteria": [
+        "Un build sin .env falla con un mensaje claro y accionable, o exige un flag explícito para compilar sin anuncios",
+        "El build de Android con .env de test solo es posible con ese flag explícito",
+        "build.rs deja de imprimir los valores de las variables (solo el nombre)",
+        "La compilación normal de la app (cargo check / cargo tauri build) sigue funcionando"
+      ],
+      "notes": [
+        "Toca src-tauri/build.rs, src-tauri/src/ads.rs y el plugin de AdMob (plugins/tauri-plugin-admob/android/build.gradle.kts:9-11). Las 9 variables de AD_VARS de build.rs:9-19 son IDs públicos de AdSense/AdMob, no secretos: el problema es la degradación silenciosa, no la fuga."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-035",
+      "title": "Arreglar los scripts de build rotos",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:46Z",
+      "updated": "2026-11-22T05:00:46Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "text": "Detectado en la revisión senior (R-19). tools/build-msix.ps1 no está implementado (el bloque cargo msix build está comentado, líneas 73-81) y además su OutDir es 'dist', que es el frontendDist: el .msix se escribiría dentro de dist/, que build.rs borra en el siguiente build y que Tauri embebe en el binario. tools/build-android.sh --aab está roto (la línea 45 siempre ejecuta --apk). La versión está triplicada (Cargo.toml:3, tauri.conf.json:4, build-msix.ps1:66). tauri.conf.json:65 deja el placeholder [TU_THUMBPRINT_CERTIFICADO_NSIS]."
+        }
+      ],
+      "criteria": [
+        "Una sola fuente de verdad para la versión, comprobada por una prueba automática",
+        "tools/build-android.sh --aab genera un AAB de verdad",
+        "El script de msix está implementado o eliminado, y en ningún caso escribe dentro de dist/",
+        "tauri.conf.json y los scripts de build no se contradicen (bundles, versión, targets)"
+      ],
+      "notes": [
+        "Si el script de msix no se puede completar en esta máquina, elimínalo y deja constancia en el README-TAURI.md de cómo se hace. No cambies el placeholder del certificado: es la casilla donde el usuario pone su thumbprint real."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-036",
+      "title": "CI: que las pruebas se lanzen solas",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:46Z",
+      "updated": "2026-11-22T05:00:46Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "text": "Detectado en la revisión senior (R-04). No existe .github/ (nunca existió en el historial). Las 259 pruebas dependen de que alguien se acuerde de ejecutarlas, y tools/test.sh exige un entorno gráfico (weston o Xvfb) que en un runner hay que preparar."
+        }
+      ],
+      "criteria": [
+        "Un workflow de GitHub Actions lanza unitarias, node --check de todo el frontend, cargo check + cargo test + clippy, y la suite E2E completa",
+        "El workflow guarda los logs y las capturas cuando algo falla",
+        "La rama principal está protegida: no se puede mergear sin el CI en verde",
+        "El badge de estado está en el README.md"
+      ],
+      "notes": [
+        "El E2E necesita weston o Xvfb, WebKitWebDriver y tauri-driver: mira cómo los prepara tools/test.sh y qué requisitos documenta. Si el runner no puede con el E2E, al menos unitarias + node --check + cargo deben correr, y el E2E queda en un workflow aparte que se puede activar."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-037",
+      "title": "Lint, formato y los ficheros que faltan",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:46Z",
+      "updated": "2026-11-22T05:00:46Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "text": "Detectado en la revisión senior (R-37). No hay ESLint ni Prettier, ni .editorconfig, ni .gitattributes, ni LICENSE en la raíz, ni CHANGELOG.md, ni CONTRIBUTING.md, ni SECURITY.md, ni Dependabot. Hay un // eslint-disable-next-line no-console en tests/e2e/specs/03-datos.spec.mjs:81 para un linter que no existe."
+        }
+      ],
+      "criteria": [
+        "npm run lint pasa en verde sobre todo el frontend y las pruebas",
+        "Existe .editorconfig (2 espacios, LF, UTF-8) y .gitattributes (los .sh con LF para no romperse en Windows)",
+        "Hay LICENSE en la raíz (copia de legal/LICENSE), CHANGELOG.md, CONTRIBUTING.md y SECURITY.md",
+        "Dependabot configurado para npm y cargo"
+      ],
+      "notes": [
+        "Las dependencias del linter van en el package.json de la raíz (que es solo de herramientas: la app sigue sin npm). Las reglas que ya se cumplen en el proyecto (colores solo con variables CSS, tamaños en rem con var(--fs-*), cada campo con su label for, emojis con aria-hidden) se pueden partly codificar en el linter. No rompas ninguna convención existente: ejecuta el linter y arregla lo que salga, pero si algo es un falso positivo documenta la excepción en el propio fichero."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-038",
+      "title": "Toolchain fijado y builds reproducibles",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:46Z",
+      "updated": "2026-11-22T05:00:46Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "text": "Detectado en la revisión senior (R-17). No hay rust-toolchain.toml, cargo install usa rangos (tauri-cli \"^2.0\" en build.sh:21,146), ninguna llamada a cargo usa --locked, .cargo/config.toml no está versionado (y .gitignore:13 ignora src-tauri/.cargo/), Cargo.toml:7 declara rust-version = 1.77 que ninguna versión real del árbol cumple, y hay tres dependencias directas sin usar: thiserror, tauri-plugin-dialog y tauri-plugin-fs."
+        }
+      ],
+      "criteria": [
+        "Existe rust-toolchain.toml con la versión que usa el proyecto",
+        "Las herramientas se instalan con versión exacta y --locked, y todas las llamadas a cargo pasan --locked",
+        "Cargo.toml deja de declarar un MSRV que no se cumple",
+        "thiserror, tauri-plugin-dialog y tauri-plugin-fs desaparecen (o se usan) y cargo build --locked no modifica Cargo.lock"
+      ],
+      "notes": [
+        "El SDK de Google Mobile Ads está en 23.6.0 (la línea actual es 24.x) en plugins/tauri-plugin-admob/android/build.gradle.kts:34: súbelo también. Cuidado: si tauri-plugin-dialog o fs se usan de verdad en el frontend, no los borres: compruébalo con grep antes."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-039",
+      "title": "tools/test.sh a la altura del proyecto",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:46Z",
+      "updated": "2026-11-22T05:00:46Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "text": "Detectado en la revisión senior (R-26). tools/test.sh:80 usa el glob entrecomillado 'tests/unit/*.test.mjs', que Node solo expande desde la v22, y no comprueba la versión; no ejecuta node --check del frontend; no ejecuta cargo test ni clippy; no muestra cobertura; wdio.conf.mjs no define outputDir ni screenshot on-failure, así que un E2E que falla no deja ninguna captura; logs/ acumula 867 ficheros sin poda; no se comprueba el puerto 41237 del MCP (sí el 4446 de WebdriverIO); y si el glob no matchea, el script puede salir en verde sin haber ejecutado ninguna prueba."
+        }
+      ],
+      "criteria": [
+        "El script comprueba la versión de Node y avisa con un mensaje accionable si es insuficiente",
+        "Ejecuta node --check sobre todos los .js del frontend y cargo test + clippy",
+        "Muestra la cobertura de las unitarias",
+        "Un E2E que falla deja capturas y trazas, y logs/ se poda a los N últimos",
+        "Comprueba también el puerto 41237 y sale con código distinto de cero si no se ejecutó ninguna prueba"
+      ],
+      "notes": [
+        "El summary_unit (test.sh:83-90) busca el formato TAP ('^# (tests|pass|fail) '): si lo cambias, actualízalo. tools/test.sh y tests/e2e/wdio.conf.mjs están protegidos por permisos del agente: si necesitas tocarlos, hazlo y dilo en el resumen."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        }
+      ]
+    },
+    {
+      "id": "T-040",
+      "title": "Que el binario no se publique con el frontend anterior",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-22T05:00:46Z",
+      "updated": "2026-11-22T05:00:46Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "text": "Detectado en la revisión senior (R-18). src-tauri/build.rs copia el frontend a dist/ pero no emite ninguna directiva cuyo valor cambie con su contenido: solo cargo:rerun-if-changed con rutas y cargo:rustc-env con las 9 variables de anuncios. Si el fingerprint del build script no cambia, Cargo no recompila el crate y el binario conserva los assets anteriores. Tauri 2 embebe el frontend como blobs en tauri-codegen-assets (96 ficheros, 632 KB) en tiempo de compilación. Además build.rs:58 ignora el error de remove_dir_all (let _ =), con lo que los ficheros viejos se quedan en dist/."
+        }
+      ],
+      "criteria": [
+        "build.rs emite una directiva cuyo valor cambia con el contenido del frontend copiado, de modo que tocar un .js fuerza la recompilación",
+        "remove_dir_all deja de ignorar su error",
+        "Una comprobación demuestra que, tras tocar un .js del frontend, el binario embebido lleva el frontend nuevo"
+      ],
+      "notes": [
+        "Ojo: esta tarea es la que hace fiable el resto del plan de publicación. El hash puede ser el del contenido concatenado de los ficheros copiados; emítelo como cargo:rustc-env=FRONTEND_HASH=<hash> y úsalo en un assert o en un fichero de versión."
+      ],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        }
+      ]
     }
   ]
 }

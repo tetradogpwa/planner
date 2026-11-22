@@ -212,8 +212,12 @@ function buildWeekJson(offset) {
 /** Despacha `planner:changed` en window con un mensaje listo para una
  *  región role="status". El evento lleva la causa ('add' | 'update' |
  *  'delete' | 'startDate' | 'navigate' | 'import') para que la app
- *  decida qué repintar. */
-function emitChanged(action, statusMessage, extra = {}) {
+ *  decida qué repintar.
+ *
+ *  Lo exporta la importación de JSON (Ajustes › Datos), que también
+ *  cambia la lista de tareas y tiene que avisar como el resto de
+ *  mutaciones (T-031). */
+export function emitChanged(action, statusMessage, extra = {}) {
   window.dispatchEvent(new CustomEvent('planner:changed', {
     detail: { action, status: statusMessage, ...extra },
   }));

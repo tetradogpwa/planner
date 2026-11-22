@@ -25,6 +25,29 @@ import {
 // NDaysTask) en el formato que produce ToJson. La usa Importar.
 const HERE      = fileURLToPath(new URL('.', import.meta.url));
 const FIXTURE   = joinPath(HERE, '..', 'fixtures', 'tareas.json');
+// Fixture con un JSON roto a propósito (la lista de tareas se corta a
+// mitad). Importarlo NO puede borrar las tareas del usuario (T-031).
+const FIXTURE_ROTA = joinPath(HERE, '..', 'fixtures', 'json-corrupto.json');
+
+/** Instala un listener de `planner:changed` que guarda en
+ *  window.__changed los eventos que dispara la app (acción y mensaje).
+ *  Se reinstala en cada uso porque una recarga de la app borra los
+ *  listeners de la página. */
+async function escucharCambios() {
+  await browser.execute(() => {
+    window.__changed = [];
+    if (window.__changedHandler) {
+      window.removeEventListener('planner:changed', window.__changedHandler);
+    }
+    window.__changedHandler = (e) => {
+      window.__changed.push({
+        action: e.detail?.action ?? null,
+        status: e.detail?.status ?? null,
+      });
+    };
+    window.addEventListener('planner:changed', window.__changedHandler);
+  });
+}
 
 describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
 
@@ -72,6 +95,11 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     await abrirAppNueva();
     await irAGestionDatos();
 
+    // Escuchamos los cambios de la app: la importación tiene que
+    // despachar `planner:changed` para que las demás vistas se repinten
+    // y se anuncie el resultado (T-031).
+    await escucharCambios();
+
     // Ruta absoluta al fixture: primero intentamos el camino oficial
     // setValue; si WebKitWebDriver lo rechaza, caemos al polyfill del
     // DOM (DataTransfer + change). En ambos casos se ejecuta el
@@ -84,10 +112,16 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     // La tarjeta avisa en su #dataStatus con el emoji y el plural.
     await esperarStatus('#dataStatus', '✅ 3 tarea(s) importada(s)');
 
+    // Y la app entera se ha enterado del cambio.
+    const eventos = await browser.execute(() => window.__changed);
+    const importacion = eventos.find(e => e.action === 'import');
+    expect(importacion).toBeTruthy();   // la importación despacha planner:changed
+    expect(importacion.status).toBe('✅ 3 tarea(s) importada(s)');
+
     // Volvemos a la vista Tareas para ver la lista: la lista se
-    // actualiza al disparar 'change' (FromJson hace push sobre
-    // Context.Tasks, que es Proxy → persiste + re-pinta la vista
-    // activa, pero como la activa es 'data', hay que ir a 'tasks').
+    // actualiza al disparar 'change' (la importación sustituye
+    // Context.Tasks, que es Proxy → persiste; como la vista activa es
+    // 'ajustes', hay que ir a 'tasks').
     await irATareas();
     expect(await nombresDeTareas()).toEqual([
       'Beber agua', 'Gimnasio', 'Regar plantas',
@@ -280,6 +314,37 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     await irATareas();
     expect(await nombresDeTareas()).toEqual(['Tarea A', 'Tarea B']);
     expect(await tiposDeTareas()).toEqual(['Diaria', 'Diaria']);
+  });
+
+  // ── Importar un JSON corrupto: no debe borrar nada ──────────────────
+
+  it('importar un JSON corrupto no borra las tareas y avisa del error', async () => {
+    // Estado heredado del test anterior: Tarea A y Tarea B.
+    await irAGestionDatos();
+
+    // Escuchamos los cambios: una importación fallida no muta la lista,
+    // así que no debe despachar ningún `planner:changed`.
+    await escucharCambios();
+
+    const camino = await cargarArchivoEnInput('#importJsonInput', FIXTURE_ROTA);
+    // eslint-disable-next-line no-console
+    console.log('Importación corrupta por:', camino);
+
+    // La tarjeta avisa del error (y nunca de "0 tarea(s) importada(s)").
+    await esperarStatus('#dataStatus', '❌ JSON inválido');
+
+    // No se ha avisado de ningún cambio: no se ha tocado nada.
+    const eventos = await browser.execute(() => window.__changed);
+    expect(eventos.filter(e => e.action === 'import')).toHaveLength(0);
+
+    // La lista sigue intacta…
+    await irATareas();
+    await expect($('#taskCount')).toHaveText('2');
+    expect(await nombresDeTareas()).toEqual(['Tarea A', 'Tarea B']);
+
+    // …y sigue intacta tras recargar la app: no se ha perdido nada.
+    expect(await recargar()).toBe('app');
+    expect(await nombresDeTareas()).toEqual(['Tarea A', 'Tarea B']);
   });
 
   // ── Exportar PDF: Semana actual y Exportar rango ───────────────────
