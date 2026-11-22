@@ -2641,10 +2641,10 @@
     {
       "id": "T-030",
       "title": "E2E: fallo intermitente en 03-datos al cancelar Borrar",
-      "status": "en_revision",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-06T19:40:59Z",
-      "updated": "2026-11-22T04:15:46Z",
+      "updated": "2026-11-22T06:14:04Z",
       "attempts": 1,
       "requests": [
         {
@@ -2681,6 +2681,11 @@
           "at": "2026-11-22T04:15:46Z",
           "event": "estado → en_revision",
           "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-22T06:14:04Z",
+          "event": "estado → hecha",
+          "note": "Revisado, corregido y aprobado: la app avisa con planner:painted cuando una vista termina de pintarse y las pruebas esperan ese aviso. 20 suites E2E seguidas en verde (10 weston + 10 Xvfb). Commit 485499f"
         }
       ],
       "firstTree": "932fa9012948f1783656ce37d0272d989521becb"

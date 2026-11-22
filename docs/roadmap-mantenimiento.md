@@ -26,6 +26,33 @@ de aceptación. **Una tarea cada vez**, como manda `CLAUDE.md`.
 
 Estimaciones en "jornada" de trabajo efectivo, no en horas de reloj.
 
+### Estado (22 de noviembre de 2026)
+
+| Fase | Tarea | Estado |
+|------|-------|--------|
+| 0 | T-031 · Importar un JSON inválido no debe borrar las tareas | ✅ hecha (`cfa56b1`) |
+| 0 | T-032 · Quitar los permisos que la app no usa | ✅ hecha (`5ec782e`) |
+| 0 | T-033 · El token del servidor MCP no vive en texto plano en el navegador | ✅ hecha (`9235346`) |
+| 0 | T-034 · Un build de release no puede salir sin `.env` ni con el App ID de test | ✅ hecha (`7ff089c`) |
+| 0 | T-035 · Arreglar los scripts de build rotos | ⏳ siguiente |
+| 1 | T-036…T-040 · Las guardas (CI, lint, toolchain, `test.sh`, hash del frontend) | ⏳ pendiente |
+| 2-5 | T-041…T-063 · Pruebas, cobertura, estructura y limpieza | ⏳ pendiente |
+
+**Cómo se trabaja cada tarea**: un ayudante (MiniMax M3 Flash) implementa
+la tarea y escribe sus pruebas; M3 revisa el diff entero, corrige lo que
+hace falta, comprueba por su cuenta que cada prueba nueva se pone en
+rojo al romper el código que prueba, ejecuta la suite completa y hace el
+commit. En las cuatro primeras tareas, la revisión corrigió tres fallos
+del ayudante:
+
+- T-031: revocaba el `blob:` de la descarga en el mismo instante del
+  clic, lo que puede cancelar la descarga en WebKitGTK.
+- T-033: faltaba avisar en el README de que el token cambia al
+  actualizar (el antiguo estaba en el `localStorage` y se descarta).
+- T-034: el guard de build hacía fallar `cargo check` en un clon
+  limpio; ahora solo se exige en las builds que se publican (perfil
+  release o Android).
+
 ---
 
 ## Fase 0 — Frenar las pérdidas (2-3 jornadas)
