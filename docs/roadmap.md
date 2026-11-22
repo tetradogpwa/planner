@@ -9,6 +9,11 @@ orden y con qué criterio se da por bueno cada paso. La cola de
 tareas (`.tasks/tasks.json`) sigue siendo la fuente de verdad de lo
 que se está implementando; aquí está el panorama completo.
 
+> Complemento: la [revisión senior del proyecto](./revision-senior.md) y su
+> [plan de mantenimiento](./roadmap-mantenimiento.md) cubren la otra
+> mitad del trabajo — calidad interna, cobertura, CI y build. Este
+> documento es el de "acabar y publicar"; aquel, el de "que no se pudra".
+
 ---
 
 ## 1. Dónde estamos
@@ -18,7 +23,7 @@ que se está implementando; aquí está el panorama completo.
 | Tareas en la cola | 30 (29 hechas, T-030 en revisión) |
 | Pruebas unitarias | 131, todas en verde |
 | Specs E2E (app real) | 13, todas en verde |
-| Commits locales sin subir | 30 (`main` va 30 commits por delante de `origin/main`) |
+| Commits locales sin subir | 0 (`main` está sincronizado con `origin/main`) |
 | Código del frontend | ~1.600 líneas en la raíz + 20 tarjetas en `ui/` |
 | Binarios publicados | 1 AppImage de Linux (octubre); faltan Windows y Android |
 
