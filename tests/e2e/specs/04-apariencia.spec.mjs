@@ -73,27 +73,6 @@ const irAApariencia = async () => {
   );
 };
 
-// Enciende el interruptor «Modo edición» de Apariencia. Sin esto, la
-// vista previa está con `hidden=true` y los radios de tema no
-// muestran el botón "Restablecer".
-const activarModoEdicionApariencia = async () => {
-  await irAApariencia();
-  const on = await browser.execute(
-    () => document.getElementById('customEditToggle')?.checked === true,
-  );
-  if (!on) {
-    const slider = await $('#customEditToggle + .slider');
-    await slider.scrollIntoView();
-    await slider.click();
-  }
-  await browser.waitUntil(
-    async () => await browser.execute(
-      () => document.querySelector('#settingsPreview')?.hidden === false,
-    ),
-    { timeout: 5_000, timeoutMsg: 'La vista previa no quedó visible' },
-  );
-};
-
 // Abre la pestaña Accesibilidad de Ajustes (Alt+8 → Accesibilidad)
 // y la bloque "Tamaño de letra general", donde están los radios de
 // escala. Antes vivían en Apariencia; desde T-022 viven aquí.

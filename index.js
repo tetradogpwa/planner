@@ -17,6 +17,10 @@ import './api.js';   // monta window.PlannerApi
 // En Tauri el Service Worker no aporta nada (los recursos ya están
 // locales). Solo se activa en modo PWA puro (sin Tauri), pero
 // actualmente está desactivado por defecto.
+// El Service Worker está desactivado a propósito (su lista de assets
+// está obsoleta; ver R-13/T-054). La condición es constante a
+// propósito, y por eso ESLint avisa.
+// eslint-disable-next-line no-constant-condition
 if ('serviceWorker' in navigator && false) {
   navigator.serviceWorker.register('./sw.js').catch(console.warn);
 }
@@ -56,7 +60,6 @@ removeAdsBtn.addEventListener('click', async () => {
 });
 
 // ── Vistas ───────────────────────────────────────────────
-const VIEW_KEYS = ['tasks', 'week', 'allWeeks', 'ajustes'];
 const views = {
   tasks:        document.getElementById('view-tasks'),
   week:         document.getElementById('view-week'),
@@ -280,7 +283,7 @@ function currentViewName() {
 }
 
 window.addEventListener('planner:changed', (e) => {
-  const { action, status } = e.detail ?? {};
+  const { status } = e.detail ?? {};
   // Repintamos la vista activa para que la UI refleje los cambios
   // hechos por la API (addTask, updateTask, deleteTask, setStartDate…).
   const view = currentViewName();

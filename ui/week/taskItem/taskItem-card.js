@@ -150,7 +150,7 @@ export class TaskItemCard {
       const idx = headers.indexOf(this.header);
       if (idx < 0) return;
 
-      let next = -1;
+      let next;
       switch (e.key) {
         case 'ArrowUp':   next = (idx - 1 + headers.length) % headers.length; break;
         case 'ArrowDown': next = (idx + 1) % headers.length; break;

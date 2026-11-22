@@ -78,17 +78,28 @@ function comandosEjecutados(id) {
     .join('\n');
 }
 
-// ── El workflow existe y tiene los tres jobs ─────────────────────────
+// ── El workflow existe y tiene los jobs ─────────────────────────────
 
 test('existe el workflow del CI', () => {
   assert.ok(existsSync(join(RAIZ, WORKFLOW)), `falta ${WORKFLOW}`);
 });
 
-test('el workflow tiene los jobs unit, rust y e2e', () => {
+test('el workflow tiene los jobs lint, unit, rust y e2e', () => {
   const jobs = jobsDelWorkflow(cuerpoWorkflow());
-  for (const esperado of ['unit', 'rust', 'e2e']) {
+  for (const esperado of ['lint', 'unit', 'rust', 'e2e']) {
     assert.ok(jobs.has(esperado), `falta el job \`${esperado}\` en el workflow`);
   }
+});
+
+test('el job lint instala las dependencias y ejecuta el linter', () => {
+  // Sin `npm ci` el job no puede ni ejecutar ESLint: `npm run lint`
+  // necesita el paquete `eslint` instalado (es una devDependency de
+  // la raíz, no de la app).
+  const cuerpo = comandosEjecutados('lint');
+  assert.match(cuerpo, /npm ci/,
+    'el job lint tiene que instalar las dependencias de la raíz');
+  assert.match(cuerpo, /npm run lint/,
+    'el job lint tiene que ejecutar el linter');
 });
 
 test('cada job se llama como su id (ese es el nombre del status check)', () => {

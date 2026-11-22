@@ -3018,11 +3018,11 @@
     {
       "id": "T-037",
       "title": "Lint, formato y los ficheros que faltan",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-22T05:00:46Z",
-      "updated": "2026-11-22T05:00:46Z",
-      "attempts": 0,
+      "updated": "2026-11-22T16:02:44Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-22T05:00:46Z",
@@ -3039,13 +3039,34 @@
         "Las dependencias del linter van en el package.json de la raíz (que es solo de herramientas: la app sigue sin npm). Las reglas que ya se cumplen en el proyecto (colores solo con variables CSS, tamaños en rem con var(--fs-*), cada campo con su label for, emojis con aria-hidden) se pueden partly codificar en el linter. No rompas ninguna convención existente: ejecuta el linter y arregla lo que salga, pero si algo es un falso positivo documenta la excepción en el propio fichero."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "6d37d00e297d4e14c79c907eadda4585456c5263",
       "history": [
         {
           "at": "2026-11-22T05:00:46Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-11-22T11:21:11Z",
+          "event": "foto del árbol",
+          "note": "6d37d00e29"
+        },
+        {
+          "at": "2026-11-22T11:21:11Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-11-22T16:02:44Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-22T16:02:44Z",
+          "event": "estado → hecha",
+          "note": "Revisado y aprobado (MiniMax M3): npm run lint en verde sobre 76 ficheros, suite completa en verde"
         }
-      ]
+      ],
+      "firstTree": "6d37d00e297d4e14c79c907eadda4585456c5263"
     },
     {
       "id": "T-038",

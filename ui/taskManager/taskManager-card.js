@@ -82,7 +82,7 @@ export class TaskManagerCard {
       const panel = document.createElement('div');
       panel.className = 'edit-panel';
 
-      row.querySelector('.btn-trash').onclick = (ev) => {
+      row.querySelector('.btn-trash').onclick = () => {
         // Tras el repintado el foco debe quedarse en el botón
         // Eliminar de la fila que ahora ocupa la posición `i` (la
         // siguiente tarea), o la anterior si era la última. Si la

@@ -1,8 +1,16 @@
 {
   "name": "planner-tools",
   "private": true,
-  "description": "Solo expone 'npx status' para ver la cola de tareas desde la terminal. La app (index.html, index.js...) sigue sin npm ni dependencias; esto no se empaqueta (no está en WEB_ASSETS).",
+  "description": "Herramientas de desarrollo del Planificador Semanal: expone 'npx status' para ver la cola de tareas desde la terminal y añade el linter (npm run lint). La app (index.html, index.js...) sigue sin npm ni dependencias; esto no se empaqueta (no está en WEB_ASSETS).",
   "bin": {
     "status": "./tools/tasks/status.mjs"
+  },
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0"
   }
 }

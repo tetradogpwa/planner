@@ -1,11 +1,12 @@
 # ─────────────────────────────────────────────────────────────────────
-# CI del Planificador Semanal (T-036).
+# CI del Planificador Semanal (T-036, T-037).
 #
 # Las pruebas del repo dejan de depender de que alguien se acuerde de
 # lanzarlas: en cada push y en cada PR se ejecutan solas.
 #
-# Tres jobs independientes (si uno falla, los demás siguen):
+# Cuatro jobs independientes (si uno falla, los demás siguen):
 #
+#   lint  ESLint sobre el frontend, las pruebas y las herramientas.
 #   unit  Pruebas unitarias (node:test) + `node --check` de todo el
 #         JavaScript del frontend (la app no lleva bundler).
 #   rust  `cargo check` + `cargo test` + `cargo clippy` de src-tauri/.
@@ -47,6 +48,30 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  # ── Linter (ESLint) ───────────────────────────────────────────────
+  lint:
+    name: lint
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Clonar el repo
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # El linter es una dependencia de DESARROLLO de la raíz: la app
+      # sigue sin npm (esto no se empaqueta).
+      - name: Dependencias del linter (npm ci)
+        run: npm ci --no-audit --no-fund
+
+      - name: ESLint (npm run lint)
+        run: npm run lint
+
   # ── Unitarias y sintaxis del frontend ─────────────────────────────
   unit:
     name: unit

@@ -22,7 +22,9 @@ export function FromJson(dataStr) {
     datos = JSON.parse(dataStr);
   } catch (e) {
     console.warn('[serializer] el JSON no se ha podido leer:', e);
-    throw new Error('JSON inválido: el archivo no contiene un JSON válido');
+    // El `cause` guarda el error original: el mensaje que ve el
+    // usuario sigue siendo este, pero al depurar se sabe por qué.
+    throw new Error('JSON inválido: el archivo no contiene un JSON válido', { cause: e });
   }
 
   // Aceptamos un array de tareas o el envoltorio { tasks: [...] }.
@@ -38,7 +40,7 @@ export function FromJson(dataStr) {
     return lista.map(processTask).filter(Boolean);
   } catch (e) {
     console.warn('[serializer] alguna tarea del JSON no se ha podido leer:', e);
-    throw new Error('JSON inválido: alguna tarea del archivo no se ha podido leer');
+    throw new Error('JSON inválido: alguna tarea del archivo no se ha podido leer', { cause: e });
   }
 }
 

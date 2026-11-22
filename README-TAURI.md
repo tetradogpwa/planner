@@ -526,11 +526,12 @@ funcionar.
 Hay un workflow de GitHub Actions en
 [`.github/workflows/ci.yml`](./.github/workflows/ci.yml). Se dispara en
 cada `push` a `main` y en cada PR hacia `main` (y a mano, desde
-*Actions → CI → Run workflow*), y lanza **tres jobs independientes**
+*Actions → CI → Run workflow*), y lanza **cuatro jobs independientes**
 (que si uno falla, los demás siguen):
 
 | Job | Qué lanza |
 |-----|-----------|
+| `lint` | `npm ci` + `npm run lint`: ESLint sobre el frontend, las pruebas y las herramientas |
 | `unit` | `bash tools/test.sh unit` (las pruebas de `back/`, `api.js`, etc. con `node:test`) y `node --check` de todo el JavaScript del frontend |
 | `rust` | `cargo check`, `cargo test` y `cargo clippy` de `src-tauri/` |
 | `e2e` | `bash tools/test.sh e2e`: compila el binario de Tauri y lo maneja con WebdriverIO + `tauri-driver` dentro de un Xvfb sin pantalla |
@@ -545,10 +546,14 @@ Detalles que importan:
 - **Node 22** en los jobs de JavaScript: `tools/test.sh` lanza
   `node --test 'tests/unit/*.test.mjs'` y ese glob entrecomillado solo
   lo expande Node a partir de la v22.
+- **El linter no es de la app**: `eslint` está en las
+  `devDependencies` del `package.json` de la raíz y solo se usa en
+  desarrollo y en el CI. La app que se empaqueta sigue sin npm.
 - **Los logs se suben siempre** como artefacto (`actions/upload-artifact`,
   `if: always()`): `logs/` en los jobs `unit` y `e2e`, y
   `tests/e2e/.tmp/` en el `e2e`. El log del propio job también se
-  guarda en la página de la ejecución.
+  guarda en la página de la ejecución. El job `lint` no sube
+  artefacto: su salida está en el propio log del job.
 - **Capturas**: los E2E todavía no hacen capturas al fallar
   (`tests/e2e/wdio.conf.mjs` no define `outputDir` ni
   `screenshot: 'on-failure'`; es la tarea T-039). Cuando se active,
@@ -574,11 +579,11 @@ visto los checks, el desplegable de la interfaz no los ofrece.
 2. **Settings → Branches → Add rule**.
    (En la interfaz nueva es **Settings → Rules → Rulesets → New
    ruleset**: apunta a la rama `main`, en *Rules* marca *Require
-   status checks to pass* y en *Status checks* añade los tres checks.)
+   status checks to pass* y en *Status checks* añade los cuatro checks.)
 3. En *Branch name pattern* escribe `main`.
-4. Marca **Require status checks to pass** y añade los tres checks:
-   `unit`, `rust` y `e2e` (activa también *Require branches to be up
-   to date*).
+4. Marca **Require status checks to pass** y añade los cuatro checks:
+   `lint`, `unit`, `rust` y `e2e` (activa también *Require branches to
+   be up to date*).
 5. Opcionalmente marca *Require a pull request before merging* y
    *Require approvals* (una aprobación).
 6. **Create** (en la interfaz nueva: **Create** → *Save ruleset*).
@@ -592,7 +597,7 @@ gh api -X PUT repos/tetradogpwa/planner/branches/main/protection --input - <<'JS
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["unit", "rust", "e2e"]
+    "contexts": ["lint", "unit", "rust", "e2e"]
   },
   "enforce_admins": true,
   "required_pull_request_reviews": null,
@@ -608,7 +613,7 @@ Qué exige ese JSON:
 
 - `required_status_checks.contexts`: los **nombres exactos de los
   status checks**, que son los nombres de los jobs del workflow
-  (`unit`, `rust`, `e2e`). Son los mismos que salen en
+  (`lint`, `unit`, `rust`, `e2e`). Son los mismos que salen en
   `contexts` porque cada job declara `name:` con su id.
 - `strict: true`: los checks tienen que estar **al día con `main`**
   para poder mergear (si no, hay que actualizar la rama).

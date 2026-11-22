@@ -53,7 +53,7 @@ function loadTasks() {
 }
 
 function lastLogFor(id) {
-  let files = [];
+  let files;
   try { files = readdirSync(LOGS).filter(f => f.startsWith(`${id}-`) && f.endsWith('.log')); }
   catch { return null; }
   if (!files.length) return null;

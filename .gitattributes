@@ -1,0 +1,29 @@
+# Cómo guarda Git los ficheros de este repositorio.
+#
+# El objetivo es que el contenido del repositorio sea SIEMPRE el mismo
+# en cualquier sistema: con saltos de línea LF y en UTF-8. En Windows,
+# sin esto, los scripts de shell se guardan con CRLF y bash se queja
+# ("\r: command not found") y los ficheros de texto cambian en cada
+# commit.
+
+# Normalización general: LF en el repositorio y en la copia de trabajo.
+* text=auto eol=lf
+
+# Los scripts de shell SIEMPRE con LF: con CRLF no funcionan en
+# Windows y dan errores difíciles de entender.
+*.sh text eol=lf
+
+# Los ficheros que no son texto se guardan tal cual.
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.exe binary
+*.msi binary
+*.AppImage binary
+*.deb binary
+*.aab binary
+*.apk binary

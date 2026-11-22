@@ -38,7 +38,7 @@ export function estadoPersistible(estado) {
  * que tiene la capa nativa.
  */
 export function leerEstadoMcp(almacen = globalThis.localStorage) {
-  let estado = {};
+  let estado;
   try {
     const crudo = almacen?.getItem(CLAVE_ESTADO_MCP);
     estado = crudo ? JSON.parse(crudo) : {};

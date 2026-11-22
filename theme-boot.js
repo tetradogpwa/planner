@@ -3,7 +3,7 @@
 // `scheme` y `vars` en ui/settings/preferences.js.
 (function () {
   var prefs = {};
-  try { prefs = JSON.parse(localStorage.getItem('a11yPrefs')) || {}; } catch (e) {}
+  try { prefs = JSON.parse(localStorage.getItem('a11yPrefs')) || {}; } catch { /* preferencias ilegibles: valores por defecto */ }
   var root = document.documentElement;
 
   // 'light' / 'dark' se usan tal cual; 'custom', 'contrast-dark' y

@@ -1,0 +1,37 @@
+# Convenciones de formato del Planificador Semanal.
+#
+# La app NO lleva Prettier ni ningún formateador: el código se escribe
+# a mano y estas reglas son la referencia para el editor y para quien
+#.programa. Se aplican al HTML, al CSS y al JavaScript por igual.
+#
+# El repositorio guarda los ficheros con salto de línea LF y en UTF-8
+# sin BOM (ver también .gitattributes).
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Los scripts de shell se leen en un terminal: los espacios finales
+# pueden cambiar el significado de una línea.
+[*.sh]
+indent_size = 2
+
+# Rust usa 4 espacios por convención (rustfmt).
+[*.rs]
+indent_size = 4
+
+# Los ficheros de Markdown usan dos espacios al final de la línea para
+# el salto de línea explícito: no se tocan.
+[*.md]
+trim_trailing_whitespace = false
+
+# Los JSON no admiten comentarios: el formato es el de la propia
+# herramienta que los genera.
+[*.json]
+indent_size = 2

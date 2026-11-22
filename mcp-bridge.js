@@ -14,25 +14,13 @@
 
 import { PlannerApi } from './api.js';
 
-/** Mapa de tool → método de PlannerApi al que delegar.
- *  Solo exponemos las herramientas del contrato MCP; cualquier tool
- *  desconocida se devuelve como error al cliente. */
-const TOOL_TO_API = {
-  listar_tareas:       ()                => PlannerApi.listTasks(),
-  ver_tarea:           ({ index })        => PlannerApi.getTask(index),
-  crear_tarea:         (spec)             => PlannerApi.addTask(spec),
-  editar_tarea:        ({ index, spec }) => PlannerApi.updateTask(index, spec),
-  borrar_tarea:        ({ index })        => PlannerApi.deleteTask(index),
-  ver_semana:          ({ offset = 0 })  => PlannerApi.getWeek(offset),
-  cambiar_fecha_inicio:({ isoDate })      => PlannerApi.setStartDate(isoDate),
-  abrir_vista:         ({ view })         => { PlannerApi.navigate(view); return { view }; },
-  exportar_json:       ()                => PlannerApi.exportJson(),
-};
-
 /** Procesa un payload { id, tool, args } recibido del backend y devuelve
  *  la respuesta que se enviará con `mcp_reply`. La función de PlannerApi
  *  a la que se delega se inyecta (`api`) para poder probarla con un
- *  stub en los tests sin tocar `api.js`. Por defecto usa la real. */
+ *  stub en los tests sin tocar `api.js`. Por defecto usa la real.
+ *
+ *  El mapa de herramientas vive aquí dentro y no en una constante de
+ *  módulo: es el único que se usa (el de fuera estaba muerto, T-054). */
 export async function handleMcpCall(payload, api = PlannerApi) {
   const { id, tool, args } = payload ?? {};
   const toolMap = {

@@ -66,6 +66,7 @@ dist/
 
 # Pruebas (tools/test.sh): dependencias y datos aislados de los E2E,
 # binario de pruebas y salidas completas
+node_modules/
 tests/e2e/node_modules/
 tests/e2e/.tmp/
 src-tauri/target-e2e/

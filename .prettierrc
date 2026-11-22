@@ -1,0 +1,24 @@
+{
+  "//": "Configuración de Prettier SOLO como referencia para el futuro. NO se ejecuta: el código del proyecto está escrito a mano y un formateo masivo sería un diff imposible de revisar (y podría romper la maquetación). El formato real lo marcan .editorconfig y .gitattributes. Si algún día se decide usar Prettier, esto es lo que habría que aplicar.",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "quoteProps": "as-needed",
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "htmlWhitespaceSensitivity": "css",
+  "overrides": [
+    {
+      "files": "*.html",
+      "options": { "printWidth": 120 }
+    },
+    {
+      "files": "*.css",
+      "options": { "printWidth": 120 }
+    }
+  ]
+}

@@ -34,7 +34,6 @@
 import { Key } from 'webdriverio';
 import {
   abrirAppNueva,
-  recargar,
   navegarVistaAlt,
 } from '../helpers.mjs';
 

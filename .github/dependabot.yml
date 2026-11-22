@@ -1,0 +1,55 @@
+# ─────────────────────────────────────────────────────────────────────
+# Dependabot (T-037).
+#
+# Dos ecosistemas:
+#   · npm: las dependencias de DESARROLLO de la raíz (el linter) y las
+#     de las E2E (tests/e2e/package.json). La app no lleva npm.
+#   · cargo: las dependencias de la capa nativa (src-tauri/Cargo.toml).
+#
+# No se actualiza `src-tauri/Cargo.lock` a ciegas: cada PR se revisa
+# y se prueba con el CI (jobs `rust` y `e2e`).
+# ─────────────────────────────────────────────────────────────────────
+version: 2
+
+updates:
+  # El linter y las herramientas de la raíz.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(npm)"
+    labels:
+      - dependencias
+
+  # Las dependencias de las pruebas E2E (WebdriverIO).
+  - package-ecosystem: npm
+    directory: "/tests/e2e"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(e2e)"
+    labels:
+      - dependencias
+
+  # La capa nativa (Tauri).
+  - package-ecosystem: cargo
+    directory: "/src-tauri"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(cargo)"
+    labels:
+      - dependencias
