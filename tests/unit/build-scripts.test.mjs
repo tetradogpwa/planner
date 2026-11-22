@@ -344,6 +344,26 @@ test('--apk y --aab a la vez son un error', () => {
 
 // ── 5. La documentación no manda a scripts que no existen ────────────
 
+test('la config crea el directorio del frontend antes de compilar', () => {
+  // El CLI de Tauri comprueba que `frontendDist` EXISTA antes de
+  // compilar, y en un clon limpio no existe (dist/ esta en .gitignore y
+  // lo crea build.rs, que se ejecuta mas tarde). Sin esto, en un clon
+  // nuevo el build falla con "Unable to find your web assets" y los
+  // E2E no se pueden ni compilar: fue lo que paso en el primer CI en
+  // GitHub.
+  const conf = JSON.parse(leer('src-tauri', 'tauri.conf.json'));
+  const comando = conf.build?.beforeBuildCommand ?? '';
+  assert.ok(comando.length > 0,
+    'tauri.conf.json necesita un beforeBuildCommand que cree el ' +
+    'directorio del frontend (frontendDist) antes de compilar');
+  assert.match(comando, /mkdir\b/,
+    'el beforeBuildCommand tiene que crear el directorio');
+  const destino = conf.build.frontendDist.replace(/^\.\.\//, '');
+  assert.ok(comando.includes(destino),
+    `el beforeBuildCommand tiene que crear el frontendDist de la ` +
+    `configuracion (${conf.build.frontendDist}), y crea: ${comando}`);
+});
+
 test('el README-TAURI.md apunta al script unificado', () => {
   assert.ok(
     README.includes('tools/build.sh'),

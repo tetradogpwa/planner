@@ -53,6 +53,23 @@ planner/
     └── minimax/          ← lanzador del desarrollador (MiniMax)
 ```
 
+### El directorio `dist/` se crea solo
+
+`dist/` (el `frontendDist` de Tauri) **no está en el repo**: lo genera
+`src-tauri/build.rs` al compilar. Pero el CLI de Tauri comprueba que
+`frontendDist` **exista** *antes* de compilar, así que en un clon
+limpio el build fallaba con:
+
+```
+Error: Unable to find your web assets, did you forget to build your web app?
+```
+
+Por eso `tauri.conf.json` tiene `"beforeBuildCommand": "mkdir -p dist"`:
+el directorio se crea antes de la comprobación. **No lo vacíes**: sin
+esa línea, ni la app ni los E2E se pueden compilar desde un clon
+nuevo (fue lo que détectó la primera ejecución del CI en GitHub). Una
+prueba automática lo vigila (`tests/unit/build-scripts.test.mjs`).
+
 ### Build unificado (`tools/build.sh`)
 
 Script único en bash que cubre los tres objetivos desde cualquier
