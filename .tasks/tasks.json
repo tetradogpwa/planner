@@ -3071,11 +3071,11 @@
     {
       "id": "T-038",
       "title": "Toolchain fijado y builds reproducibles",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-22T05:00:46Z",
-      "updated": "2026-11-22T05:00:46Z",
-      "attempts": 0,
+      "updated": "2026-11-22T16:23:32Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-22T05:00:46Z",
@@ -3092,13 +3092,34 @@
         "El SDK de Google Mobile Ads está en 23.6.0 (la línea actual es 24.x) en plugins/tauri-plugin-admob/android/build.gradle.kts:34: súbelo también. Cuidado: si tauri-plugin-dialog o fs se usan de verdad en el frontend, no los borres: compruébalo con grep antes."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "38e47712c85d73f891b02284357a62c5a2a29c07",
       "history": [
         {
           "at": "2026-11-22T05:00:46Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-11-22T16:23:32Z",
+          "event": "foto del árbol",
+          "note": "38e47712c8"
+        },
+        {
+          "at": "2026-11-22T16:23:32Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-11-22T16:23:32Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-22T16:23:32Z",
+          "event": "estado → hecha",
+          "note": "Revisado y aprobado (MiniMax M3): toolchain fijada, --locked en todas las compilaciones, MSRV real, thiserror fuera; lint y suite en verde"
         }
-      ]
+      ],
+      "firstTree": "38e47712c85d73f891b02284357a62c5a2a29c07"
     },
     {
       "id": "T-039",

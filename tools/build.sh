@@ -24,7 +24,7 @@
 #
 # Requisitos generales (comunes a todos los objetivos):
 #   * Rust toolchain estable (rustup.rs) y cargo-tauri:
-#       cargo install tauri-cli --version "^2.0" --locked
+#       cargo install tauri-cli --version "2.12.3" --locked
 #
 # Requisitos para compilar el AppImage y el .deb de Linux:
 #   * Debian/Ubuntu: sudo apt install -y \
@@ -36,7 +36,7 @@
 # Requisitos para compilar el instalador NSIS de Windows desde Linux
 # (compilación cruzada con cargo-xwin). El script lo detecta y, si
 # falta algo, imprime exactamente qué instalar:
-#   * cargo install --locked cargo-xwin
+#   * cargo install cargo-xwin --version "0.23.1" --locked
 #   * rustup target add x86_64-pc-windows-msvc
 #   * Debian/Ubuntu: sudo apt install -y nsis lld llvm clang
 #       (lld-link, llvm-rc)
@@ -174,7 +174,7 @@ check_linux_reqs() {
   local ok=1
   if ! have_cmd cargo-tauri && ! cargo tauri --version >/dev/null 2>&1; then
     echo "   ✗ Falta cargo-tauri (CLI de Tauri 2)" >&2
-    echo "     → cargo install tauri-cli --version \"^2.0\" --locked" >&2
+    echo "     → cargo install tauri-cli --version '2.12.3' --locked" >&2
     ok=0
   fi
   return $((1 - ok))
@@ -184,7 +184,7 @@ check_windows_reqs() {
   local ok=1
   if ! have_cmd cargo-xwin; then
     echo "   ✗ Falta cargo-xwin (compilación cruzada a Windows)" >&2
-    echo "     → cargo install --locked cargo-xwin" >&2
+    echo "     → cargo install cargo-xwin --version '0.23.1' --locked" >&2
     ok=0
   fi
   if ! rustup target list --installed 2>/dev/null | grep -q '^x86_64-pc-windows-msvc$'; then
@@ -257,9 +257,12 @@ build_linux() {
   # Los dos formatos que se publican en Linux: el AppImage (portable)
   # y el .deb (Debian/Ubuntu). Los dos están declarados en
   # tauri.conf.json (bundle.targets).
+  # `-- --locked`: cargo no puede actualizar Cargo.lock durante el
+  # build (si el lock no cuadra, el build falla en vez de resolverlo solo).
   cargo tauri build \
     --bundles appimage,deb \
-    "${debug_flag[@]}"
+    "${debug_flag[@]}" \
+    -- --locked
 }
 
 build_windows() {
@@ -276,7 +279,8 @@ build_windows() {
     --runner cargo-xwin \
     --target x86_64-pc-windows-msvc \
     --bundles nsis \
-    "${debug_flag[@]}"
+    "${debug_flag[@]}" \
+    -- --locked
 }
 
 build_android() {
@@ -296,7 +300,7 @@ build_android() {
   local flag="--apk"
   if [[ "$FORMATO_ANDROID" == "aab" ]]; then flag="--aab"; fi
 
-  cargo tauri android build "$flag" "${debug_flag[@]}"
+  cargo tauri android build "$flag" "${debug_flag[@]}" -- --locked
 }
 
 # ─────────────── Recolección de artefactos ──────────────────────────

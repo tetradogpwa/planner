@@ -1,0 +1,12 @@
+# La versión de Rust con la que se construye y se prueba el proyecto.
+#
+# Fijada a propósito: sin este fichero, cada máquina usa la que tenga
+# instalada y el mismo commit compila en unos sitios y en otros no
+# (los errores de MSRV y de API aparecen solo donde no desarrollas).
+#
+# `stable` hoy es 1.99.0; se escribe la versión exacta para que una
+# actualización de stable no cambie el build por sorpresa.
+[toolchain]
+channel = "1.99.0"
+profile = "minimal"
+components = ["clippy"]

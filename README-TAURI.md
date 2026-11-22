@@ -182,6 +182,23 @@ prueba te avisa si se te olvida.
 
 ## 🚀 Build por plataforma
 
+### Toolchain fijada
+
+La versión de Rust está fijada en `rust-toolchain.toml` (`1.99.0`), y las
+herramientas de build se instalan con **versión exacta**:
+
+| Herramienta | Versión |
+|-------------|---------|
+| Rust | 1.99.0 (`rust-toolchain.toml`) |
+| cargo-tauri | 2.12.3 |
+| cargo-xwin (Windows) | 0.23.1 |
+| tauri-driver (E2E) | 2.1.0 |
+
+Todas las compilaciones pasan `--locked`: si `Cargo.lock` no cuadra con
+`Cargo.toml`, el build **falla** en vez de resolverlo por su cuenta (un
+build que cambia el lock puede compilar una cosa distinta en cada
+máquina). El MSRV de `Cargo.toml` es el mismo 1.99.
+
 ### Requisitos comunes
 
 - **Rust ≥ 1.77** (`rustup.rs`).

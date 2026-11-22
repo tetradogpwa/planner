@@ -364,6 +364,71 @@ test('la config crea el directorio del frontend antes de compilar', () => {
     `configuracion (${conf.build.frontendDist}), y crea: ${comando}`);
 });
 
+test('la toolchain de Rust está fijada', () => {
+  // Sin rust-toolchain.toml, cada máquina usa la versión de Rust que
+  // tenga: el mismo commit compila en unos sitios y en otros no.
+  const toml = leer('rust-toolchain.toml');
+  assert.match(toml, /channel\s*=\s*"\d+\.\d+\.\d+"/,
+    'rust-toolchain.toml tiene que fijar una versión exacta de Rust ' +
+    '(no "stable": esa cambia sin avisar)');
+});
+
+test('las herramientas se instalan con versión exacta y --locked', () => {
+  for (const script of ['build.sh', 'test.sh']) {
+    const texto = leer('tools', script);
+    for (const m of texto.matchAll(/cargo install ([a-z0-9-]+)([^\n]*)/g)) {
+      const [, herramienta, resto] = m;
+      assert.match(resto, /--version\s+['"]?\d/,
+        `tools/${script}: "${herramienta}" se instala con un rango de ` +
+        'versiones; tiene que ser una versión exacta');
+      assert.match(resto, /--locked/,
+        `tools/${script}: "${herramienta}" se instala sin --locked`);
+    }
+  }
+});
+
+test('todas las compilaciones pasan --locked', () => {
+  for (const script of ['build.sh', 'test.sh']) {
+    const texto = leer('tools', script);
+    const lineas = texto.split('\n');
+    for (let i = 0; i < lineas.length; i++) {
+      if (!/cargo tauri (build|android build)/.test(lineas[i])) continue;
+      // La llamada puede ocupar varias líneas: se mira el bloque
+      // entero hasta que acaba la orden.
+      const bloque = lineas.slice(i, i + 8).join('\n');
+      assert.match(bloque, /-- --locked/,
+        `tools/${script}:${i + 1}: la compilación tiene que pasar ` +
+        '--locked (si el lock no cuadra, que falle y no se resuelva solo)');
+    }
+  }
+});
+
+test('no hay dependencias directas sin usar', () => {
+  const cargo = leer('src-tauri', 'Cargo.toml');
+  const fuentes = [
+    ...leer('src-tauri', 'src', 'lib.rs'),
+    ...leer('src-tauri', 'src', 'mcp.rs'),
+    ...leer('src-tauri', 'src', 'ads.rs'),
+    ...leer('src-tauri', 'build.rs'),
+  ].join('\n');
+  for (const dep of ['thiserror', 'tauri-plugin-dialog', 'tauri-plugin-fs']) {
+    assert.ok(!cargo.includes(dep),
+      `src-tauri/Cargo.toml declara "${dep}", que no se usa`);
+    assert.ok(!fuentes.includes(dep.replace(/-/g, '_')),
+      `"${dep}" no se usa en el código`);
+  }
+});
+
+test('el MSRV declarado es el de la toolchain fijada', () => {
+  const cargo = leer('src-tauri', 'Cargo.toml');
+  const m = /rust-version\s*=\s*"(\d+\.\d+)"/.exec(cargo);
+  assert.ok(m, 'Cargo.toml tiene que declarar rust-version');
+  const toolchain = /channel\s*=\s*"(\d+\.\d+)\.\d+"/.exec(leer('rust-toolchain.toml'));
+  assert.ok(toolchain, 'rust-toolchain.toml tiene que fijar la versión');
+  assert.equal(m[1], toolchain[1],
+    'el MSRV de Cargo.toml y la versión fijada tienen que ser la misma');
+});
+
 test('el README-TAURI.md apunta al script unificado', () => {
   assert.ok(
     README.includes('tools/build.sh'),

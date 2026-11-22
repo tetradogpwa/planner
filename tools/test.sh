@@ -34,8 +34,8 @@
 #
 # Requisitos de los E2E (el script dice qué falta):
 #   sudo apt install -y weston webkit2gtk-driver   (xvfb si usas x11)
-#   cargo install tauri-driver --locked
-#   cargo install tauri-cli --version "^2.0" --locked
+#   cargo install tauri-driver --version "2.1.0" --locked
+#   cargo install tauri-cli --version "2.12.3" --locked
 # Las dependencias npm de tests/e2e/ se instalan solas la primera vez.
 # ─────────────────────────────────────────────────────────────────────
 set -uo pipefail
@@ -102,8 +102,8 @@ check_e2e_reqs() {
     *)       echo "✗ PLANNER_E2E_DISPLAY debe ser wayland o x11 (es \"$E2E_DISPLAY\")"; ok=1 ;;
   esac
   command -v WebKitWebDriver >/dev/null || { echo "✗ Falta WebKitWebDriver → sudo apt install -y webkit2gtk-driver"; ok=1; }
-  [[ -x "$TAURI_DRIVER" ]]              || { echo "✗ Falta tauri-driver → cargo install tauri-driver --locked"; ok=1; }
-  cargo tauri --version >/dev/null 2>&1 || { echo "✗ Falta cargo-tauri → cargo install tauri-cli --version \"^2.0\" --locked"; ok=1; }
+  [[ -x "$TAURI_DRIVER" ]]              || { echo "✗ Falta tauri-driver → cargo install tauri-driver --version '2.1.0' --locked"; ok=1; }
+  cargo tauri --version >/dev/null 2>&1 || { echo "✗ Falta cargo-tauri → cargo install tauri-cli --version '2.12.3' --locked"; ok=1; }
   if (exec 3<>/dev/tcp/127.0.0.1/$E2E_PORT) 2>/dev/null; then
     echo "✗ El puerto $E2E_PORT está ocupado (¿otra ejecución de los E2E?)"; ok=1
   fi
@@ -127,7 +127,7 @@ run_e2e() {
   GOOGLE_ADMOB_APP_ID= GOOGLE_ADMOB_BANNER_ID= GOOGLE_ADMOB_INTERSTITIAL_ID= \
   ALLOW_NO_ADS=1 \
   CARGO_TARGET_DIR="$E2E_TARGET_DIR" \
-    cargo tauri build --debug --no-bundle || return 1
+    cargo tauri build --debug --no-bundle -- --locked || return 1
   [[ -x "$E2E_BIN" ]] || { echo "✗ No se encontró el binario $E2E_BIN"; return 1; }
 
   # El guard de build: sin claves de anuncios y sin ALLOW_NO_ADS=1, el
