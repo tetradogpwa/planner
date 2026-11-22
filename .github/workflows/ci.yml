@@ -1,0 +1,224 @@
+# ─────────────────────────────────────────────────────────────────────
+# CI del Planificador Semanal (T-036).
+#
+# Las pruebas del repo dejan de depender de que alguien se acuerde de
+# lanzarlas: en cada push y en cada PR se ejecutan solas.
+#
+# Tres jobs independientes (si uno falla, los demás siguen):
+#
+#   unit  Pruebas unitarias (node:test) + `node --check` de todo el
+#         JavaScript del frontend (la app no lleva bundler).
+#   rust  `cargo check` + `cargo test` + `cargo clippy` de src-tauri/.
+#   e2e   La app REAL: se compila el binario de Tauri y se maneja con
+#         WebdriverIO + tauri-driver dentro de un Xvfb sin pantalla.
+#
+# El workflow REUTILIZA `bash tools/test.sh` (no lo reimplementa): el
+# script ya aísla los datos del usuario, usa un servidor gráfico
+# invisible, compila el binario de pruebas sin claves de anuncios
+# (ALLOW_NO_ADS=1) y deja el log completo en logs/.
+#
+# Para que en `main` no se pueda mergear con el CI en rojo hay que
+# activar la protección de rama (eso NO se puede hacer desde el repo:
+# es una configuración del repositorio en GitHub). Los pasos exactos
+# —por la interfaz y con `gh api`— están en README-TAURI.md, sección
+# «Integración continua (CI)».
+# ─────────────────────────────────────────────────────────────────────
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Lanzar a mano: Actions → CI → Run workflow.
+  workflow_dispatch:
+
+# El CI solo lee el repo: no hay credenciales, tokens ni secretos.
+permissions:
+  contents: read
+
+# Un push nuevo en la misma rama cancela la ejecución anterior.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ── Unitarias y sintaxis del frontend ─────────────────────────────
+  unit:
+    name: unit
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Clonar el repo
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          # Node 22 es el mínimo: `node --test 'tests/unit/*.test.mjs'`
+          # (tools/test.sh) solo expande ese glob a partir de la v22.
+          node-version: '22'
+
+      - name: Pruebas unitarias (bash tools/test.sh unit)
+        run: bash tools/test.sh unit
+
+      - name: node --check de todo el frontend
+        run: |
+          set -euo pipefail
+          # Todo el JavaScript que se empaqueta en la app **y** el de
+          # las pruebas y las herramientas (un spec con una errata de
+          # sintaxis se detecta aquí, en el job rápido, y no dos
+          # minutos después en el E2E). Se excluyen node_modules/
+          # (dependencias), dist/ (copia del frontend que genera
+          # build.rs), releases/, logs/ y src-tauri/.
+          lista=$(mktemp)
+          find . \
+            \( -name node_modules -o -name dist -o -name releases \
+               -o -name logs -o -name src-tauri -o -name .git \) -prune \
+            -o \( -name '*.js' -o -name '*.mjs' \) -print > "$lista"
+          total=$(wc -l < "$lista")
+          echo "Ficheros JavaScript comprobados: $total"
+          if [ "$total" -lt 10 ]; then
+            echo "✗ La lista de ficheros sale vacía: el find está mal escrito"
+            exit 1
+          fi
+          # -d '\n' para que los nombres con espacios no se partan.
+          xargs -d '\n' -n1 node --check < "$lista"
+          echo "✓ node --check: $total ficheros compilan"
+
+      - name: Subir los logs de las pruebas
+        # Siempre, no solo al fallar: el log completo es lo primero que
+        # se mira cuando el CI se pone rojo.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-unit
+          path: logs/
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ── Capa nativa (Rust) ─────────────────────────────────────────────
+  rust:
+    name: rust
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: Clonar el repo
+        uses: actions/checkout@v4
+
+      - name: Rust estable con clippy
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Caché de cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: rust
+
+      # `shell: bash` añade `-o pipefail`: con el `tee` de abajo el paso
+      # sigue fallando si falla cargo.
+      - name: cargo check
+        shell: bash
+        run: |
+          mkdir -p logs
+          cargo check --manifest-path src-tauri/Cargo.toml --all-targets --locked 2>&1 | tee logs/cargo-check.log
+
+      - name: cargo test
+        shell: bash
+        run: |
+          mkdir -p logs
+          cargo test --manifest-path src-tauri/Cargo.toml --locked 2>&1 | tee logs/cargo-test.log
+
+      - name: cargo clippy
+        shell: bash
+        run: |
+          mkdir -p logs
+          cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --locked -- -D warnings 2>&1 | tee logs/cargo-clippy.log
+
+      - name: Subir los logs de las pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-rust
+          path: logs/
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ── E2E contra la app real ─────────────────────────────────────────
+  e2e:
+    name: e2e
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - name: Clonar el repo
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+
+      - name: Dependencias de sistema (Tauri, WebKitGTK, Xvfb)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential curl wget file pkg-config \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev libssl-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev \
+            webkit2gtk-driver weston xvfb xauth dbus-x11
+
+      - name: Rust estable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Caché de cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: e2e
+
+      - name: tauri-driver y cargo-tauri
+        run: |
+          cargo install tauri-driver --locked
+          cargo install tauri-cli --version "^2.0" --locked
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Dependencias de los E2E (npm ci)
+        working-directory: tests/e2e
+        run: npm ci --no-audit --no-fund
+
+      - name: Suite E2E completa (app real)
+        env:
+          # En un runner de Ubuntu sin pantalla se usa Xvfb; en local se
+          # usa weston sin pantalla (wayland). Los dos caminos están en
+          # tools/test.sh.
+          PLANNER_E2E_DISPLAY: x11
+        run: bash tools/test.sh e2e
+
+      - name: Subir los logs de las pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-e2e
+          path: logs/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Subir los datos de las pruebas (weston.log, descargas)
+        # tests/e2e/.tmp/ es donde tools/test.sh aísla los datos del
+        # usuario y donde acabarán las capturas de los E2E cuando se
+        # active screenshot: 'on-failure' (T-039).
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: datos-e2e
+          path: tests/e2e/.tmp/
+          if-no-files-found: warn
+          retention-days: 14

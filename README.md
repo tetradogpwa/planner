@@ -2,6 +2,13 @@
 
 Un planificador inteligente con repeticiones de tareas, ciclos personalizados y exportación a PDF. Completamente funcional sin necesidad de backend.
 
+[![CI](https://github.com/tetradogpwa/planner/actions/workflows/ci.yml/badge.svg)](https://github.com/tetradogpwa/planner/actions/workflows/ci.yml)
+
+Las pruebas se lanzan solas en cada PR y en cada `push` a `main`:
+unitarias, `node --check` de todo el frontend, Rust y la suite E2E
+contra la app real. Detalles y protección de `main` en
+[`README-TAURI.md`](./README-TAURI.md#ci).
+
 > **¿Buscas la versión instalable (.exe, .AppImage, .apk)?**
 > Esta es la PWA. La versión empaquetada con Tauri 2 está en el mismo
 > repositorio: consulta [`README-TAURI.md`](./README-TAURI.md).

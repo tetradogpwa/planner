@@ -2958,11 +2958,11 @@
     {
       "id": "T-036",
       "title": "CI: que las pruebas se lanzen solas",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-22T05:00:46Z",
-      "updated": "2026-11-22T05:00:46Z",
-      "attempts": 0,
+      "updated": "2026-11-22T06:48:10Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-22T05:00:46Z",
@@ -2976,16 +2976,44 @@
         "El badge de estado está en el README.md"
       ],
       "notes": [
-        "El E2E necesita weston o Xvfb, WebKitWebDriver y tauri-driver: mira cómo los prepara tools/test.sh y qué requisitos documenta. Si el runner no puede con el E2E, al menos unitarias + node --check + cargo deben correr, y el E2E queda en un workflow aparte que se puede activar."
+        "El E2E necesita weston o Xvfb, WebKitWebDriver y tauri-driver: mira cómo los prepara tools/test.sh y qué requisitos documenta. Si el runner no puede con el E2E, al menos unitarias + node --check + cargo deben correr, y el E2E queda en un workflow aparte que se puede activar.",
+        "Supervisor (22/11/2026): la protección de rama NO se puede activar desde el repo (gh no está autenticado en esta máquina). El criterio se cumple dejando en el README-TAURI.md los pasos exactos para activarla en GitHub (Settings > Branches > Add rule, o el comando 'gh api -X PUT repos/{owner}/{repo}/branches/main/protection'), y el workflow listo para exigirse. El badge necesita el nombre exacto del workflow y el owner del repo: tetradogpwa/planner.",
+        "El job de E2E en el runner tiene que instalar: weston, webkit2gtk-driver, xvfb y cargo install tauri-driver + tauri-cli (los requisitos que ya documenta tools/test.sh). Sin ads: el binario de pruebas se compila con ALLOW_NO_ADS=1 (T-034). Ojo: el glob de node --test entrecomillado exige Node 22."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "f063e9c83c6ec1fa86d9e593197417070b5a76a0",
       "history": [
         {
           "at": "2026-11-22T05:00:46Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-11-22T06:31:59Z",
+          "event": "modificada",
+          "note": "nota, nota"
+        },
+        {
+          "at": "2026-11-22T06:48:09Z",
+          "event": "foto del árbol",
+          "note": "f063e9c83c"
+        },
+        {
+          "at": "2026-11-22T06:48:09Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-11-22T06:48:09Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-22T06:48:10Z",
+          "event": "estado → hecha",
+          "note": "Revisado y aprobado (MiniMax M3): YAML validado, clippy pasa con -D warnings, el node --check cubre 75 ficheros y las guardas del CI se verifican en rojo"
         }
-      ]
+      ],
+      "firstTree": "f063e9c83c6ec1fa86d9e593197417070b5a76a0"
     },
     {
       "id": "T-037",

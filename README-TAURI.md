@@ -502,6 +502,145 @@ funcionar.
 
 ---
 
+<a id="ci"></a>
+
+## 🤖 Integración continua (CI)
+
+Hay un workflow de GitHub Actions en
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml). Se dispara en
+cada `push` a `main` y en cada PR hacia `main` (y a mano, desde
+*Actions → CI → Run workflow*), y lanza **tres jobs independientes**
+(que si uno falla, los demás siguen):
+
+| Job | Qué lanza |
+|-----|-----------|
+| `unit` | `bash tools/test.sh unit` (las pruebas de `back/`, `api.js`, etc. con `node:test`) y `node --check` de todo el JavaScript del frontend |
+| `rust` | `cargo check`, `cargo test` y `cargo clippy` de `src-tauri/` |
+| `e2e` | `bash tools/test.sh e2e`: compila el binario de Tauri y lo maneja con WebdriverIO + `tauri-driver` dentro de un Xvfb sin pantalla |
+
+El workflow **reutiliza `bash tools/test.sh`**: no reimplementa nada de
+lo que el script ya hace (aislar los datos del usuario, el servidor
+gráfico invisible, el binario de pruebas sin claves de anuncios con
+`ALLOW_NO_ADS=1`, el log completo en `logs/`).
+
+Detalles que importan:
+
+- **Node 22** en los jobs de JavaScript: `tools/test.sh` lanza
+  `node --test 'tests/unit/*.test.mjs'` y ese glob entrecomillado solo
+  lo expande Node a partir de la v22.
+- **Los logs se suben siempre** como artefacto (`actions/upload-artifact`,
+  `if: always()`): `logs/` en los jobs `unit` y `e2e`, y
+  `tests/e2e/.tmp/` en el `e2e`. El log del propio job también se
+  guarda en la página de la ejecución.
+- **Capturas**: los E2E todavía no hacen capturas al fallar
+  (`tests/e2e/wdio.conf.mjs` no define `outputDir` ni
+  `screenshot: 'on-failure'`; es la tarea T-039). Cuando se active,
+  caerán en `tests/e2e/.tmp/` y subirán con el mismo artefacto.
+- **El CI no necesita credenciales ni tokens**: todo es local. El
+  workflow solo pide permiso de lectura (`permissions: contents: read`).
+
+### 🔒 Proteger `main` (obligatorio, se activa a mano)
+
+> **Esto hay que activarlo una vez a mano en GitHub y no se puede
+> hacer desde el repo.** La protección de rama es una configuración del
+> repositorio en GitHub (no un fichero del repositorio), y aquí no hay
+> `gh` autenticado. Sin ella, el CI es solo informativo: se podría
+> mergear a `main` con el CI en rojo.
+
+**Orden**: primero sube el workflow (`.github/workflows/ci.yml`) y
+espera a que GitHub lo haya ejecutado **una vez**; hasta que no ha
+visto los checks, el desplegable de la interfaz no los ofrece.
+
+#### Opción A — por la interfaz de GitHub
+
+1. Abre el repositorio: <https://github.com/tetradogpwa/planner>
+2. **Settings → Branches → Add rule**.
+   (En la interfaz nueva es **Settings → Rules → Rulesets → New
+   ruleset**: apunta a la rama `main`, en *Rules* marca *Require
+   status checks to pass* y en *Status checks* añade los tres checks.)
+3. En *Branch name pattern* escribe `main`.
+4. Marca **Require status checks to pass** y añade los tres checks:
+   `unit`, `rust` y `e2e` (activa también *Require branches to be up
+   to date*).
+5. Opcionalmente marca *Require a pull request before merging* y
+   *Require approvals* (una aprobación).
+6. **Create** (en la interfaz nueva: **Create** → *Save ruleset*).
+
+#### Opción B — con `gh api` (copiable)
+
+Equivalente a lo anterior, en un solo comando:
+
+```bash
+gh api -X PUT repos/tetradogpwa/planner/branches/main/protection --input - <<'JSON'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["unit", "rust", "e2e"]
+  },
+  "enforce_admins": true,
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "required_linear_history": false,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
+```
+
+Qué exige ese JSON:
+
+- `required_status_checks.contexts`: los **nombres exactos de los
+  status checks**, que son los nombres de los jobs del workflow
+  (`unit`, `rust`, `e2e`). Son los mismos que salen en
+  `contexts` porque cada job declara `name:` con su id.
+- `strict: true`: los checks tienen que estar **al día con `main`**
+  para poder mergear (si no, hay que actualizar la rama).
+- `enforce_admins: true`: la regla también se aplica a los
+  administradores (ponlo en `false` si quieres poder saltártela).
+- `required_pull_request_reviews`: aquí va `null` (nadie revisa los
+  PRs de un proyecto personal). Para exigir una revisión, sustituye
+  `null` por `{ "required_approving_review_count": 1 }`.
+- `restrictions: null`: puede pushing cualquiera con permiso de
+  escritura.
+
+Si en el desplegable de la interfaz los checks aparecen como
+`CI / unit` en vez de `unit`, elige esa opción: es el mismo job (GitHub
+añade el nombre del workflow cuando hay otro con el mismo nombre de
+job).
+
+La variante con la app de GitHub Actions identificada (`app_id`
+15368), por si prefieres que solo GitHub Actions pueda satisfied el
+check:
+
+```bash
+gh api -X PUT repos/tetradogpwa/planner/branches/main/protection --input - <<'JSON'
+{
+  "required_status_checks": {
+    "strict": true,
+    "checks": [
+      { "context": "unit", "app_id": 15368 },
+      { "context": "rust", "app_id": 15368 },
+      { "context": "e2e",  "app_id": 15368 }
+    ]
+  }
+}
+JSON
+```
+
+**Comprobar** que la regla está activa:
+
+```bash
+gh api repos/tetradogpwa/planner/branches/main/protection
+```
+
+**Quitar** la regla (dejar el CI solo informativo):
+
+```bash
+gh api -X DELETE repos/tetradogpwa/planner/branches/main/protection
+```
+
+---
+
 ## 📜 Licencia
 
 El código fuente se distribuye bajo los términos del archivo
