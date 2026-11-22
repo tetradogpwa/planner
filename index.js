@@ -251,6 +251,17 @@ async function render(view, { tab = null } = {}) {
       break;
     }
   }
+
+  // La vista ya está pintada. Lo avisamos con un evento porque la
+  // vista se activa (clase 'active') ANTES de pintarse: el pintado
+  // es asíncrono (trae el HTML y el CSS de la tarjeta), así que
+  // "visible" no quiere decir "al día". Sin esta señal, quien lea el
+  // DOM nada más abrir una vista puede leer el contenido del pintado
+  // anterior; era lo que hacía fallar la vista Tareas de forma
+  // intermitente en los E2E.
+  window.dispatchEvent(new CustomEvent('planner:painted', {
+    detail: { view },
+  }));
 }
 
 applyPreferences();   // activa también el seguimiento del tema del sistema

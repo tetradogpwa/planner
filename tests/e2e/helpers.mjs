@@ -119,14 +119,43 @@ export async function irASemana() {
 
 /** Navega a la vista Tareas usando el menú lateral (clic real sobre
  *  el botón del sidebar, como lo haría una persona). Espera a que
- *  la vista esté visible. */
+ *  la vista esté visible Y pintada: la app activa la vista antes de
+ *  pintarla, así que leer la lista justo después del clic puede dar
+ *  el contenido del pintado anterior. */
 export async function irATareas() {
-  await $('button.nav-item[data-view="tasks"]').click();
+  await esperarPintado(async () => {
+    await $('button.nav-item[data-view="tasks"]').click();
+  });
   await browser.waitUntil(
     async () => await browser.execute(
       () => document.getElementById('view-tasks').classList.contains('active')
     ),
     { timeout: 5_000, timeoutMsg: 'No se volvió a la vista Tareas' },
+  );
+}
+
+/** Ejecuta `accion` y espera a que la app avise de que la vista ya
+ *  está pintada (evento 'planner:painted', emitido por index.js al
+ *  terminar cada render).
+ *
+ *  El contador se pone a cero y el listener se instala ANTES de la
+ *  acción, para que no se escape ningún pintado; y se espera a que
+ *  llegue uno nuevo, no a que la vista esté visible: visible solo
+ *  dice que la vista está activa, no que su contenido sea el actual.
+ */
+export async function esperarPintado(accion) {
+  await browser.execute(() => {
+    window.__painted = 0;
+    if (window.__paintedHandler) {
+      window.removeEventListener('planner:painted', window.__paintedHandler);
+    }
+    window.__paintedHandler = () => { window.__painted += 1; };
+    window.addEventListener('planner:painted', window.__paintedHandler);
+  });
+  await accion();
+  await browser.waitUntil(
+    async () => await browser.execute(() => (window.__painted ?? 0) > 0),
+    { timeout: 10_000, timeoutMsg: 'La app no avisó de que la vista terminó de pintarse' },
   );
 }
 
