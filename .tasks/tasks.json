@@ -2905,11 +2905,11 @@
     {
       "id": "T-035",
       "title": "Arreglar los scripts de build rotos",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-22T05:00:46Z",
-      "updated": "2026-11-22T05:00:46Z",
-      "attempts": 0,
+      "updated": "2026-11-22T06:31:45Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-22T05:00:46Z",
@@ -2926,13 +2926,34 @@
         "Si el script de msix no se puede completar en esta máquina, elimínalo y deja constancia en el README-TAURI.md de cómo se hace. No cambies el placeholder del certificado: es la casilla donde el usuario pone su thumbprint real."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "f631b37617b9fcdf1ef0d4df550382424958ce2a",
       "history": [
         {
           "at": "2026-11-22T05:00:46Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-11-22T06:17:09Z",
+          "event": "foto del árbol",
+          "note": "f631b37617"
+        },
+        {
+          "at": "2026-11-22T06:17:09Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-11-22T06:31:45Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-22T06:31:45Z",
+          "event": "estado → hecha",
+          "note": "Revisado y aprobado (MiniMax M3): verificado con un build real de Linux (AppImage + .deb) y con la guarda de version en rojo"
         }
-      ]
+      ],
+      "firstTree": "f631b37617b9fcdf1ef0d4df550382424958ce2a"
     },
     {
       "id": "T-036",

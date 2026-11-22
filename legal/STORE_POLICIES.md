@@ -1,6 +1,6 @@
 # Cumplimiento de políticas de tiendas
 
-**Última actualización:** 19 de octubre de 2026
+**Última actualización:** 22 de noviembre de 2026
 
 > Documento **interno** del repositorio. Sirve como checklist antes
 > de cada release. No se distribuye con la app.
@@ -44,13 +44,13 @@ anuncios, no hay *Ads Disclosure*, no hay declaración de comerciante.
 - Capturas de pantalla: **pendiente** — aportar antes del primer
   release.
 
-## 2. Microsoft Store (MSIX)
+## 2. Microsoft Store (instalador `.exe` firmado)
 
 ### 2.1 Requisitos técnicos
 
 | Requisito | Estado actual | Notas |
 |-----------|---------------|-------|
-| Firma con certificado de CA reconocida | ⏳ pendiente | Configurar `MSIX_CERT_THUMBPRINT` en `.env` |
+| Firma con certificado de CA reconocida | ⏳ pendiente | `bundle.windows.certificateThumbprint` en `src-tauri/tauri.conf.json` (hoy es el placeholder `[TU_THUMBPRINT_CERTIFICADO_NSIS]`) |
 | `Publisher` declarado en el manifest | pendiente | debe coincidir con el sujeto del certificado |
 | `PublisherDisplayName` declarado | pendiente | debe coincidir con el del Partner Center |
 | `IdentityName` único | `gabriel.cat.developer.planner` | configurar en Partner Center |
@@ -59,22 +59,31 @@ anuncios, no hay *Ads Disclosure*, no hay declaración de comerciante.
 
 ### 2.2 Flujo de packaging
 
-Tauri 2 **no incluye MSIX como target nativo**. Para generar el
-paquete Store:
+Tauri 2 **no incluye MSIX como target nativo**: solo genera
+instaladores `.exe` (NSIS) y `.msi` (WiX). El crate `cargo-msix`
+existe, pero su README dice que nada funciona todavía, así que hoy
+**no hay forma de generar un `.msix` con este proyecto**.
 
-1. Construir el .exe con Tauri NSIS:
-   ```
-   .\tools\build-windows.ps1
-   ```
-2. Envolver en MSIX con `cargo-msix`:
-   ```
-   .\tools\build-msix.ps1 -ExePath "src-tauri\target\release\bundle\*.exe"
-   ```
-3. Firmar con `signtool` y un certificado válido.
-4. Subir el `.msix` al Partner Center.
+El flujo que sí funciona es subir el **`.exe` NSIS firmado** al
+Partner Center como producto de tipo "EXE or MSI app":
 
-Alternativamente, mientras no se use Store, distribuir directamente el
-`.exe` NSIS:
+1. Construir el instalador en Windows, con el certificado (la Store
+   exige firma):
+   ```
+   bash tools/build.sh windows
+   ```
+   La firma la hace Tauri con `signtool` a partir del thumbprint de
+   `bundle.windows.certificateThumbprint`.
+2. Usar el instalador **offline** de WebView2 (`webviewInstallMode:
+   offlineInstaller`) con una configuración aparte:
+   ```
+   cargo tauri build --config src-tauri/tauri.microsoftstore.conf.json
+   ```
+3. Declarar `/S` como parámetro de instalación silenciosa (NSIS). Sin
+   él, la Store rechaza el envío.
+4. Subir el `.exe` al Partner Center.
+
+Mientras no se use la Store, se distribuye directamente el `.exe` NSIS:
 
 - Doble clic → instala.
 - Soporta auto-update vía `tauri-plugin-updater` (no habilitado aún).

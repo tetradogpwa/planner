@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────
 # build.sh — Script de build unificado para Planificador Semanal.
-#            Por defecto genera solo el AppImage de Linux. Los
-#            binarios se copian a releases/ (en la raíz, ignorada por
-#            git).
+#            Es el ÚNICO script de build del proyecto: sustituye a los
+#            scripts por plataforma que había antes (linux, windows,
+#            msix, android), que se contradecían entre sí y con
+#            tauri.conf.json. Por defecto genera el AppImage y el .deb
+#            de Linux. Los binarios se copian a releases/ (en la raíz,
+#            ignorada por git).
 # ─────────────────────────────────────────────────────────────────────
 # Uso:
-#   ./tools/build.sh                  → solo AppImage (Linux, release)
+#   ./tools/build.sh                  → AppImage + .deb de Linux (release)
 #   ./tools/build.sh linux            → igual que sin argumentos
 #   ./tools/build.sh windows          → instalador NSIS (.exe, xwin)
 #   ./tools/build.sh android          → APK de Android
+#   ./tools/build.sh android --apk    → APK de Android (es el valor por defecto)
+#   ./tools/build.sh android --aab    → AAB de Android (Google Play)
+#   ./tools/build.sh --aab            → solo el AAB (equivale a android --aab)
 #   ./tools/build.sh linux android    → varios objetivos a la vez
-#   ./tools/build.sh all              → AppImage + .exe NSIS + APK
+#   ./tools/build.sh all              → Linux + .exe NSIS + APK
 #   ./tools/build.sh all --debug      → los tres objetivos en debug
 #   ./tools/build.sh --help           → muestra esta ayuda
 #   (--all equivale a all, por compatibilidad)
@@ -20,7 +26,7 @@
 #   * Rust toolchain estable (rustup.rs) y cargo-tauri:
 #       cargo install tauri-cli --version "^2.0" --locked
 #
-# Requisitos para compilar el AppImage de Linux (build-linux.sh):
+# Requisitos para compilar el AppImage y el .deb de Linux:
 #   * Debian/Ubuntu: sudo apt install -y \
 #       libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
 #       librsvg2-dev libssl-dev libsoup-3.0-dev \
@@ -35,8 +41,8 @@
 #   * Debian/Ubuntu: sudo apt install -y nsis lld llvm clang
 #       (lld-link, llvm-rc)
 #
-# Requisitos para compilar el APK de Android. El script lo detecta y,
-# si falta algo, imprime exactamente qué instalar:
+# Requisitos para compilar el APK (o el AAB) de Android. El script lo
+# detecta y, si falta algo, imprime exactamente qué instalar:
 #   * SDK de Android (API 24+) y NDK r25+:
 #       export ANDROID_HOME=~/Android/Sdk
 #       export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/<version>
@@ -68,6 +74,10 @@ REPO_ROOT="$(pwd)"
 # ─────────────── Argumentos ──────────────────────────────────────────
 MODE="release"
 PRINT_HELP=0
+# Formato del artefacto de Android: "apk" (sideload) o "aab" (Play).
+FORMATO_ANDROID="apk"
+PIDE_APK=0
+PIDE_AAB=0
 TARGETS=()
 
 add_target() {
@@ -79,18 +89,31 @@ add_target() {
 for arg in "$@"; do
   case "$arg" in
     --debug) MODE="debug" ;;
+    --apk) PIDE_APK=1 ;;
+    --aab) PIDE_AAB=1 ;;
     all|--all) add_target linux; add_target windows; add_target android ;;
     linux|windows|android) add_target "$arg" ;;
     --help|-h) PRINT_HELP=1 ;;
     *)
       echo "✗ Argumento desconocido: $arg" >&2
       echo "" >&2
-      echo "   Uso: ./tools/build.sh [linux|windows|android|all]... [--debug]" >&2
+      echo "   Uso: ./tools/build.sh [linux|windows|android|all]... [--debug] [--apk|--aab]" >&2
       echo "        ./tools/build.sh --help   para más información" >&2
       exit 2
       ;;
   esac
 done
+
+if [[ "$PIDE_APK" -eq 1 && "$PIDE_AAB" -eq 1 ]]; then
+  echo "✗ --apk y --aab son excluyentes: eliges el formato del artefacto" >&2
+  echo "  de Android (APK para sideload, AAB para Google Play)." >&2
+  exit 2
+fi
+if [[ "$PIDE_AAB" -eq 1 ]]; then
+  FORMATO_ANDROID="aab"
+  # `--aab` sin objetivo explícito: se entiende "android".
+  add_target android
+fi
 
 if [[ "$PRINT_HELP" -eq 1 ]]; then
   # Imprime la cabecera de este script (líneas que empiezan por "#"),
@@ -222,7 +245,7 @@ check_android_reqs() {
 
 # ─────────────── Builders ───────────────────────────────────────────
 build_linux() {
-  echo "▸▸ Construyendo AppImage Linux (${MODE})"
+  echo "▸▸ Construyendo AppImage y .deb de Linux (${MODE})"
   if ! check_linux_reqs; then
     echo "✗ Requisitos Linux no cumplidos. Abortando este objetivo." >&2
     return 1
@@ -231,8 +254,11 @@ build_linux() {
   local debug_flag=()
   if [[ "$MODE" == "debug" ]]; then debug_flag=(--debug); fi
 
+  # Los dos formatos que se publican en Linux: el AppImage (portable)
+  # y el .deb (Debian/Ubuntu). Los dos están declarados en
+  # tauri.conf.json (bundle.targets).
   cargo tauri build \
-    --bundles appimage \
+    --bundles appimage,deb \
     "${debug_flag[@]}"
 }
 
@@ -254,7 +280,8 @@ build_windows() {
 }
 
 build_android() {
-  echo "▸▸ Construyendo APK Android (${MODE})"
+  local formato="${FORMATO_ANDROID^^}"   # APK o AAB
+  echo "▸▸ Construyendo ${formato} Android (${MODE})"
   if ! check_android_reqs; then
     echo "✗ Requisitos Android no cumplidos. Abortando este objetivo." >&2
     return 1
@@ -263,7 +290,13 @@ build_android() {
   local debug_flag=()
   if [[ "$MODE" == "debug" ]]; then debug_flag=(--debug); fi
 
-  cargo tauri android build --apk "${debug_flag[@]}"
+  # `--apk` y `--aab` son los dos formatos que sabe generar
+  # `cargo tauri android build`: el APK para sideload y el AAB (Android
+  # App Bundle) para subirlo a Google Play.
+  local flag="--apk"
+  if [[ "$FORMATO_ANDROID" == "aab" ]]; then flag="--aab"; fi
+
+  cargo tauri android build "$flag" "${debug_flag[@]}"
 }
 
 # ─────────────── Recolección de artefactos ──────────────────────────
@@ -277,12 +310,26 @@ collect_artifacts() {
   local -a files=()
   case "$target" in
     linux)
-      files=(src-tauri/target/"${MODE}"/bundle/appimage/*.AppImage) ;;
+      # AppImage y .deb: los dos formatos que se publican en Linux.
+      files=(src-tauri/target/"${MODE}"/bundle/appimage/*.AppImage
+             src-tauri/target/"${MODE}"/bundle/deb/*.deb) ;;
     windows)
       files=(src-tauri/target/x86_64-pc-windows-msvc/"${MODE}"/bundle/nsis/*-setup.exe) ;;
     android)
-      mapfile -t files < <(find src-tauri/gen/android/app/build/outputs/apk \
-        -path "*/${MODE}/*" -name '*.apk' 2>/dev/null) ;;
+      # Gradle deja el APK en outputs/apk/<variante>/ y el AAB (Android
+      # App Bundle) en outputs/bundle/<variante>/. Si Gradle lo dejara
+      # en otro sitio, el find wider lo encuentra igualmente.
+      if [[ "$FORMATO_ANDROID" == "aab" ]]; then
+        mapfile -t files < <(find src-tauri/gen/android/app/build/outputs/bundle \
+          -path "*/${MODE}/*" -name '*.aab' 2>/dev/null)
+        if [[ "${#files[@]}" -eq 0 ]]; then
+          mapfile -t files < <(find src-tauri/gen/android -name '*.aab' -type f 2>/dev/null)
+        fi
+      else
+        mapfile -t files < <(find src-tauri/gen/android/app/build/outputs/apk \
+          -path "*/${MODE}/*" -name '*.apk' 2>/dev/null)
+      fi
+      ;;
   esac
   local f copied=0
   for f in "${files[@]}"; do
@@ -291,6 +338,12 @@ collect_artifacts() {
     echo "   → releases/$(basename "$f")"
     copied=$((copied + 1))
   done
+  if [[ "$copied" -eq 0 && "$target" == "android" ]]; then
+    echo "   ✗ No se encontró ningún .${FORMATO_ANDROID} en las salidas de" >&2
+    echo "     Gradle (src-tauri/gen/android/app/build/outputs/)." >&2
+    echo "     Mira ahí: el nombre y la carpeta dependen de la variante" >&2
+    echo "     de Gradle que se haya compilado." >&2
+  fi
   [[ "$copied" -gt 0 ]]
 }
 

@@ -9,7 +9,7 @@ Permite distribuir la app como:
 | Plataforma | Formato | Tienda / distribución |
 |------------|---------|-----------------------|
 | Linux | `.AppImage`, `.deb` | Web del Desarrollador (sin tienda central) |
-| Windows | `.exe` (NSIS) | Web del Desarrollador + (opcional) Microsoft Store como `.msix` |
+| Windows | `.exe` (NSIS) | Web del Desarrollador + (opcional) Microsoft Store (como `.exe` firmado) |
 | Android | `.apk`, `.aab` | Google Play Store (AAB) o sideload (APK) |
 
 El código fuente del frontend es el mismo que la PWA original. La
@@ -46,35 +46,54 @@ planner/
 │   ├── icons/            ← iconos generados para cada plataforma
 │   └── capabilities/
 │       └── default.json  ← permisos del WebView
-└── tools/                ← scripts de build por plataforma
-    ├── build-linux.sh
-    ├── build-windows.ps1
-    ├── build-msix.ps1
-    └── build-android.sh
+└── tools/                ← scripts de build y de pruebas
+    ├── build.sh          ← script ÚNICO de build (linux/windows/android)
+    ├── test.sh           ← pruebas unitarias y E2E
+    ├── tasks/            ← cola de tareas del supervisor
+    └── minimax/          ← lanzador del desarrollador (MiniMax)
 ```
 
 ### Build unificado (`tools/build.sh`)
 
 Script único en bash que cubre los tres objetivos desde cualquier
-carpeta (hace `cd` a la raíz del repo):
+carpeta (hace `cd` a la raíz del repo). Es el **único** script de build
+del proyecto: los que había por plataforma (uno para Linux, otro para
+Windows, otro para el paquete de la Store y otro para Android) se
+eliminaron porque se contradecían entre sí y con `tauri.conf.json`.
 
 ```bash
-./tools/build.sh                # solo AppImage (Linux, release)
-./tools/build.sh --debug        # AppImage en debug
-./tools/build.sh --all          # AppImage + APK (Android) + .exe NSIS (Windows)
-./tools/build.sh --all --debug  # los tres en debug
-./tools/build.sh --help         # muestra el uso completo
+./tools/build.sh                 # AppImage + .deb de Linux (release)
+./tools/build.sh linux           # igual que sin argumentos
+./tools/build.sh windows         # instalador NSIS .exe (compilación cruzada)
+./tools/build.sh android         # APK de Android
+./tools/build.sh android --aab   # AAB de Android (Google Play)
+./tools/build.sh all             # Linux + Windows + Android
+./tools/build.sh all --debug     # los tres en debug
+./tools/build.sh --help          # muestra el uso completo
 ```
 
 Antes de compilar cada objetivo, el script comprueba sus requisitos y,
-si falta alguno, imprime exactamente qué instalar y cómo. Con `--all`,
+si falta alguno, imprime exactamente qué instalar y cómo. Con `all`,
 si un objetivo falla (requisitos o compilación) el script continúa con
 los demás y al final muestra un resumen por objetivo (`✓` / `✗` con
 motivo); el código de salida es `≠0` si alguno falla.
 
-Al terminar, los artefactos generados (`*.AppImage`, `*.apk`,
-`*-setup.exe`) se copian a `releases/` en la raíz del repo y se listan
-con su tamaño. La carpeta `releases/` está en `.gitignore`.
+Al terminar, los artefactos generados (`*.AppImage`, `*.deb`, `*.apk`,
+`*.aab`, `*-setup.exe`) se copian a `releases/` en la raíz del repo y se
+listan con su tamaño. La carpeta `releases/` está en `.gitignore`.
+
+Lo que lanza cada objetivo:
+
+| Objetivo | Comando | Salida |
+|----------|---------|--------|
+| `linux` | `cargo tauri build --bundles appimage,deb` | `*.AppImage` y `*.deb` |
+| `windows` | `cargo tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis` | `*-setup.exe` |
+| `android` | `cargo tauri android build --apk` | `*.apk` |
+| `android --aab` | `cargo tauri android build --aab` | `*.aab` |
+
+Los mismos bundles están declarados en `src-tauri/tauri.conf.json`
+(`bundle.targets`), así que el script y la configuración no se
+contradicen.
 
 Requisitos generales (comunes a los tres objetivos):
 
@@ -83,7 +102,7 @@ Requisitos generales (comunes a los tres objetivos):
   cargo install tauri-cli --version "^2.0" --locked
   ```
 
-Requisitos específicos del **AppImage de Linux**:
+Requisitos específicos del **AppImage y el `.deb` de Linux**:
 
 ```bash
 sudo apt install -y \
@@ -103,16 +122,7 @@ rustup target add x86_64-pc-windows-msvc
 sudo apt install -y nsis lld llvm clang   # lld-link + llvm-rc
 ```
 
-El comando que lanza el script es:
-
-```bash
-cargo tauri build \
-  --runner cargo-xwin \
-  --target x86_64-pc-windows-msvc \
-  --bundles nsis
-```
-
-Requisitos específicos del **APK de Android** — el script detecta y
+Requisitos específicos del **APK/AAB de Android** — el script detecta y
 reporta cada uno si falta:
 
 - SDK de Android (API 24+) y NDK r25+:
@@ -129,6 +139,27 @@ reporta cada uno si falta:
 Si existe `.env` en la raíz, el script lo carga automáticamente (con
 `set -a; source .env; set +a`) para que `build.rs` y la firma de
 Android reciban las variables sin imprimir sus valores.
+
+### La versión de la app
+
+La versión se define en **un solo sitio**: `src-tauri/Cargo.toml` (el
+campo `version` del paquete).
+
+`src-tauri/tauri.conf.json` la repite, y hace falta: Tauri usa ese
+campo para el `versionName` del paquete de Android y para los recursos
+de versión del `.exe` de Windows (`FileVersion`/`ProductVersion`). Si se
+quitara, el paquete de Android se publicaría como "1.0" (el valor por
+defecto de Gradle) y el `.exe` iría sin información de versión. El
+resto (la versión que ve la app en runtime y la que ponen los nombres
+de los artefactos) sí sale de `Cargo.toml`.
+
+La copia no se desincroniza sola: la prueba
+`tests/unit/build-scripts.test.mjs` falla si `Cargo.toml` y
+`tauri.conf.json` no coinciden, y también si la versión aparece
+copiada en cualquier otro sitio (otro `tauri.conf*.json`, el
+`package.json`, un script de build o este README). Para cambiar la
+versión: edita `Cargo.toml` y copia el valor a `tauri.conf.json`; la
+prueba te avisa si se te olvida.
 
 ---
 
@@ -148,30 +179,116 @@ sudo apt install -y \
   librsvg2-dev libssl-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev \
   build-essential curl wget file pkg-config
 
-./tools/build-linux.sh
+./tools/build.sh linux
 # → src-tauri/target/release/bundle/Planificador Semanal_*.AppImage
-# → src-tauri/target/release/bundle/planner_*.deb
+# → src-tauri/target/release/bundle/deb/planner_*.deb
+# → los dos, copiados a releases/
 ```
 
 ### Windows (instalador NSIS .exe)
 
-En una máquina con Windows + Visual Studio 2022:
-
-```powershell
-PS> .\tools\build-windows.ps1
-# → src-tauri\target\release\bundle\Planificador Semanal_*.exe
+```bash
+./tools/build.sh windows
+# → src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe
+# → copiado a releases/
 ```
 
-### Microsoft Store (MSIX)
+En Windows, con Visual Studio 2022 (Build Tools con el workload
+"Desktop development with C++"), se puede compilar también sin
+compilación cruzada:
 
-Tauri 2 no produce MSIX directamente. Flujo recomendado:
-
-```powershell
-PS> .\tools\build-windows.ps1                            # 1) .exe NSIS
-PS> cargo install cargo-msix --locked                    # 2) herramienta
-PS> .\tools\build-msix.ps1 -ExePath "src-tauri\target\release\bundle\*.exe"
-# → dist\Planificador Semanal_0.1.0_x64.msix
+```bash
+cargo tauri build --bundles nsis
 ```
+
+#### Cómo se firma el instalador de Windows
+
+El instalador se firma con **Authenticode** (`signtool`), y la firma
+solo se puede aplicar en un **host Windows**, donde está `signtool` y
+el almacén de certificados.
+
+En `src-tauri/tauri.conf.json`:
+
+```json
+"windows": {
+  "certificateThumbprint": "[TU_THUMBPRINT_CERTIFICADO_NSIS]",
+  "digestAlgorithm": "sha256",
+  "timestampUrl": "http://timestamp.digicert.com"
+}
+```
+
+`[TU_THUMBPRINT_CERTIFICADO_NSIS]` es un **placeholder**: es la casilla
+donde va el thumbprint SHA-1 de tu certificado. Mientras siga ahí:
+
+- **Compilando en Linux** (compilación cruzada con `cargo-xwin`): el
+  instalador sale **sin firmar**. Tauri omite la firma porque `signtool`
+  no existe fuera de Windows. Windows lo instalará avisando de que el
+  editor es desconocido.
+- **Compilando en Windows**: `signtool` busca en el almacén de
+  certificados un certificado con ese thumbprint; como el placeholder no
+  corresponde a ninguno, la firma falla y el build se para.
+
+Para firmar de verdad:
+
+1. Consigue un **certificado de firma de código** emitido por una CA
+   reconocida por Windows. Para Microsoft Store, el certificado debe
+   estar a nombre de la cuenta del publicador: el `Publisher` del
+   paquete tiene que coincidir con el `PublisherDisplayName` de Partner
+   Center.
+2. Instálalo en el almacén de certificados de Windows:
+   ```powershell
+   PS> Import-PfxCertificate -FilePath .\cert.pfx -CertStoreLocation Cert:\CurrentUser\My
+   ```
+3. Copia su thumbprint SHA-1:
+   ```powershell
+   PS> Get-ChildItem Cert:\CurrentUser\My | Select-Object Subject, Thumbprint
+   ```
+4. Sustituye el placeholder de `certificateThumbprint` por ese
+   thumbprint y compila **en Windows**. Tauri firmará el instalador
+   (`signtool sign /fd sha256 /sha1 <thumbprint> /t <timestampUrl>`) con
+   los valores de `digestAlgorithm` y `timestampUrl` de la configuración.
+
+Si lo que quieres es un instalador **sin firmar**, quita el campo
+`certificateThumbprint` de la configuración: Tauri avisa de que se salta
+la firma y sigue.
+
+### Microsoft Store (el `.exe` firmado, no un MSIX)
+
+**Tauri 2 no genera MSIX.** Lo que produce son instaladores `.exe`
+(NSIS) y `.msi` (WiX). El camino que hoy funciona para Microsoft Store
+es subir el **`.exe` NSIS firmado** al Partner Center como producto de
+tipo "EXE or MSI app":
+
+1. Regístrate como desarrollador en Microsoft y crea el producto en
+   [Partner Center](https://partner.microsoft.com/) → "New Product" →
+   **"EXE or MSI app"**.
+2. Compila el instalador **en Windows y con el certificado** (ver
+   arriba): la Store exige firma.
+3. El instalador tiene que ser **offline** (que no descargue WebView2 al
+   instalar). Se puede con una configuración aparte:
+   ```json
+   // src-tauri/tauri.microsoftstore.conf.json
+   { "bundle": { "windows": { "webviewInstallMode": { "type": "offlineInstaller" } } } }
+   ```
+   ```bash
+   cargo tauri build --config src-tauri/tauri.microsoftstore.conf.json
+   ```
+4. Declara el **parámetro de instalación silenciosa**: `/S` (NSIS, con
+   `S` mayúscula). Sin esto, la Store rechaza el envío ("Win32
+   products must install silently").
+5. Sube el `.exe` al Partner Center y rellena el listado (política de
+   privacidad, capturas, clasificación…).
+
+Sobre el **MSIX** propiamente dicho: existe el crate `cargo-msix`
+(`cargo install cargo-msix --locked`), pero su propio README dice que
+es "work in progress" y que "nothing is functional": hoy no hay forma
+de generar un `.msix` con este proyecto. Si algún día se hace, el
+paquete se firma con `signtool` y un certificado de CA reconocida por
+Microsoft, y el `Publisher` del manifiesto tiene que coincidir con el
+`PublisherDisplayName` de Partner Center. El script de MSIX que había
+en el repo estaba sin implementar y además escribía dentro de `dist/`,
+que es el `frontendDist` de Tauri (se borra en el siguiente build y se
+embebe dentro del binario): se eliminó.
 
 ### Android (APK / AAB)
 
@@ -181,12 +298,21 @@ Requisitos: Android Studio (SDK + NDK), Java 17, keystore.
 # Solo la primera vez
 cargo tauri android init
 
-# Build APK release
-./tools/build-android.sh
+# Build APK release (sideload)
+./tools/build.sh android
 
-# Build AAB (Play Store)
-./tools/build-android.sh --aab
+# Build AAB (Google Play)
+./tools/build.sh android --aab
 ```
+
+`--aab` llama a `cargo tauri android build --aab` (el flag real de la
+CLI de Tauri), así que genera un **Android App Bundle** de verdad, no un
+APK renombrado. Gradle deja el APK en
+`src-tauri/gen/android/app/build/outputs/apk/<variante>/` y el AAB en
+`src-tauri/gen/android/app/build/outputs/bundle/<variante>/`; el script
+copia el que encuentre a `releases/`. Si Gradle cambia de sitio la
+salida, el script lo avisa y hay que mirar el directorio de salidas de
+Gradle (`src-tauri/gen/android/app/build/outputs/`).
 
 ---
 
