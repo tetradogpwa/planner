@@ -110,6 +110,18 @@ jobs:
       - name: Clonar el repo
         uses: actions/checkout@v4
 
+      # La capa nativa de Tauri compila contra GTK y WebKitGTK: sin
+      # sus cabeceras de desarrollo, `cargo check` falla con "the
+      # system library `webkit2gtk-4.1` ... was not found". Son las
+      # mismas librerías que documenta tools/build.sh.
+      - name: Dependencias de sistema (GTK, WebKitGTK)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
+            librsvg2-dev libssl-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev
+
       - name: Rust estable con clippy
         uses: dtolnay/rust-toolchain@stable
         with:
