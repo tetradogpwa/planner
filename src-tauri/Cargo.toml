@@ -20,12 +20,11 @@ path = "src/main.rs"
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 dotenvy = "0.15"                # build.rs incrusta las claves de anuncios desde .env
+serde_json = "1"                # build.rs lee csp.json y genera el TAURI_CONFIG
 
 [dependencies]
 tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"        # necesario para abrir enlaces externos (política de privacidad, etc.)
-tauri-plugin-dialog = "2"       # diálogos nativos para importar/exportar JSON
-tauri-plugin-fs = "2"           # acceso a filesystem para backup JSON
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"

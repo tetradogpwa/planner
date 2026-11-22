@@ -14,25 +14,6 @@
 
     "shell:allow-open",
 
-    "dialog:default",
-    "dialog:allow-save",
-    "dialog:allow-open",
-    "dialog:allow-message",
-
-    "fs:default",
-    "fs:allow-read-text-file",
-    "fs:allow-write-text-file",
-    {
-      "identifier": "fs:scope",
-      "allow": [
-        "$DOCUMENT/**",
-        "$DOWNLOAD/**",
-        "$DESKTOP/**",
-        "$APPDATA/**",
-        "$APPLOCALDATA/**"
-      ]
-    },
-
     "core:event:allow-listen",
     "core:event:allow-unlisten"
   ]

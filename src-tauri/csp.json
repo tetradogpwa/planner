@@ -1,0 +1,31 @@
+{
+  "_comentario": [
+    "Las dos variantes de la Content-Security-Policy de la app.",
+    "`build.rs` elige una u otra en tiempo de compilación según si la",
+    "build lleva anuncios (ver `inject_csp`) y la mete en la",
+    "configuración de Tauri con la variable TAURI_CONFIG.",
+    "La de `tauri.conf.json` es SIEMPRE la de `sin_anuncios`: es el",
+    "valor por defecto seguro. Los hosts de Google (AdSense) solo se",
+    "permiten si la build lleva claves de AdSense, porque son los",
+    "únicos que cargan algo remoto (el script de anuncios).",
+    "La prueba `tests/unit/permisos.test.mjs` comprueba que las dos",
+    "variantes no se desincronizan."
+  ],
+
+  "fuentes_solo_con_anuncios": [
+    "https://www.google.com",
+    "https://pagead2.googlesyndication.com",
+    "https://googleads.g.doubleclick.net",
+    "https://*.googletagservices.com",
+    "https://www.googletagmanager.com",
+    "https://tpc.googlesyndication.com",
+    "https://*.google.com",
+    "https://*.googlesyndication.com",
+    "https://*.doubleclick.net",
+    "https:"
+  ],
+
+  "con_anuncios": "default-src 'self' tauri: https://www.google.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://*.googletagservices.com; img-src 'self' data: tauri: asset: https:; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://*.googletagservices.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com; connect-src 'self' tauri: ipc: https://*.google.com https://*.googlesyndication.com https://*.doubleclick.net",
+
+  "sin_anuncios": "default-src 'self' tauri:; img-src 'self' data: tauri: asset:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-src 'none'; connect-src 'self' tauri: ipc:"
+}

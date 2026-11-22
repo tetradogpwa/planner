@@ -9,6 +9,13 @@
 //!    cuando el usuario lo activa. Ver `mcp.rs`.
 //!  - Definir la app de Tauri 2 (ventanas, plugins, comandos).
 //!
+//! Plugins que se registran: `shell` (abrir enlaces externos) y
+//! `admob` (anuncios nativos de Android). **No** se registra `fs` ni
+//! `dialog`: la app no los usa (la importación y la exportación de
+//! tareas van con `Blob`/`FileReader` y el PDF con html2pdf), así que
+//! concederlos sería darle acceso al disco del usuario sin necesidad.
+//! La prueba `tests/unit/permisos.test.mjs` lo vigila.
+//!
 //! Por defecto la app **no muestra anuncios**. Para activarlos, define
 //! en `.env` (o como variables de entorno del CI) las claves de
 //! AdSense (escritorio) y/o AdMob (Android) y recompila. Ver `.env.example`.
@@ -104,8 +111,6 @@ fn mcp_status(app: tauri::AppHandle) -> mcp::McpStatus {
 pub fn run() {
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init())
         // En escritorio sus comandos devuelven error; solo actúa en Android.
         .plugin(tauri_plugin_admob::init());
 

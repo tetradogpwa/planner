@@ -2688,10 +2688,10 @@
     {
       "id": "T-031",
       "title": "Importar un JSON inválido no debe borrar las tareas",
-      "status": "en_revision",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-22T05:00:45Z",
-      "updated": "2026-11-22T05:15:16Z",
+      "updated": "2026-11-22T05:29:04Z",
       "attempts": 1,
       "requests": [
         {
@@ -2729,6 +2729,11 @@
           "at": "2026-11-22T05:15:16Z",
           "event": "estado → en_revision",
           "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-22T05:29:04Z",
+          "event": "estado → hecha",
+          "note": "Revisado y aprobado: 139 unitarias + 13 specs E2E en verde; commit cfa56b1"
         }
       ],
       "firstTree": "e368328321eb6ee9f4e8f65539dad0699b997fcf"
@@ -2736,11 +2741,11 @@
     {
       "id": "T-032",
       "title": "Quitar los permisos que la app no usa",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-22T05:00:46Z",
-      "updated": "2026-11-22T05:00:46Z",
-      "attempts": 0,
+      "updated": "2026-11-22T05:29:04Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-22T05:00:46Z",
@@ -2757,13 +2762,34 @@
         "Toca src-tauri/capabilities/default.json, src-tauri/src/lib.rs y src-tauri/tauri.conf.json. Comprueba con grep que no hay llamadas a plugin:fs| ni plugin:dialog| en el frontend. El plugin admob sí se usa (Android) y se queda."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "291544b97fb28be515123e135d411283289eff70",
       "history": [
         {
           "at": "2026-11-22T05:00:46Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-11-22T05:15:37Z",
+          "event": "foto del árbol",
+          "note": "291544b97f"
+        },
+        {
+          "at": "2026-11-22T05:15:37Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-11-22T05:29:04Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-22T05:29:04Z",
+          "event": "estado → hecha",
+          "note": "Revisado y aprobado por el supervisor (MiniMax M3): cargo check verde, 149 unitarias + 14 specs E2E en verde"
         }
-      ]
+      ],
+      "firstTree": "291544b97fb28be515123e135d411283289eff70"
     },
     {
       "id": "T-033",

@@ -38,6 +38,7 @@ planner/
 ├── src-tauri/            ← capa nativa Rust
 │   ├── Cargo.toml
 │   ├── tauri.conf.json
+│   ├── csp.json         ← las dos variantes de la CSP (con/sin anuncios)
 │   ├── build.rs
 │   ├── src/
 │   │   ├── main.rs       ← entry point del binario
@@ -280,6 +281,55 @@ detectar cambios.
    ```js
    await window.__TAURI__.core.invoke('nombre_del_comando', { args });
    ```
+
+---
+
+## 🔒 Permisos del WebView y CSP
+
+La app concede al WebView **solo lo que usa**. Regla del proyecto:
+
+> **Todo permiso que se concede tiene que corresponder a un plugin que
+> el frontend usa de verdad.** Si no se usa, no se concede (y no se
+> registra el plugin).
+
+### Plugins
+
+| Plugin | ¿Se usa? | Dónde |
+|--------|----------|-------|
+| `core` | Sí | `invoke`, eventos (`window.__TAURI__.core`) |
+| `shell` | Sí | abrir enlaces externos (Legal, "quitar anuncios") |
+| `admob` | Sí | anuncios **nativos** de Android (`capabilities/mobile.json`) |
+| `fs` | **No** | la importación/exportación usa `Blob`/`FileReader` y el PDF usa html2pdf |
+| `dialog` | **No** | igual que `fs`: no hay ningún diálogo nativo |
+
+`fs` y `dialog` se quitaron de `src-tauri/capabilities/default.json`,
+de `src-tauri/src/lib.rs` y de `src-tauri/Cargo.toml` (T-032). Con
+`withGlobalTauri: true` (que **se queda**: el frontend usa
+`window.__TAURI__`) y los scripts remotos de AdSense en el mismo
+WebView, conceder acceso al disco sin uso era un riesgo innecesario.
+
+La comprobación automática es `tests/unit/permisos.test.mjs`: falla si
+vuelve a aparecer un permiso concedido sin usar (incluye `fs` y
+`dialog`), si `lib.rs` registra un plugin que el frontend no usa, o si
+`Cargo.toml` vuelve a depender de `tauri-plugin-fs`/`-dialog`.
+`tests/e2e/specs/13-permisos.spec.mjs` lo comprueba además en la app
+real.
+
+### CSP: los hosts de AdSense solo si la build lleva anuncios
+
+La CSP de `tauri.conf.json` es estática, pero Tauri permite
+sobrescribirla en tiempo de compilación con la variable de entorno
+`TAURI_CONFIG`. `src-tauri/build.rs` lo hace:
+
+- **Build sin claves de AdSense** (lo normal: `provider: "none"` en
+  `src/ads.rs`): la CSP **no permite ningún host de Google**. Es el
+  valor por defecto de `tauri.conf.json`.
+- **Build con `GOOGLE_ADSENSE_CLIENT`**: la CSP permite los hosts de
+  AdSense (el script de anuncios es lo único remoto que carga la app).
+
+Las dos variantes están en `src-tauri/csp.json`; `build.rs` elige una y
+la inyecta. Los anuncios de AdMob (Android) son **nativos**, así que en
+Android la CSP va siempre sin hosts remotos.
 
 ---
 
