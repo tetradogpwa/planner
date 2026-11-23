@@ -23,8 +23,6 @@
           "*CLAUDE.md": "deny",
           "*AGENTS.md": "deny",
           "*opencode.json": "deny",
-          "*tools/test.sh": "deny",
-          "*tests/e2e/wdio.conf.mjs": "deny",
           "*tests/e2e/package.json": "deny",
           "*tests/e2e/package-lock.json": "deny"
         },
@@ -48,6 +46,48 @@
           "node tools/tasks/tasks.mjs next*": "allow",
           "node tools/tasks/tasks.mjs empezar*": "allow",
           "node tools/tasks/tasks.mjs terminar*": "allow"
+        },
+        "skill": "deny",
+        "question": "deny",
+        "external_directory": "deny",
+        "doom_loop": "deny"
+      }
+    },
+    "planner-reviewer": {
+      "description": "Revisor (MiniMax) del Planificador Semanal: comprueba el trabajo de una tarea contra sus criterios de aceptación y dicta un veredicto; no edita nada",
+      "mode": "primary",
+      "model": "minimax/MiniMax-M3",
+      "permission": {
+        "*": "allow",
+        "read": {
+          "*": "allow",
+          "*.env": "deny",
+          "*.env.*": "deny",
+          "*.env.example": "allow"
+        },
+        "edit": {
+          "*": "deny"
+        },
+        "bash": {
+          "*": "allow",
+          "git commit*": "deny",
+          "git push*": "deny",
+          "git reset*": "deny",
+          "git checkout*": "deny",
+          "git switch*": "deny",
+          "git restore*": "deny",
+          "git stash*": "deny",
+          "git clean*": "deny",
+          "git rebase*": "deny",
+          "rm -rf*": "deny",
+          "node tools/tasks/tasks.mjs add*": "deny",
+          "node tools/tasks/tasks.mjs amend*": "deny",
+          "node tools/tasks/tasks.mjs feedback*": "deny",
+          "node tools/tasks/tasks.mjs status*": "deny",
+          "node tools/tasks/tasks.mjs snapshot*": "deny",
+          "node tools/tasks/tasks.mjs diff*": "allow",
+          "node tools/tasks/tasks.mjs show*": "allow",
+          "node tools/tasks/tasks.mjs list*": "allow"
         },
         "skill": "deny",
         "question": "deny",
