@@ -191,6 +191,7 @@ fi
 
 declare -A SALTAR=()          # tareas que agotaron sus intentos
 declare -A INTENTOS=()        # intentos de trabajo por tarea (este recorrido)
+declare -A FALLOS_REVISION=() # revisiones fallidas por tarea
 CERRADAS=0
 FALLIDAS=0
 
@@ -354,8 +355,16 @@ while :; do
       2)
         # La revisión falló (no el trabajo): la tarea se queda en
         # revisión para que la mire una persona. Devolverla al
-        # trabajador no ayudaría: no tiene nada que arreglar.
-        say "↻ [$id] se queda en revisión: la revisión automática falló."
+        # trabajador no ayudaría: no tiene nada que arreglar. Y si la
+        # revisión falla otra vez, se deja de insistir (si no, el
+        # ciclo repite la misma revisión sin fin).
+        FALLOS_REVISION[$id]=$(( ${FALLOS_REVISION[$id]:-0} + 1 ))
+        if [[ "${FALLOS_REVISION[$id]}" -ge 2 ]]; then
+          say "↻ [$id] se queda en revisión: la revisión automática falla otra vez; se sigue con la cola."
+          SALTAR["$id"]=1
+        else
+          say "↻ [$id] se queda en revisión: la revisión automática falló."
+        fi
         ;;
       *)
         # Correcciones del revisor → vuelven al trabajador.

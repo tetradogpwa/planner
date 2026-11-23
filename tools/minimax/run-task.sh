@@ -117,7 +117,11 @@ $TASKS snapshot "$ID" >/dev/null
 $TASKS status "$ID" en_curso --note "MiniMax ($MINIMAX_MODEL en OpenCode) empieza; registro en $LOG" >/dev/null
 echo "▸ MiniMax trabajando en $ID (registro: $LOG)"
 
-timeout "$MINIMAX_TIMEOUT" "${OPENCODE_CMD[@]}" --title "$ID" "$PROMPT" < /dev/null > "$LOG" 2>&1
+# El prompt va por la entrada estándar, no como argumento: con muchas
+# correcciones acumuladas el mensaje puede pasar del tamaño máximo que
+# acepta el sistema ("argument list too long") y el MiniMax no llega a
+# arrancar.
+timeout "$MINIMAX_TIMEOUT" "${OPENCODE_CMD[@]}" --title "$ID" < <(printf '%s' "$PROMPT") > "$LOG" 2>&1
 CODE=$?
 
 # OpenCode puede salir con 0 aunque el proveedor haya fallado.

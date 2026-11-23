@@ -105,12 +105,16 @@ PROMPT="$(cat "$ROOT/tools/minimax/reviewer-prompt.md")
 
 Tarea a revisar: $ID
 
-$($TASKS show "$ID")
+$($TASKS show "$ID" | head -c 24000)
+
+(El detalle completo de la tarea, con todo el historial de correcciones,
+está en .tasks/tasks.json: léelo con la herramienta de lectura si lo
+necesitas.)
 
 $DIFF_TXT
 "
 
-timeout "$MINIMAX_TIMEOUT" "${OPENCODE_CMD[@]}" --title "$ID-revision" "${DIFF_ARGS[@]}" "$PROMPT" < /dev/null > "$LOG" 2>&1
+timeout "$MINIMAX_TIMEOUT" "${OPENCODE_CMD[@]}" --title "$ID-revision" "${DIFF_ARGS[@]}" < <(printf '%s' "$PROMPT") > "$LOG" 2>&1
 CODE=$?
 
 # El veredicto se busca en la salida del revisor.

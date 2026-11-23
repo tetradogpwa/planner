@@ -171,7 +171,19 @@ function workerPrompt(task) {
   }
   if (task.feedback.length) {
     out.push('', 'Correcciones del supervisor a intentos anteriores (resuélvelas todas):');
-    task.feedback.forEach(f => out.push(`- ${f.note}`));
+    // Solo las últimas y recortadas: el prompt tiene que caber en el
+    // contexto de quien lo recibe (y las más viejas ya están resueltas
+    // o son caducas). El resto queda en .tasks/tasks.json.
+    const recientes = task.feedback.slice(-3);
+    for (const f of recientes) {
+      const nota = f.note.length > 6000
+        ? `${f.note.slice(0, 6000)}… (recortada; el resto está en .tasks/tasks.json)`
+        : f.note;
+      out.push(`- ${nota}`);
+    }
+    if (task.feedback.length > recientes.length) {
+      out.push(`(Hay ${task.feedback.length - recientes.length} correcciones más antiguas en .tasks/tasks.json: míralas si te falta alguna.)`);
+    }
   }
   out.push('', 'Cuando termines, responde con un resumen breve: archivos cambiados, cómo se cumple cada criterio y qué no has podido comprobar.');
   return out.join('\n');
