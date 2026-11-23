@@ -42,11 +42,23 @@ El flujo habitual es:
 repo lo lanza todo:
 
 ```bash
-bash tools/test.sh              # unitarias + E2E
+bash tools/test.sh              # unitarias + comprobaciones + E2E
 bash tools/test.sh unit         # solo unitarias (segundos)
+bash tools/test.sh check        # solo sintaxis (node --check) y Rust (cargo test + clippy)
 bash tools/test.sh e2e          # solo E2E (compila la app real)
 bash tools/test.sh e2e --spec tests/e2e/specs/00-arranque.spec.mjs
 ```
+
+El script comprueba la versión de Node (hace falta la 22 o superior:
+el glob entrecomillado de `node --test` solo se expande desde ahí) y
+sale con un código de error si no se ha ejecutado ninguna prueba: un
+verde sin pruebas no vale. Las unitarias se lanzan con la cobertura del
+runner, que sale en el resumen. Un E2E que falla deja la captura y la
+traza en `tests/e2e/.tmp/capturas/`, y el script lista dónde están.
+
+La salida completa de cada vuelta va a `logs/test-<objetivo>-<fecha>-<pid>.log`
+y solo se conservan los 20 últimos (`PLANNER_LOG_KEPT=50` para más;
+`PLANNER_LOG_DIR` para apartarlos a otra carpeta).
 
 Además del script:
 

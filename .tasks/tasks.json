@@ -1,5 +1,5 @@
 {
-  "next": 41,
+  "next": 42,
   "tasks": [
     {
       "id": "T-001",
@@ -3124,11 +3124,11 @@
     {
       "id": "T-039",
       "title": "tools/test.sh a la altura del proyecto",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-22T05:00:46Z",
-      "updated": "2026-11-22T05:00:46Z",
-      "attempts": 0,
+      "updated": "2026-11-23T10:24:44Z",
+      "attempts": 3,
       "requests": [
         {
           "at": "2026-11-22T05:00:46Z",
@@ -3145,23 +3145,98 @@
       "notes": [
         "El summary_unit (test.sh:83-90) busca el formato TAP ('^# (tests|pass|fail) '): si lo cambias, actualízalo. tools/test.sh y tests/e2e/wdio.conf.mjs están protegidos por permisos del agente: si necesitas tocarlos, hazlo y dilo en el resumen."
       ],
-      "feedback": [],
-      "baseTree": null,
+      "feedback": [
+        {
+          "at": "2026-11-23T09:32:41Z",
+          "note": "La revisión automática aprobó el trabajo, pero las pruebas no pasan (log en logs/). Corrige lo que fallen."
+        },
+        {
+          "at": "2026-11-23T10:13:48Z",
+          "note": "tools/test.sh, línea 692 (dentro de `comprobar_pruebas_ejecutadas`, caso `e2e`): el recuento se busca solo con `grep -aoE '[0-9]+ passing'`, pero el reporter de WebdriverIO (`@wdio/spec-reporter` v10, `getCountDisplay`) imprime la línea \"N passing\" únicamente si `passed > 0` e imprime \"N failing\" solo si `failed > 0`. Así, cuando un E2E falla, el log no contiene ninguna línea \"N passing\", `total` queda vacío y el script imprime el diagnóstico FALSO \"✗ No se encontró el recuento de pruebas E2E en el log. / Si no se ejecutó ninguna prueba, el script no puede salir en verde.\" (reproducido: con una spec que falla a propósito, el log solo tiene \"1 failing (511ms)\" y el script reporta que no se ejecutó ninguna prueba). Corrige el recuento para que tenga en cuenta también \"failing\" (y/o el total de \"Spec Files:\"), de forma que (a) si se ejecutaron pruebas pero fallaron, el mensaje diga que fallaron y no que no se ejecutó ninguna, y (b) siga detectando de verdad el caso de cero pruebas ejecutadas. Añade en tests/unit/test-script.test.mjs una prueba que fije este caso: un log de E2E con \"1 failing\" y sin \"N passing\" debe hacer que el script NO diga \"No se ejecutó ninguna prueba\".\ntests/unit/test-script.test.mjs, líneas 434-438 (prueba \"el script poda logs/ y conserva los N últimos\"): es la única llamada a `spawnSync` que no fija `PLANNER_LOG_DIR` en el entorno (el helper `ejecutarTestSh` sí lo hace, línea 91). Con `PLANNER_LOG_DIR` presente en el ambiente, el script copiado escribe y poda su log en esa carpeta externa mientras la prueba comprueba la carpeta temporal, y falla con \"logs/ tiene que quedar con 5 ficheros como máximo, tiene 30\" (reproducido con `PLANNER_LOG_DIR=/tmp/... bash tools/test.sh unit`). Añade `PLANNER_LOG_DIR: logs` al `env` del `spawnSync` de esa prueba, para que apunte a `join(dir, 'logs')` y la prueba sea independiente del ambiente.\nui/shortcuts/shortcuts-card.js (líneas 51-70) y tests/e2e/specs/05-teclado.spec.mjs (nuevo caso \"Escape cierra la ayuda aunque llegue antes del siguiente frame\"): este cambio corrige un bug real del frontend (la trampa de foco se registraba un frame tarde y el Escape se perdía; verificado que la spec nueva falla sin el arreglo), pero es un cambio de comportamiento de la aplicación que no tiene ninguna relación con T-039, cuyo objeto es tools/test.sh. Deshaz estos dos cambios y deja el arreglo del modal de atajos para una tarea propia; si el comportamiento te parece importante, crea la tarea con tools/tasks/tasks.mjs add explicando el bug (la trampa de foco en ui/shortcuts/shortcuts-card.js open() se registra en requestAnimationFrame, y el Escape pulsado en esa ventana no cierra el modal) e indica que el arreglo y su E2E deben ir ahí."
+        }
+      ],
+      "baseTree": "187deef50a5f866c3b65f8811f1560651283f33c",
       "history": [
         {
           "at": "2026-11-22T05:00:46Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-11-23T08:51:31Z",
+          "event": "foto del árbol",
+          "note": "88a73d2186"
+        },
+        {
+          "at": "2026-11-23T08:51:31Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax la empieza desde OpenCode"
+        },
+        {
+          "at": "2026-11-23T09:07:48Z",
+          "event": "estado → pendiente",
+          "note": "Recuperada por cola.sh: no había ningún MiniMax trabajando en ella."
+        },
+        {
+          "at": "2026-11-23T09:07:48Z",
+          "event": "foto del árbol",
+          "note": "39f2972fe5"
+        },
+        {
+          "at": "2026-11-23T09:07:48Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-039-20261123-100748.log"
+        },
+        {
+          "at": "2026-11-23T09:22:53Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-11-23T09:32:41Z",
+          "event": "devuelta a MiniMax",
+          "note": "La revisión automática aprobó el trabajo, pero las pruebas no pasan (log en logs/). Corrige lo que fallen."
+        },
+        {
+          "at": "2026-11-23T09:32:41Z",
+          "event": "foto del árbol",
+          "note": "187deef50a"
+        },
+        {
+          "at": "2026-11-23T09:32:41Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-039-20261123-103241.log"
+        },
+        {
+          "at": "2026-11-23T10:05:01Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado (sesión de OpenCode)"
+        },
+        {
+          "at": "2026-11-23T10:05:09Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-11-23T10:13:48Z",
+          "event": "devuelta a MiniMax",
+          "note": "tools/test.sh, línea 692 (dentro de `comprobar_pruebas_ejecutadas`, caso `e2e`): el recuento se busca solo con `grep -aoE '[0-9]+ passing'`, pero el reporter de WebdriverIO (`@wdio/spec-reporter` v10, `getCountDisplay`) imprime la línea \"N passing\" únicamente si `passed > 0` e imprime \"N failing\" solo si `failed > 0`. Así, cuando un E2E falla, el log no contiene ninguna línea \"N passing\", `total` queda vacío y el script imprime el diagnóstico FALSO \"✗ No se encontró el recuento de pruebas E2E en el log. / Si no se ejecutó ninguna prueba, el script no puede salir en verde.\" (reproducido: con una spec que falla a propósito, el log solo tiene \"1 failing (511ms)\" y el script reporta que no se ejecutó ninguna prueba). Corrige el recuento para que tenga en cuenta también \"failing\" (y/o el total de \"Spec Files:\"), de forma que (a) si se ejecutaron pruebas pero fallaron, el mensaje diga que fallaron y no que no se ejecutó ninguna, y (b) siga detectando de verdad el caso de cero pruebas ejecutadas. Añade en tests/unit/test-script.test.mjs una prueba que fije este caso: un log de E2E con \"1 failing\" y sin \"N passing\" debe hacer que el script NO diga \"No se ejecutó ninguna prueba\".\ntests/unit/test-script.test.mjs, líneas 434-438 (prueba \"el script poda logs/ y conserva los N últimos\"): es la única llamada a `spawnSync` que no fija `PLANNER_LOG_DIR` en el entorno (el helper `ejecutarTestSh` sí lo hace, línea 91). Con `PLANNER_LOG_DIR` presente en el ambiente, el script copiado escribe y poda su log en esa carpeta externa mientras la prueba comprueba la carpeta temporal, y falla con \"logs/ tiene que quedar con 5 ficheros como máximo, tiene 30\" (reproducido con `PLANNER_LOG_DIR=/tmp/... bash tools/test.sh unit`). Añade `PLANNER_LOG_DIR: logs` al `env` del `spawnSync` de esa prueba, para que apunte a `join(dir, 'logs')` y la prueba sea independiente del ambiente.\nui/shortcuts/shortcuts-card.js (líneas 51-70) y tests/e2e/specs/05-teclado.spec.mjs (nuevo caso \"Escape cierra la ayuda aunque llegue antes del siguiente frame\"): este cambio corrige un bug real del frontend (la trampa de foco se registraba un frame tarde y el Escape se perdía; verificado que la spec nueva falla sin el arreglo), pero es un cambio de comportamiento de la aplicación que no tiene ninguna relación con T-039, cuyo objeto es tools/test.sh. Deshaz estos dos cambios y deja el arreglo del modal de atajos para una tarea propia; si el comportamiento te parece importante, crea la tarea con tools/tasks/tasks.mjs add explicando el bug (la trampa de foco en ui/shortcuts/shortcuts-card.js open() se registra en requestAnimationFrame, y el Escape pulsado en esa ventana no cierra el modal) e indica que el arreglo y su E2E deben ir ahí."
+        },
+        {
+          "at": "2026-11-23T10:24:44Z",
+          "event": "estado → hecha",
+          "note": "Implementada, revisada (correcciones aplicadas) y probada: bash tools/test.sh en verde (unit, check y e2e)."
         }
-      ]
+      ],
+      "firstTree": "88a73d2186655a8566f1a44eb94fa3ea6c0c9228"
     },
     {
       "id": "T-040",
       "title": "Que el binario no se publique con el frontend anterior",
-      "status": "pendiente",
+      "status": "en_revision",
       "relatedTo": null,
       "created": "2026-11-22T05:00:46Z",
-      "updated": "2026-11-22T05:00:46Z",
-      "attempts": 0,
+      "updated": "2026-11-23T10:23:52Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-22T05:00:46Z",
@@ -3177,10 +3252,54 @@
         "Ojo: esta tarea es la que hace fiable el resto del plan de publicación. El hash puede ser el del contenido concatenado de los ficheros copiados; emítelo como cargo:rustc-env=FRONTEND_HASH=<hash> y úsalo en un assert o en un fichero de versión."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "3e526112240a4f786a2dbcabb96920691a3496fd",
       "history": [
         {
           "at": "2026-11-22T05:00:46Z",
+          "event": "creada"
+        },
+        {
+          "at": "2026-11-23T10:13:49Z",
+          "event": "foto del árbol",
+          "note": "3e52611224"
+        },
+        {
+          "at": "2026-11-23T10:13:49Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3 en OpenCode) empieza; registro en .tasks/logs/T-040-20261123-111348.log"
+        },
+        {
+          "at": "2026-11-23T10:23:52Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        }
+      ],
+      "firstTree": "3e526112240a4f786a2dbcabb96920691a3496fd"
+    },
+    {
+      "id": "T-041",
+      "title": "El Escape no cierra la ayuda de atajos si se pulsa nada más abrirla",
+      "status": "pendiente",
+      "relatedTo": null,
+      "created": "2026-11-23T10:22:58Z",
+      "updated": "2026-11-23T10:22:58Z",
+      "attempts": 0,
+      "requests": [
+        {
+          "at": "2026-11-23T10:22:58Z",
+          "text": "Detectado mientras se hacia T-039. En ui/shortcuts/shortcuts-card.js, open() registra la trampa de foco (y con ella el manejador de Escape) dentro de requestAnimationFrame: el modal ya es visible pero todavia no escucha Escape, y como el foco sigue fuera del modal el keydown ni siquiera le llega al contenedor. Si el usuario pulsa Escape en esa ventana, la pulsacion se pierde y la ayuda no se cierra. Arreglar registrando la trampa de foco al abrir el modal (y dejando el foco explicito dentro del contenido para el siguiente frame, que es lo que necesita el lector de pantalla) y anadir la E2E correspondiente en tests/e2e/specs/05-teclado.spec.mjs (congelando requestAnimationFrame para que el fallo no dependa del ritmo de la maquina). Es un cambio de comportamiento de la aplicacion, asi que va en su propia tarea: no mezclarlo con tareas de herramientas."
+        }
+      ],
+      "criteria": [
+        "El Escape cierra la ayuda de atajos tambien si se pulsa nada mas abrirla",
+        "Hay una E2E que falla sin el arreglo (congelando requestAnimationFrame) y pasa con el"
+      ],
+      "notes": [],
+      "feedback": [],
+      "baseTree": null,
+      "history": [
+        {
+          "at": "2026-11-23T10:22:58Z",
           "event": "creada"
         }
       ]
