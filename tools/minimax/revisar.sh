@@ -85,9 +85,18 @@ mkdir -p .tasks/logs
 LOG=".tasks/logs/$ID-revision-$(date +%Y%m%d-%H%M%S).log"
 
 if [[ -n "$DIFF_FICHERO" && -f "$DIFF_FICHERO" ]]; then
-  DIFF="$(cat "$DIFF_FICHERO")"
+  # El diff va ADJUNTO (--file), no dentro del mensaje: con los diffs
+  # grandes la línea de órdenes revienta ("argument list too long") y
+  # la revisión falla sin decir nada.
+  DIFF_ARGS=(--file "$DIFF_FICHERO")
+  DIFF_TXT="El diff completo de la tarea va ADJUNTO a este mensaje (fichero
+$DIFF_FICHERO). Léelo con la herramienta de lectura antes de opinar: sin
+él no puedes comprobar los criterios."
 else
-  DIFF="$($TASKS diff "$ID" --total)"
+  DIFF_ARGS=()
+  DIFF_TXT="Diff de la tarea (cambios desde la foto del primer intento):
+
+$($TASKS diff "$ID" --total)"
 fi
 
 PROMPT="$(cat "$ROOT/tools/minimax/reviewer-prompt.md")
@@ -98,21 +107,20 @@ Tarea a revisar: $ID
 
 $($TASKS show "$ID")
 
-Diff de la tarea (cambios desde la foto del árbol):
-
-$DIFF
+$DIFF_TXT
 "
 
-timeout "$MINIMAX_TIMEOUT" "${OPENCODE_CMD[@]}" --title "$ID-revision" "$PROMPT" < /dev/null > "$LOG" 2>&1
+timeout "$MINIMAX_TIMEOUT" "${OPENCODE_CMD[@]}" --title "$ID-revision" "${DIFF_ARGS[@]}" "$PROMPT" < /dev/null > "$LOG" 2>&1
 CODE=$?
 
 # El veredicto se busca en la salida del revisor.
 VEREDICTO="$(grep -aE '^VEREDICTO:' "$LOG" | tail -1)"
 
 if [[ -z "$VEREDICTO" ]]; then
-  echo "✗ El revisor no dio veredicto (código $CODE). Registro: $LOG"
-  tail -n 20 "$LOG" >&2
-  exit 1
+  echo "✗ El revisor no dio veredicto (código $CODE). Esto NO es un defecto" >&2
+  echo "  del trabajo revisado: es un fallo de la revisión. Registro: $LOG" >&2
+  tail -n 15 "$LOG" >&2
+  exit 2
 fi
 
 if grep -qa 'APROBADO' <<<"$VEREDICTO"; then

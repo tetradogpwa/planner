@@ -249,6 +249,13 @@ revisar() {  # revisar <id> → 0 si aprueba
     say "   ✓ Aprobada"
     return 0
   fi
+  if grep -qa 'no dio veredicto' <<<"$salida"; then
+    # La revisión falló (no el trabajo): no se le devuelve la tarea al
+    # trabajador, que no tiene nada que arreglar.
+    say "   ✗ La revisión falló (no es un defecto del trabajo):"
+    tail -n 6 <<<"$salida" | sed 's/^/     /' | tee -a "$LOG"
+    return 2
+  fi
   say "   ✗ Correcciones:"
   grep -aE '^CORRECCION:' <<<"$salida" | sed 's/^/     /' | tee -a "$LOG"
   return 1
@@ -343,11 +350,21 @@ while :; do
         ;;
     esac
   else
-    # Correcciones del revisor → vuelven al trabajador.
-    correcciones="$(grep -ahE '^CORRECCION:' ".tasks/logs/${id}-revision-"*.log 2>/dev/null | tail -20 | sed 's/^CORRECCION: //')"
-    [[ -z "$correcciones" ]] && correcciones="La revisión automática pidió correcciones (mira el registro en .tasks/logs/)."
-    $TASKS feedback "$id" --note "$correcciones" >> "$LOG" 2>&1
-    say "↻ [$id] devuelta al trabajador con correcciones"
+    case $? in
+      2)
+        # La revisión falló (no el trabajo): la tarea se queda en
+        # revisión para que la mire una persona. Devolverla al
+        # trabajador no ayudaría: no tiene nada que arreglar.
+        say "↻ [$id] se queda en revisión: la revisión automática falló."
+        ;;
+      *)
+        # Correcciones del revisor → vuelven al trabajador.
+        correcciones="$(grep -ahE '^CORRECCION:' ".tasks/logs/${id}-revision-"*.log 2>/dev/null | tail -20 | sed 's/^CORRECCION: //')"
+        [[ -z "$correcciones" ]] && correcciones="La revisión automática pidió correcciones (mira el registro en .tasks/logs/)."
+        $TASKS feedback "$id" --note "$correcciones" >> "$LOG" 2>&1
+        say "↻ [$id] devuelta al trabajador con correcciones"
+        ;;
+    esac
   fi
 
   if [[ "$MAX_TAREAS" -gt 0 && "$CERRADAS" -ge "$MAX_TAREAS" ]]; then
