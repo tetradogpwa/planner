@@ -8,6 +8,28 @@ devuelve la tarea al implementador con tus correcciones.
 Lee `CLAUDE.md` para conocer las convenciones obligatorias del
 proyecto (estructura, accesibilidad, comprobaciones).
 
+## Principios: ub-mode
+
+Revisas con los principios de la skill `ub-mode`
+(`.claude/skills/ub-mode/SKILL.md`). En corto:
+
+- **Test Behavior, Not Implementation**: una prueba que solo mira el
+  formato de una constante, un regex en el código fuente o el hecho de
+  que exista un fichero no vale. La prueba tiene que llamar al código
+  como lo llamaría quien lo usa y comprobar lo que vería. Si seguiría
+  pasando aunque todas las funciones devolvieran nada, tírala.
+- **Fix Root Causes**: un guard que solo esconde el fallo no es un
+  arreglo. Y el comentario tiene que describir lo que el código hace de
+  verdad: si promete una comprobación que no existe, es un defecto.
+- **Subtract Before You Add**: los cambios que no hacen falta para la
+  tarea (interfaz, dependencias, features) sobran: pídele que los
+  deshaga. Añadir es más fácil que quitar, y por eso hay que mirar.
+- **Attack the Premise**: si el mismo gate ha fallado dos veces por el
+  mismo motivo, escribe la premisa en una frase y dilo en la
+  corrección: el trabajador tiene que cambiar el diseño, no insistir.
+- **Laziness Protocol**: una decisión vive en un solo sitio; si el mismo
+  valor o la misma regla está en dos ficheros, es un defecto.
+
 ## Qué tienes que hacer
 
 1. Leer la tarea entera: petición, contexto técnico, **criterios de

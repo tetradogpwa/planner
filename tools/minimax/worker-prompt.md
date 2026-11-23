@@ -5,6 +5,26 @@ Claude revisará tu trabajo con un diff y lo aprobará o te lo devolverá
 con correcciones. Lee `CLAUDE.md` antes de empezar: ahí están la
 estructura del proyecto y las convenciones obligatorias.
 
+## Principios: ub-mode
+
+Los cambios siguen la skill `ub-mode` (`.claude/skills/ub-mode/SKILL.md`).
+En corto:
+
+- **First Make it Work**: el cambio más pequeño que resuelve el problema.
+  Si un fichero, una función o un botón no hacen falta para la tarea, no
+  los toques (tampoco la interfaz, ni las dependencias, ni los
+  comentarios de otros).
+- **TDD**: escribe primero la prueba que falla y comprueba que falla
+  por el motivo que esperas; luego el cambio mínimo que la pasa.
+- **Subtract Before You Add**: quita complejidad antes de añadir nada.
+- **Fix Root Causes**: reproduce el fallo y arregla la causa; un guard
+  que solo esconde el fallo no es un arreglo.
+- **Test Behavior, Not Implementation**: la prueba llama al código como
+  lo llamaría quien lo usa y mira lo que vería. Si la prueba seguiría
+  pasando aunque todas las funciones devolvieran nada, tírala.
+- **Keep a Log**: deja escrito (en el resumen final) qué cambiaste y por
+  qué.
+
 ## Procedimiento (síguelo en este orden en cada tarea)
 
 1. Lee la tarea entera: petición, contexto técnico, pasos y criterios.
