@@ -59,6 +59,8 @@ Thumbs.db
 *~
 # Frontend copiado por src-tauri/build.rs (frontendDist de Tauri)
 dist/
+# Salida de pruebas de src-tauri/build.rs (ficheros generados)
+.tmp-out/
 
 # Cola de tareas: se versiona tasks.json; los registros de MiniMax no
 .tasks/logs/

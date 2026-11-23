@@ -39,7 +39,7 @@ STORE="$ROOT/.tasks/tasks.json"
 SOLO_TAREA=""
 SIN_REVISION=0
 MAX_TAREAS=0        # 0 = todas
-MAX_INTENTOS=3      # intentos por tarea
+MAX_INTENTOS=4      # intentos por tarea
 DRY=0
 CHECK_ONLY=0
 
@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
     --tarea)        shift; SOLO_TAREA="${1:-}" ;;
     --sin-revision) SIN_REVISION=1 ;;
     --max-tareas)   shift; MAX_TAREAS="${1:-0}" ;;
-    --max-intentos) shift; MAX_INTENTOS="${1:-3}" ;;
+    --max-intentos) shift; MAX_INTENTOS="${1:-4}" ;;
     --dry-run)      DRY=1 ;;
     --check)        CHECK_ONLY=1 ;;
     --ayuda|-h)
@@ -177,6 +177,7 @@ fi
 # ── El ciclo ────────────────────────────────────────────────────────
 
 declare -A SALTAR=()          # tareas que agotaron sus intentos
+declare -A INTENTOS=()        # intentos de trabajo por tarea (este recorrido)
 CERRADAS=0
 FALLIDAS=0
 
@@ -193,10 +194,21 @@ elegir() {  # elegir <estado> → id de la primera tarea de ese estado
 
 trabajar() {  # trabajar <id>
   local id="$1" salida
-  # Foto del árbol ANTES de que el trabajador toque nada: con ella se
-  # calcula el diff que se revisa y la lista de ficheros del commit.
-  arbol_actual > "$ESTADO/$id.base"
-  say "▸ [$id] MiniMax trabaja en la tarea…"
+  # Cuántas veces ha trabajado el trabajador en esta tarea ESTE
+  # recorrido (el contador de la cola no vale: lo incrementan otros
+  # actores, como una sesión que empezó la tarea a mano).
+  INTENTOS[$id]=$(( ${INTENTOS[$id]:-0} + 1 ))
+  # La foto de partida es el ÚLTIMO COMMIT, no el árbol: así el diff de
+  # la tarea y su commit incluyen todo lo que se haya hecho en ella,
+  # aunque el trabajo empezara con cambios sin commitear de otra tarea.
+  git rev-parse HEAD > "$ESTADO/$id.base"
+  local sucios
+  sucios="$(git status --porcelain | head -10)"
+  if [[ -n "$sucios" ]]; then
+    say "   ⚠ El árbol ya tenía cambios sin commitear; el diff de la tarea los incluye:"
+    printf '     %s\n' "$sucios" | tee -a "$LOG"
+  fi
+  say "▸ [$id] MiniMax trabaja en la tarea (intento ${INTENTOS[$id]}/$MAX_INTENTOS)…"
   salida="$(bash tools/minimax/run-task.sh "$id" 2>&1)"
   echo "$salida" >> "$LOG"
   tail -n 3 <<<"$salida" | head -2 | sed 's/^/   /' | tee -a "$LOG"
@@ -204,11 +216,17 @@ trabajar() {  # trabajar <id>
 }
 
 revisar() {  # revisar <id> → 0 si aprueba
-  local id="$1" salida diff_fichero
+  local id="$1" salida diff_fichero base actual
   diff_fichero="$ESTADO/$id.diff"
-  if [[ ! -s "$diff_fichero" ]]; then
-    # Sin foto propia (p. ej. trabajo hecho en otra sesión): el diff de
-    # la tarea, desde su primer intento.
+  base="$(cat "$ESTADO/$id.base" 2>/dev/null)"
+  if [[ -n "$base" ]]; then
+    # El diff de ESTA tarea: desde la foto que se hizo antes de que el
+    # trabajador tocara nada hasta ahora.
+    actual="$(arbol_actual)"
+    diff_entre "$base" "$actual" > "$diff_fichero"
+  else
+    # Sin foto propia (trabajo hecho en otra sesión): el diff de la
+    # tarea, desde su primer intento.
     $TASKS diff "$id" --total > "$diff_fichero" 2>/dev/null || true
   fi
   say "▸ [$id] Revisión automática…"
@@ -247,9 +265,12 @@ aprobar_y_commitear() {  # aprobar_y_commitear <id>
   fi
   say "   ▸ Commit: $id: $titulo"
   printf '     %s\n' "${ficheros[@]}" | tee -a "$LOG"
+  # Los ficheros nuevos (los que aún no están en git) no se pueden
+  # commitear con `git commit -- <fichero>`: hay que añadirlos antes.
+  git add -A -- "${ficheros[@]}" >> "$LOG" 2>&1
   if ! git commit -q -m "$id: $titulo" -- "${ficheros[@]}" >> "$LOG" 2>&1; then
-    say "   ✗ El commit falló (ver $LOG)"
-    return 1
+    say "   ✗ El commit falló (ver $LOG). La tarea vuelve al trabajador."
+    return 2
   fi
   say "   ✓ Commit hecho: $(git rev-parse --short HEAD)"
   return 0
@@ -266,17 +287,17 @@ while :; do
 
   est="$(estado "$id")"
   if [[ "$est" == "pendiente" ]]; then
+    if [[ "${INTENTOS[$id]:-0}" -ge "$MAX_INTENTOS" ]]; then
+      say "✗ [$id] Agotó los intentos de este recorrido ($MAX_INTENTOS). Se deja pendiente para que la mire una persona."
+      SALTAR["$id"]=1
+      FALLIDAS=$((FALLIDAS+1))
+      continue
+    fi
     trabajar "$id"
     est="$(estado "$id")"
     if [[ "$est" == "pendiente" ]]; then
       # El trabajador falló: la tarea vuelve a la cola.
-      intentos="$(campo "$id" attempts)"
-      if [[ "${intentos:-0}" -ge "$MAX_INTENTOS" ]]; then
-        say "✗ [$id] Agotó los intentos ($intentos). Se deja pendiente para que la mire una persona."
-        SALTAR["$id"]=1
-        FALLIDAS=$((FALLIDAS+1))
-        continue
-      fi
+      say "↻ [$id] el trabajador falló; vuelve a la cola."
       continue
     fi
   fi
@@ -288,26 +309,28 @@ while :; do
   fi
 
   if revisar "$id"; then
-    if aprobar_y_commitear "$id"; then
-      $TASKS status "$id" hecha --note "Aprobada por la revisión automática; pruebas en verde y commit hecho." >> "$LOG" 2>&1
-      say "✓ [$id] HECHA"
-      CERRADAS=$((CERRADAS+1))
-    else
-      $TASKS feedback "$id" --note "La revisión automática aprobó el trabajo, pero las pruebas no pasan (log en logs/). Corrige lo que fallen." >> "$LOG" 2>&1
-      say "↻ [$id] devuelta al trabajador (las pruebas fallan)"
-    fi
+    aprobar_y_commitear "$id"
+    case $? in
+      0)
+        $TASKS status "$id" hecha --note "Aprobada por la revisión automática; pruebas en verde y commit hecho." >> "$LOG" 2>&1
+        say "✓ [$id] HECHA"
+        CERRADAS=$((CERRADAS+1))
+        ;;
+      2)
+        $TASKS feedback "$id" --note "La revisión automática aprobó el trabajo, pero el commit falló (mira .tasks/logs/cola-*.log). Vuelve a hacer el cambio: el commit lo hace el script." >> "$LOG" 2>&1
+        say "↻ [$id] devuelta al trabajador (el commit falló)"
+        ;;
+      *)
+        $TASKS feedback "$id" --note "La revisión automática aprobó el trabajo, pero las pruebas no pasan (log en logs/). Corrige lo que fallen." >> "$LOG" 2>&1
+        say "↻ [$id] devuelta al trabajador (las pruebas fallan)"
+        ;;
+    esac
   else
     # Correcciones del revisor → vuelven al trabajador.
     correcciones="$(grep -ahE '^CORRECCION:' ".tasks/logs/${id}-revision-"*.log 2>/dev/null | tail -20 | sed 's/^CORRECCION: //')"
     [[ -z "$correcciones" ]] && correcciones="La revisión automática pidió correcciones (mira el registro en .tasks/logs/)."
     $TASKS feedback "$id" --note "$correcciones" >> "$LOG" 2>&1
     say "↻ [$id] devuelta al trabajador con correcciones"
-    intentos="$(campo "$id" attempts)"
-    if [[ "${intentos:-0}" -ge "$MAX_INTENTOS" ]]; then
-      say "✗ [$id] Agotó los intentos ($intentos). Se deja pendiente para que la mire una persona."
-      SALTAR["$id"]=1
-      FALLIDAS=$((FALLIDAS+1))
-    fi
   fi
 
   if [[ "$MAX_TAREAS" -gt 0 && "$CERRADAS" -ge "$MAX_TAREAS" ]]; then
