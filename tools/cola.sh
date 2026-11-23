@@ -147,18 +147,31 @@ if [[ "$CHECK_ONLY" -eq 1 ]]; then check_config; exit $?; fi
 # trabajando en ella, se devuelve a la cola.
 
 recuperar() {
-  local id pid
-  while read -r id; do
-    [[ -z "$id" ]] && continue
+  local id pid espera=0
+  # Hasta que no quede ninguna tarea "en curso" sin trabajador vivo:
+  # si no, run-task.sh se niega a empezar otra ("MiniMax ya está con
+  # T-0XX") y la cola se queda bloqueada.
+  while :; do
+    id=""
+    while read -r x; do
+      [[ -n "$x" ]] && { id="$x"; break; }
+    done < <(listar en_curso)
+    [[ -z "$id" ]] && return 0
+
     pid="$(pgrep -f "minimax/run-task.sh $id" 2>/dev/null | head -1)"
-    if [[ -z "$pid" ]]; then
-      say "↻ [$id] estaba en curso sin nadie trabajando: vuelve a la cola."
-      $TASKS status "$id" pendiente --note "Recuperada por cola.sh: no había ningún MiniMax trabajando en ella." >> "$LOG" 2>&1
-    else
+    if [[ -n "$pid" ]]; then
       say "▸ [$id] hay un MiniMax trabajando (pid $pid): se espera."
-      sleep 60
+      sleep 30
+      espera=$((espera+1))
+      if [[ "$espera" -gt 120 ]]; then
+        say "✗ [$id] lleva demasiado tiempo en curso: se para aquí para que la mire una persona."
+        return 1
+      fi
+      continue
     fi
-  done < <(listar en_curso)
+    say "↻ [$id] estaba en curso sin nadie trabajando: vuelve a la cola."
+    $TASKS status "$id" pendiente --note "Recuperada por cola.sh: no había ningún MiniMax trabajando en ella." >> "$LOG" 2>&1
+  done
 }
 
 if [[ "$DRY" -eq 1 ]]; then
@@ -279,6 +292,10 @@ aprobar_y_commitear() {  # aprobar_y_commitear <id>
 recuperar
 
 while :; do
+  # Red de seguridad: si alguien dejó una tarea en curso sin trabajador
+  # (una sesión que murió), se devuelve a la cola antes de seguir.
+  recuperar || break
+
   # 1) Tareas en revisión (trabajo hecho, sin revisar) o pendientes.
   id=""
   id="$(elegir en_revision)" || id=""
