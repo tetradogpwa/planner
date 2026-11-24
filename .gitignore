@@ -73,3 +73,6 @@ tests/e2e/node_modules/
 tests/e2e/.tmp/
 src-tauri/target-e2e/
 logs/
+
+# Arnés de pruebas del frontend (T-040): su carpeta target/
+tests/harness/frontend/target/

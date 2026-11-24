@@ -36,6 +36,15 @@
 .legal-links a:hover { background: var(--soft); }
 .legal-about dt { font-weight: 600; color: var(--muted); }
 .legal-about dd { margin: 0 0 0.5rem 0; font-family: ui-monospace, monospace; font-size: calc(0.875rem * var(--fs-meta)); overflow-wrap: anywhere; }
+/* El hash del frontend incrustado: es un dato técnico, se muestra
+   atenuado y con las letras espaciadas para que se lea como un
+   identificador y no como texto normal. Solo variables de tema (nunca
+   colores fijos), para que funcione en claro, oscuro y alto contraste. */
+.legal-about-hash {
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  word-break: break-all;
+}
 
 .legal-modal[hidden] { display: none; }
 .legal-modal {

@@ -1,6 +1,14 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+/// La copia del frontend a `dist/` y el hash de lo que se copia.
+///
+/// Está en su propio fichero para que las pruebas unitarias puedan
+/// ejecutarlo **solos** (sin `tauri_build::build()`, que exige el
+/// entorno completo de `cargo tauri`). El código que se compila para
+/// la app es el mismo que ejecutan las pruebas.
+mod frontend_copy;
+
 /// Variables de anuncios que se incrustan en el binario en tiempo de
 /// compilación. Se leen después en `src/ads.rs` desde el fichero que
 /// genera este script (`OUT_DIR/ads_env.rs`).
@@ -81,34 +89,40 @@ fn main() {
     tauri_build::build()
 }
 
+/// Copia el frontend a `dist/` y deja constancia de **qué** se copió.
+///
+/// El problema que resuelve esto (T-040): Tauri 2 incrusta el frontend
+/// como *blobs* dentro del binario, en tiempo de compilación (lo hace
+/// la macro `tauri::generate_context!`, al expandirse en `rustc`). Si
+/// el contenido de `dist/` cambia pero cargo no recompila el crate, el
+/// binario se publica con el frontend anterior.
+///
+/// Lo que obliga a recompilar es **esto**:
+///
+///   1. El `cargo:rerun-if-changed` que se emite **por cada fichero**
+///      del frontend (no solo por carpeta): al tocar un `.js` dentro
+///      de `ui/`, cargo vuelve a ejecutar este build script.
+///   2. El `include!` del fichero generado
+///      (`OUT_DIR/frontend_version.rs`) que hace el crate: si el
+///      build script se vuelve a ejecutar, cargo recompila el crate y
+///      `generate_context!` vuelve a incrustar los assets.
+///
+/// Y el hash del contenido copiado se emite además como
+/// `cargo:rustc-env=FRONTEND_HASH=<hash>`, que el crate lee con
+/// `env!("FRONTEND_HASH")` y expone en «Acerca de».
+///
+/// Ojo con el papel del hash: el valor de `cargo:rustc-env` **no** va
+/// en el fingerprint del build script (cargo solo guarda ahí las
+/// rutas de `rerun-if-changed`), así que por sí solo no obliga a
+/// recompilar. Lo que obliga son los dos puntos de arriba. El hash
+/// sirve para **saber** qué frontend lleva una build.
+///
+/// La lista de assets copiados (con su ruta) va en el fichero
+/// generado: así el hash no es una caja negra, sino algo que se puede
+/// recalcular y comparar con el contenido de `dist/`.
 fn copy_web_assets() {
-    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    let root = manifest_dir.join("..");
-    let dist = root.join("dist");
-
-    let _ = std::fs::remove_dir_all(&dist);
-    for asset in WEB_ASSETS {
-        let src = root.join(asset);
-        println!("cargo:rerun-if-changed={}", src.display());
-        copy_recursive(&src, &dist.join(asset))
-            .unwrap_or_else(|e| panic!("no se pudo copiar {asset} a dist/: {e}"));
-    }
-}
-
-fn copy_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
-    if src.is_dir() {
-        std::fs::create_dir_all(dst)?;
-        for entry in std::fs::read_dir(src)? {
-            let entry = entry?;
-            copy_recursive(&entry.path(), &dst.join(entry.file_name()))?;
-        }
-    } else {
-        if let Some(parent) = dst.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        std::fs::copy(src, dst)?;
-    }
-    Ok(())
+    let (_hash, assets) = frontend_copy::copy_web_assets(WEB_ASSETS);
+    frontend_copy::write_frontend_version(&assets);
 }
 
 /// Resuelve las claves de anuncios y las deja escritas para el crate.

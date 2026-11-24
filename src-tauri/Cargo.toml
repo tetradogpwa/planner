@@ -21,6 +21,7 @@ path = "src/main.rs"
 tauri-build = { version = "2", features = [] }
 dotenvy = "0.15"                # build.rs incrusta las claves de anuncios desde .env
 serde_json = "1"                # build.rs lee csp.json y genera el TAURI_CONFIG
+sha2 = "0.10"                   # build.rs calcula el hash del frontend copiado a dist/
 
 [dependencies]
 tauri = { version = "2", features = [] }
@@ -28,6 +29,12 @@ tauri-plugin-shell = "2"        # necesario para abrir enlaces externos (políti
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-admob = { path = "plugins/tauri-plugin-admob" }   # AdMob nativo (solo actúa en Android)
+
+# Solo para las pruebas: recalculan el hash del frontend a partir del
+# contenido de dist/ y lo comparan con el incrustado (T-040). La app
+# publicada no necesita una dependencia de hash.
+[dev-dependencies]
+sha2 = "0.10"
 
 # Dependencias del servidor MCP local (Streamable HTTP) para T-009.
 # Solo se compilan en escritorio: en Android/iOS no hay servidor.

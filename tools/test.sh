@@ -79,6 +79,10 @@ MCP_PORT=41237
 E2E_TARGET_DIR="$ROOT/src-tauri/target-e2e"
 E2E_BIN="$E2E_TARGET_DIR/debug/planner"
 E2E_TMP="$ROOT/tests/e2e/.tmp"
+# La carpeta donde el build script copia el frontend (el frontendDist
+# de Tauri). La comprobación del frontend incrustado copia de aquí el
+# frontend para poder marcarlo sin tocar ningún fichero del repo.
+FRONTEND_DIST="$ROOT/dist"
 # wayland (weston sin pantalla, por defecto) o x11 (Xvfb).
 E2E_DISPLAY="${PLANNER_E2E_DISPLAY:-wayland}"
 # Cuántos logs se conservan en logs/ (los más antiguos se borran).
@@ -380,17 +384,18 @@ run_e2e() {
   # que el binario de pruebas no lleva claves de anuncios.
   # ALLOW_NO_ADS=1: el build falla si no hay claves de anuncios y no se
   # pide explícitamente (T-034). Las pruebas son una de esas builds.
-  GOOGLE_ADSENSE_CLIENT= GOOGLE_ADSENSE_SLOT= \
-  GOOGLE_ADMOB_APP_ID= GOOGLE_ADMOB_BANNER_ID= GOOGLE_ADMOB_INTERSTITIAL_ID= \
-  ALLOW_NO_ADS=1 \
-  CARGO_TARGET_DIR="$E2E_TARGET_DIR" \
-    cargo tauri build --debug --no-bundle -- --locked || return 1
+  compilar_binario_pruebas || return 1
   [[ -x "$E2E_BIN" ]] || { echo "✗ No se encontró el binario $E2E_BIN"; return 1; }
 
   # El guard de build: sin claves de anuncios y sin ALLOW_NO_ADS=1, el
   # build tiene que FALLAR y decir qué hacer; y con claves, no puede
   # imprimir sus valores. Se comprueba con el propio build script.
   check_guard_de_build || return 1
+
+  # El frontend incrustado tiene que ser el actual (T-040): si se toca
+  # un .js del frontend, el binario recompilado tiene que llevar el
+  # asset nuevo.
+  check_frontend_embebido || return 1
 
   # Datos, configuración y caché aislados de los del usuario.
   rm -rf "$E2E_TMP"
@@ -601,6 +606,360 @@ check_guard_de_build() {
   fi
   echo "✓ Con claves de anuncios, el build dice solo el nombre de las variables"
   return 0
+}
+
+# ── El frontend incrustado tiene que ser el actual (T-040) ───────────
+# Tauri 2 incrusta el frontend como *blobs* en tiempo de compilación
+# (lo hace la macro `generate_context!`, al expandirse en `rustc`). Si
+# el contenido de la copia del frontend cambia pero cargo no recompila
+# el crate, el binario se publica con el frontend ANTERIOR: el usuario
+# recibe una app que no tiene los cambios que el repo dice que tiene.
+#
+# Aquí se comprueba de verdad, con el binario real:
+#
+#   1. Se compila y se lee el hash del frontend incrustado.
+#   2. Se copia el frontend a una carpeta temporal y se marca el `.js`
+#      de la COPIA.
+#   3. Se recompila usando esa copia como origen del frontend
+#      (`PLANNER_FRONTEND_ORIGEN`).
+#   4. Se comprueba que el hash ha cambiado y que el binario lleva el
+#      asset NUEVO (los blobs van comprimidos con brotli, así que hay
+#      que descomprimirlos para leerlos).
+#   5. Se recompila con el frontend del repo, para dejar el binario
+#      (y la copia del frontend) como estaban.
+#
+# El repo NO se toca en ningún momento: la marca va en la COPIA. Si el
+# script se interrumpe (un Ctrl-C, un `timeout`, un SIGHUP), el repo
+# sigue igual de limpio y solo hay que borrar la copia temporal (de lo
+# que se encargan los traps).
+#
+# Qué cubre cada comprobación:
+#
+#   * El hash (pasos 1 y 4) depende del CONTENIDO copiado: si el
+#     build script calculase el hash de otra cosa, los dos valores
+#     serían iguales y esta comprobación fallaría. Es la parte que
+#     comprueba el mecanismo del hash.
+#   * El asset nuevo (paso 4) es la propiedad de extremo a extremo:
+#     "marcar un .js ⇒ el binario lleva el frontend nuevo". Es la que
+#     comprueba que el frontend llega al binario.
+#
+# Las dos cosas juntas son las que importan: un hash que cambia pero
+# un binario con el asset viejo, o un asset nuevo con un hash que no
+# cambia, son los dos fallos que hay que descartar.
+
+# La copia temporal del frontend que usa la comprobación.
+#
+# Es una variable GLOBAL (y no `local`) a propósito: los traps la
+# tienen que poder borrar aunque la función que la creó ya haya
+# terminado (si no, el trap se quejaría de una variable sin asignar).
+COPIA_FRONTEND=""
+
+# El PID de la compilación en curso (si la hay).
+#
+# También es GLOBAL, por el mismo motivo que `COPIA_FRONTEND`: la
+# trampa que la mata tiene que poder encontrarla aunque la función que
+# la lanzó ya haya terminado.
+PID_COMPILACION=""
+
+# Borra la copia temporal del frontend (si queda alguna) y deja el
+# entorno como estaba.
+limpiar_copia_frontend() {
+  if [[ -n "$COPIA_FRONTEND" && -d "$COPIA_FRONTEND" ]]; then
+    rm -rf "$COPIA_FRONTEND"
+  fi
+  COPIA_FRONTEND=""
+  unset PLANNER_FRONTEND_ORIGEN
+}
+
+# Mata la compilación en curso (si la hay).
+#
+# Se mata el **grupo de procesos** (cargo y los rustc que lanza), no
+# solo cargo: si se quedaran vivos, seguirían escribiendo en la
+# carpeta de compilación y la siguiente compilación se pelearía con
+# ellos.
+matar_compilacion() {
+  local pid="${PID_COMPILACION:-}"
+  PID_COMPILACION=""
+  [[ -n "$pid" ]] || return 0
+  kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null
+  return 0
+}
+
+check_frontend_embebido() {
+  echo "▸ Comprobando que el binario lleva el frontend actual (T-040)"
+
+  # El .js que se marca (dentro de la COPIA del frontend).
+  local js="ui/legal/legal-card.js"
+  if [[ ! -f "$ROOT/$js" ]]; then
+    echo "✗ No existe el .js del frontend que hay que comprobar: $js" >&2
+    return 1
+  fi
+  if [[ ! -d "$FRONTEND_DIST" ]]; then
+    echo "✗ No existe la copia del frontend: $FRONTEND_DIST" >&2
+    return 1
+  fi
+
+  # Los traps que había antes de esta función: se guardan y se
+  # restauran al salir, para no dejar un `trap ... RETURN` colgado
+  # (salta en cada función posterior del script y lo rompería).
+  local trap_previo_exit trap_previo_int trap_previo_term trap_previo_hup trap_previo_return
+  trap_previo_exit=$(trap -p EXIT)
+  trap_previo_int=$(trap -p INT)
+  trap_previo_term=$(trap -p TERM)
+  trap_previo_hup=$(trap -p HUP)
+  trap_previo_return=$(trap -p RETURN)
+
+  # Con EXIT, INT, TERM y HUP se para la compilación y se borra la
+  # copia temporal; con RETURN, al salir de esta función. TERM y HUP
+  # no se pueden dejar de lado: son las señales con las que se mata un
+  # proceso de verdad (`timeout`, `kill`, al cerrar la terminal) y, sin
+  # atraparlas, la copia se quedaría en el disco.
+  trap 'matar_compilacion; limpiar_copia_frontend' EXIT
+  trap 'matar_compilacion; limpiar_copia_frontend; exit 130' INT
+  trap 'matar_compilacion; limpiar_copia_frontend; exit 143' TERM
+  trap 'matar_compilacion; limpiar_copia_frontend; exit 129' HUP
+  trap 'matar_compilacion; limpiar_copia_frontend' RETURN
+
+  # El resultado de la comprobación: se guarda en una variable y al
+  # final se restauran los traps y se devuelve.
+  local ok=1
+
+  # ── 1. Compila (lo normal es que ya esté compilado) ───────────────
+  # Se compila aquí para que la comprobación no dependa de que el
+  # binario del E2E esté al día.
+  if ! compilar_binario_pruebas; then
+    echo "✗ No se pudo compilar el binario para comprobar el frontend" >&2
+    ok=0
+  fi
+
+  # ── 2. El hash del frontend incrustado en el binario ──────────────
+  # El hash va en el binario de verdad: `AppInfo` lo expone al
+  # frontend (se ve en «Acerca de»), así que el enlazador no lo
+  # elimina. Se lee con `grep -a` sobre el binario.
+  local hash_antes=""
+  if [[ "$ok" == 1 ]]; then
+    hash_antes=$(hash_frontend_binario)
+    if [[ -z "$hash_antes" ]]; then
+      echo "✗ No se encontró el hash del frontend en el binario $E2E_BIN" >&2
+      echo "  (se usa para saber qué frontend lleva esta build)." >&2
+      ok=0
+    fi
+  fi
+
+  # ── 3. La carpeta de assets incrustados ───────────────────────────
+  local assets=""
+  if [[ "$ok" == 1 ]]; then
+    assets=$(dir_assets_codegen)
+    if [[ -z "$assets" ]]; then
+      echo "✗ No se encontró la carpeta de assets incrustados (tauri-codegen-assets)" >&2
+      echo "  en $E2E_TARGET_DIR: no se puede comprobar qué lleva el binario." >&2
+      ok=0
+    fi
+  fi
+
+  # ── 4. La copia del frontend, con el .js marcado ──────────────────
+  # La marca tiene que ser fácil de buscar en el asset descomprimido y
+  # no puede aparecer en el repo (si no, la comprobación valdría
+  # incluso sin recompilar).
+  local marca="T040-$(date +%s)-$$"
+  if [[ "$ok" == 1 ]]; then
+    COPIA_FRONTEND=$(mktemp -d)
+    if ! cp -R "$FRONTEND_DIST/." "$COPIA_FRONTEND/"; then
+      echo "✗ No se pudo copiar el frontend a $COPIA_FRONTEND" >&2
+      ok=0
+    fi
+    if [[ "$ok" == 1 ]]; then
+      printf '// %s\n' "$marca" >> "$COPIA_FRONTEND/$js"
+    fi
+  fi
+
+  # ── 5. Recompila con la copia como origen del frontend ───────────
+  # `PLANNER_FRONTEND_ORIGEN` le dice al build script de dónde copiar
+  # el frontend: así el binario se compila con el .js marcado sin
+  # haber tocado ningún fichero del repo.
+  if [[ "$ok" == 1 ]]; then
+    export PLANNER_FRONTEND_ORIGEN="$COPIA_FRONTEND"
+    if ! compilar_binario_pruebas; then
+      echo "✗ No se pudo recompilar el binario tras marcar $js" >&2
+      ok=0
+    fi
+    unset PLANNER_FRONTEND_ORIGEN
+  fi
+
+  local hash_despues=""
+  if [[ "$ok" == 1 ]]; then
+    hash_despues=$(hash_frontend_binario)
+    assets=$(dir_assets_codegen)
+    if [[ -z "$assets" ]]; then
+      echo "✗ Tras recompilar, no se encontró la carpeta de assets incrustados" >&2
+      ok=0
+    fi
+  fi
+
+  # ── 6. El hash tiene que haber cambiado ───────────────────────────
+  # El hash se calcula sobre el CONTENIDO copiado: si se marca un `.js`
+  # y el hash no cambia, el build script no está mirando el frontend
+  # (o el crate no se recompila con el hash nuevo).
+  if [[ "$ok" == 1 && "$hash_antes" == "$hash_despues" ]]; then
+    echo "✗ El hash del frontend NO ha cambiado tras marcar $js:" >&2
+    echo "  antes   $hash_antes" >&2
+    echo "  después $hash_despues" >&2
+    echo "  El hash tiene que depender del contenido copiado: si no," >&2
+    echo "  no sirve para saber qué frontend lleva la build." >&2
+    ok=0
+  fi
+
+  # ── 7. El binario tiene que llevar el asset NUEVO ─────────────────
+  # Los blobs van comprimidos con brotli: hay que descomprimirlos
+  # (no vale buscarlos en crudo, porque el texto no aparece tal cual).
+  if [[ "$ok" == 1 ]] && ! assets_llevan_marca "$assets" "$marca"; then
+    echo "✗ El binario NO lleva el frontend nuevo:" >&2
+    echo "  se marcó $js (marca $marca) y se recompiló, pero el asset" >&2
+    echo "  incrustado sigue siendo el anterior." >&2
+    echo "  Esto significa que el cambio del frontend no llega al" >&2
+    echo "  binario: no se puede publicar (T-040)." >&2
+    ok=0
+  fi
+
+  # ── 8. Se borra la copia y se recompila con el frontend del repo ──
+  # Así el binario (y la copia del frontend) se quedan como estaban:
+  # los E2E se ejecutan con la app tal y como está en el repo.
+  limpiar_copia_frontend
+  if [[ "$ok" == 1 ]]; then
+    if ! compilar_binario_pruebas; then
+      echo "✗ No se pudo recompilar el binario con el frontend del repo" >&2
+      ok=0
+    else
+      local hash_final
+      hash_final=$(hash_frontend_binario)
+      if [[ "$hash_final" != "$hash_antes" ]]; then
+        echo "✗ Tras recompilar con el frontend del repo, el hash sigue siendo" >&2
+        echo "  $hash_final (se esperaba $hash_antes): el binario no se ha" >&2
+        echo "  recompilado con el frontend del repo." >&2
+        ok=0
+      fi
+    fi
+  fi
+
+  # ── 9. Se restauran los traps ─────────────────────────────────────
+  # Sin esto, el `trap ... RETURN` seguiría instalado y saltaría en
+  # cada función posterior del script.
+  trap - EXIT INT TERM HUP RETURN
+  [[ -n "$trap_previo_exit" ]] && eval "$trap_previo_exit"
+  [[ -n "$trap_previo_int" ]] && eval "$trap_previo_int"
+  [[ -n "$trap_previo_term" ]] && eval "$trap_previo_term"
+  [[ -n "$trap_previo_hup" ]] && eval "$trap_previo_hup"
+  [[ -n "$trap_previo_return" ]] && eval "$trap_previo_return"
+
+  if [[ "$ok" == 1 ]]; then
+    echo "✓ Tras marcar un .js del frontend, el binario lleva el asset nuevo"
+    echo "✓ El hash del frontend cambió ($hash_antes → $hash_despues)"
+    return 0
+  fi
+  return 1
+}
+
+# El hash del frontend incrustado en el binario de pruebas.
+#
+# El hash es un SHA-256 en hexadecimal que `AppInfo` expone al
+# frontend (se ve en «Acerca de»), así que está en el binario de
+# verdad: se lee con `grep -a` sobre el binario.
+#
+# Se busca con el nombre y la versión del producto delante
+# ("planner<versión><hash>"): en el binario van pegados (son las tres
+# cadenas de `AppInfo`, seguidas), así que el ancla los separa del
+# resto de hexadecimal que hay dentro.
+hash_frontend_binario() {
+  [[ -f "$E2E_BIN" ]] || return 0
+  grep -aoE 'planner[0-9]+\.[0-9]+\.[0-9]+[0-9a-f]{64}' "$E2E_BIN" 2>/dev/null \
+    | grep -oaE '[0-9a-f]{64}$' | head -1
+}
+# Compila el binario de pruebas (debug, sin anuncios) en el directorio
+# de trabajo de los E2E.
+#
+# La compilación se lanza en **segundo plano**, en su propio grupo de
+# procesos (`set -m`), y se espera con `wait`. La razón: si la
+# compilación fuera en primer plano, bash no ejecutaría la trampa de
+# una señal (un TERM, un INT) hasta que la compilación terminara
+# (minutos). En segundo plano, `wait` se interrumpe con la señal, la
+# trampa mata la compilación (con su grupo de procesos) y el script
+# sale en seguida.
+compilar_binario_pruebas() {
+  set -m
+  GOOGLE_ADSENSE_CLIENT= GOOGLE_ADSENSE_SLOT= \
+  GOOGLE_ADMOB_APP_ID= GOOGLE_ADMOB_BANNER_ID= GOOGLE_ADMOB_INTERSTITIAL_ID= \
+  ALLOW_NO_ADS=1 \
+  CARGO_TARGET_DIR="$E2E_TARGET_DIR" \
+    cargo tauri build --debug --no-bundle -- --locked &
+  PID_COMPILACION=$!
+  set +m
+  wait "$PID_COMPILACION"
+  local codigo=$?
+  PID_COMPILACION=""
+  return "$codigo"
+}
+
+# La carpeta donde Tauri deja los assets incrustados (los blobs).
+#
+# El nombre de la carpeta lleva un hash que cambia con cada versión
+# de build.rs, así que se busca con `find` (y no con un glob fijo).
+#
+# Puede haber **varias** (una por cada versión de `build.rs` que se ha
+# compilado en este repositorio): hay que quedarse con la **última**
+# build, que es la que lleva el frontend recién copiado. Por eso se
+# ordenan por fecha de modificación y se coge la más reciente.
+dir_assets_codegen() {
+  # La más reciente primero. `-printf` es de GNU find; si no está
+  # (o no devuelve nada), se recurre a `ls -td`, que ordena por la
+  # fecha del directorio.
+  local por_fecha
+  por_fecha=$(find "$E2E_TARGET_DIR" -type d -name 'tauri-codegen-assets' \
+    -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+  if [[ -n "$por_fecha" && -d "$por_fecha" ]]; then
+    printf '%s\n' "$por_fecha"
+    return 0
+  fi
+  find "$E2E_TARGET_DIR" -type d -name 'tauri-codegen-assets' 2>/dev/null \
+    | xargs -r ls -td 2>/dev/null | head -1
+}
+
+# ¿Alguno de los assets incrustados lleva la marca?
+#
+# Los blobs están comprimidos con brotli, así que hay que
+# descomprimirlos: por eso se usa python3 con el módulo `brotli` (si
+# no lo hay, se dice qué falta y se sale con error).
+assets_llevan_marca() {
+  local assets="$1" marca="$2"
+  python3 - "$assets" "$marca" <<'PY'
+import glob, os, sys
+
+assets_dir, marca = sys.argv[1], sys.argv[2]
+
+try:
+    import brotli
+except ImportError:
+    print("falta el módulo 'brotli' de python3: "
+          "sudo apt install -y python3-brotli", file=sys.stderr)
+    sys.exit(2)
+
+for ruta in glob.glob(os.path.join(assets_dir, "*")):
+    if not os.path.isfile(ruta):
+        continue
+    with open(ruta, "rb") as f:
+        datos = f.read()
+    # Los blobs van comprimidos con brotli. Si alguno no lo estuviera,
+    # también se prueba en crudo (por si el formato cambia).
+    try:
+        texto = brotli.decompress(datos).decode("utf-8", "replace")
+    except Exception:
+        texto = datos.decode("utf-8", "replace")
+    if marca in texto:
+        print(ruta)
+        sys.exit(0)
+
+print("la marca no está en ningún asset", file=sys.stderr)
+sys.exit(1)
+PY
 }
 
 summary_e2e() {

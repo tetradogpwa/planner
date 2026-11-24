@@ -22,6 +22,146 @@
 
 mod ads;
 
+/// Versión del frontend que lleva incrustado este binario.
+///
+/// Tauri 2 incrusta el frontend como *blobs* dentro del binario, en
+/// tiempo de compilación. Para saber con certeza **qué** frontend lleva
+/// una build (y que no sea el anterior), `build.rs` calcula el hash
+/// SHA-256 del contenido copiado a `dist/` y lo emite como
+/// `cargo:rustc-env=FRONTEND_HASH=<hash>`.
+///
+/// Ojo con el papel del hash: **no** es lo que incrusta los assets (eso
+/// lo hace `generate_context!`) ni lo que obliga a recompilar. Lo que
+/// obliga a recompilar son el `cargo:rerun-if-changed` por fichero que
+/// emite el build script y el `include!` del fichero generado. El
+/// hash sirve para **saber** qué frontend lleva esta build.
+///
+/// La lista de assets copiados (con su ruta) va en un fichero
+/// generado (`OUT_DIR/frontend_version.rs`) que este módulo incluye:
+/// con ella, el hash se puede recalcular desde el contenido de
+/// `dist/` y comparar con el incrustado.
+pub mod frontend_version {
+    include!(concat!(env!("OUT_DIR"), "/frontend_version.rs"));
+}
+
+/// Hash SHA-256 del frontend incrustado en este binario.
+///
+/// Se lee con `env!("FRONTEND_HASH")` (no con el `include!` de
+/// `frontend_version`) porque el valor tiene que llegar al binario tal
+/// cual: `AppInfo` lo expone al frontend (se ve en «Acerca de»), así
+/// que el enlazador no lo elimina y se puede leer con `grep -a` para
+/// comprobar que una build lleva el frontend que se acaba de tocar,
+/// sin tener que descompilarlo.
+pub const FRONTEND_HASH: &str = env!("FRONTEND_HASH");
+
+/// Rutas (relativas a `dist/`) de los assets que se copiaron al
+/// frontend incrustado, en el mismo orden en que se calculó el hash.
+///
+/// Con esta lista y el contenido de `dist/` se puede **recalcular** el
+/// hash y compararlo con `FRONTEND_HASH`: eso es lo que hacen las
+/// pruebas de este módulo. Sin la lista, el hash sería un valor que
+/// nadie puede verificar.
+pub const FRONTEND_ASSETS: &[&str] = frontend_version::FRONTEND_ASSETS;
+
+/// Comprueba que el hash del frontend incrustado corresponde **al
+/// contenido que hay ahora mismo en `dist/`**.
+///
+/// Esta es la comprobación de verdad: recalcula el hash con la misma
+/// fórmula que usa `build.rs` (SHA-256 de la ruta de cada asset, un
+/// byte nulo, su contenido y otro byte nulo, en el orden de
+/// `FRONTEND_ASSETS`) y lo compara con el hash incrustado en el binario.
+///
+/// Si no coinciden, el binario lleva un frontend que ya no es el que se
+/// copió: algo se ha quedado viejo y el binario no se puede publicar.
+///
+/// Lo comprueba `cargo test`, no la app en marcha: la app ya tiene
+/// incrustado su frontend, así que no puede "recalcular" nada en
+/// runtime. La comprobación de que el binario **recompilado** lleva el
+/// frontend nuevo la hace `tools/test.sh` (`check_frontend_embebido`):
+/// compila, toca un `.js`, recompila, mira el blob incrustado y
+/// comprueba que el hash incrustado ha cambiado.
+#[cfg(test)]
+mod tests {
+    use super::{FRONTEND_ASSETS, FRONTEND_HASH};
+
+    /// Recalcula el hash del frontend a partir de `dist/`.
+    ///
+    /// La fórmula es la misma que la de `build.rs`: por cada asset, su
+    /// ruta (con `/` como separador), un byte nulo, su contenido y otro
+    /// byte nulo.
+    fn recalcular_hash(dist: &std::path::Path) -> String {
+        use sha2::Digest;
+        let mut hash = sha2::Sha256::new();
+        for asset in FRONTEND_ASSETS {
+            let ruta = dist.join(asset);
+            let contenido = std::fs::read(&ruta).unwrap_or_else(|e| {
+                panic!("no se pudo leer {}: {e}", ruta.display());
+            });
+            hash.update(asset.as_bytes());
+            hash.update([0]);
+            hash.update(contenido);
+            hash.update([0]);
+        }
+        hash.finalize().iter().map(|b| format!("{b:02x}")).collect()
+    }
+
+    /// La carpeta `dist/`: la copia del frontend que se incrusta.
+    fn dist() -> std::path::PathBuf {
+        let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        manifest_dir.join("..").join("dist")
+    }
+
+    #[test]
+    fn el_hash_del_frontend_es_un_sha256_en_hexadecimal() {
+        assert_eq!(
+            FRONTEND_HASH.len(),
+            64,
+            "el hash del frontend tiene que ser un SHA-256 en hexadecimal: \
+             {FRONTEND_HASH}"
+        );
+        assert!(
+            FRONTEND_HASH.chars().all(|c| c.is_ascii_hexdigit()),
+            "el hash del frontend solo puede tener dígitos y letras hexadecimales: \
+             {FRONTEND_HASH}"
+        );
+    }
+
+    #[test]
+    fn el_hash_del_frontend_no_es_vacio() {
+        assert!(
+            !FRONTEND_HASH.is_empty(),
+            "el hash del frontend no puede estar vacío: eso significaría que \
+             el frontend no se copió a dist/"
+        );
+    }
+
+    #[test]
+    fn hay_assets_del_frontend_que_verificar() {
+        // Si la lista de assets fuera vacía, el hash valdría siempre lo
+        // mismo y las pruebas de abajo no comprobarían nada.
+        assert!(
+            !FRONTEND_ASSETS.is_empty(),
+            "la lista de assets del frontend no puede estar vacía: el hash \
+             se calcularía sobre nada"
+        );
+    }
+
+    #[test]
+    fn el_hash_incrustado_es_el_del_contenido_de_dist() {
+        // La comprobación de verdad: el hash que lleva el binario tiene
+        // que ser el del contenido que hay ahora en `dist/`. Si el
+        // frontend cambiara después de la última compilación, los dos
+        // valores no coincidirían y el binario no sería publicable.
+        let esperado = recalcular_hash(&dist());
+        assert_eq!(
+            FRONTEND_HASH, esperado,
+            "el hash incrustado ({FRONTEND_HASH}) no es el del contenido de \
+             dist/ ({esperado}): el binario lleva un frontend que ya no es \
+             el que se copió"
+        );
+    }
+}
+
 // Servidor MCP local: solo se compila en escritorio. En Android/iOS
 // el módulo ni se incluye y los comandos `mcp_start` / `mcp_stop` /
 // `mcp_reply` no se registran.
@@ -40,6 +180,12 @@ pub struct AppInfo {
     pub product_name: &'static str,
     pub version: &'static str,
     pub identifier: &'static str,
+    /// Hash SHA-256 del frontend incrustado en este binario.
+    ///
+    /// Va aquí para que el hash **se use** de verdad (y no lo elimine
+    /// el enlazador): el frontend lo muestra en «Acerca de» y así se
+    /// puede comprobar qué frontend lleva una build (T-040).
+    pub frontend_hash: &'static str,
 }
 
 /// Devuelve información estática sobre la app (útil para "Acerca de").
@@ -49,6 +195,7 @@ fn get_app_info() -> AppInfo {
         product_name: env!("CARGO_PKG_NAME"),
         version: env!("CARGO_PKG_VERSION"),
         identifier: env!("CARGO_PKG_NAME"),
+        frontend_hash: FRONTEND_HASH,
     }
 }
 

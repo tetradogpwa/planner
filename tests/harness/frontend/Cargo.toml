@@ -1,0 +1,14 @@
+[package]
+name = "frontend-harness"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "Arnés de pruebas para la copia del frontend de src-tauri/build.rs (T-040)"
+
+# Solo `sha2`: el mismo hashing que usa `src-tauri/frontend_copy.rs`.
+[dependencies]
+sha2 = "0.10"
+
+[[bin]]
+name = "frontend-harness"
+path = "src/main.rs"

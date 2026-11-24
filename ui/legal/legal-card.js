@@ -75,6 +75,12 @@ export class LegalCard {
         this.root.querySelector('#legal-app-name').textContent    = info.product_name;
         this.root.querySelector('#legal-app-version').textContent  = info.version;
         this.root.querySelector('#legal-app-id').textContent       = info.identifier;
+        // El hash del frontend incrustado: dice qué frontend lleva esta
+        // build (T-040). Se muestra corto (los primeros 12 caracteres)
+        // porque el entero no le dice nada a nadie.
+        const hash = info.frontend_hash ?? '';
+        this.root.querySelector('#legal-app-frontend-hash').textContent =
+          hash ? hash.slice(0, 12) : '—';
       }
     } catch { /* sin Tauri; dejamos placeholders */ }
   }
