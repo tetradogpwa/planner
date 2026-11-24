@@ -20,12 +20,14 @@
   gap: 1rem;
 }
 
-/* Fila nombre + veces */
+/* Fila nombre + veces + fecha */
 .form-row {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  align-items: flex-end;
+  /* Arriba (no abajo): la línea del error de validación, que siempre
+     reserva su sitio bajo el nombre, no descentrara los campos. */
+  align-items: flex-start;
 }
 .form-group {
   display: flex;
@@ -37,6 +39,11 @@
 .form-group--small { flex: 0 0 auto; min-width: 6.5rem; }
 .form-group--small label { white-space: nowrap; }
 .form-group.form-group--small input { width: 7rem; max-width: 100%; }
+/* El campo de fecha necesita más ancho que "Veces/día" (el formato de
+   la fecha y el botón del calendario no caben en 7rem), pero que pueda
+   encogerse: con letra grande no debe salirse de la pantalla. */
+.form-group.form-group--date { flex: 0 1 auto; min-width: 0; }
+.form-group.form-group--date input { width: auto; max-width: 100%; }
 /* Las opciones también son <label> dentro de .form-group: que sigan el
    tamaño de "Opciones seleccionables", no el de las etiquetas. */
 .form-group label.repeat-option,
@@ -64,6 +71,20 @@
 .form-group input:focus,
 .form-group select:focus {
   border-color: var(--primary);
+}
+
+/* ── Error de validación (junto al campo, no en una ventana de diálogo) ── */
+/* La región role="alert" vive siempre en el DOM (reserva su sitio con
+   min-height, como las otras regiones de estado de la app): si se
+   ocultara al estar vacía, desaparecería del árbol de accesibilidad y
+   el mensaje no se anunciaría al aparecer. */
+.form-error {
+  margin: 0;
+  min-height: 1.2rem;
+  color: var(--danger);
+  font-size: calc(0.875rem * var(--fs-input));
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 /* ── Radio options ── */

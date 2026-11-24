@@ -1,5 +1,4 @@
-import { buildTaskFromSpec } from '../../../back/taskSpec.js';
-import { TaskForm }         from '../taskForm/taskForm-card.js';
+import { TaskForm } from '../taskForm/taskForm-card.js';
 
 /** Convierte un objeto tarea a estado del formulario. */
 function taskToFormState(task) {
@@ -44,7 +43,11 @@ export class EditTaskCard {
     this.cache();
     // El formulario es el mismo módulo que usa el alta (T-047):
     // aquí, con prefijo de id ("edit"): editTaskName, editTimesPerDay…
-    this.form = new TaskForm(this.root.querySelector('#editTaskFormMount'), { prefix: 'edit' });
+    // El formulario se guarda solo (su submit) y avisa con onSave.
+    this.form = new TaskForm(this.root.querySelector('#editTaskFormMount'), {
+      prefix: 'edit',
+      onSave: (task) => this.guardarTarea(task),
+    });
     await this.form.init();
     this.prefill();
     this.bind();
@@ -55,12 +58,19 @@ export class EditTaskCard {
   }
 
   prefill() {
-    this.form.setValues({ name: this.task.Name ?? '', total: this.task.Total ?? 1 });
+    this.form.setValues({
+      name:  this.task.Name ?? '',
+      total: this.task.Total ?? 1,
+      date:  this.task.StartDate,
+    });
     this.form.setState(this.state);
   }
 
   bind() {
-    this.saveBtn.addEventListener('click', () => this.saveTask());
+    // El botón es type="submit" del <form> del formulario: el navegador
+    // lo envía (y Enter en el nombre hace lo mismo). Como el formulario
+    // vive en otro sitio del DOM, se lo asocia con su atributo `form`.
+    this.saveBtn.setAttribute('form', this.form.ids.formId);
 
     // Ambos botones de cancelar
     this.root.querySelector('#cancelEditBtn').addEventListener('click',  () => this.#cancel());
@@ -69,17 +79,7 @@ export class EditTaskCard {
 
   // ── Guardar ──────────────────────────────────────────────────────────────
 
-  saveTask() {
-    // Se conserva la fecha de inicio de la tarea que se está editando.
-    const spec = this.form.buildSpec(this.task.StartDate);
-
-    let task;
-    try {
-      task = buildTaskFromSpec(spec);
-    } catch (err) {
-      return alert(err.message);
-    }
-
+  guardarTarea(task) {
     this.root.dispatchEvent(new CustomEvent('task-update', { detail: task, bubbles: true }));
   }
 

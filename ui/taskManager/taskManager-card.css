@@ -153,6 +153,20 @@
 .edit-mode .btn-trash,
 .edit-mode .btn-edit { display: flex; }
 
+/* ── Aviso de tarea guardada ── */
+/* Región role="status": el aviso se anuncia a los lectores de pantalla.
+   La región vive siempre en el DOM (reserva su sitio con min-height,
+   como las otras regiones de estado de la app): si se ocultara al
+   estar vacía, desaparecería del árbol de accesibilidad y muchos
+   lectores de pantalla no anunciarían el mensaje. */
+.task-status {
+  margin: 0;
+  min-height: 1.2rem;
+  color: var(--text-secondary);
+  font-size: calc(0.875rem * var(--fs-meta));
+  overflow-wrap: anywhere;
+}
+
 /* ── Panel de edición inline ── */
 .edit-panel {
   display: none;

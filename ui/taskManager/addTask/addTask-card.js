@@ -1,6 +1,4 @@
-import { buildTaskFromSpec } from '../../../back/taskSpec.js';
-import { todayISO }         from '../../../back/calendar.js';
-import { TaskForm }         from '../taskForm/taskForm-card.js';
+import { TaskForm } from '../taskForm/taskForm-card.js';
 
 export class AddTaskCard {
   constructor(root) {
@@ -16,7 +14,10 @@ export class AddTaskCard {
     this.cache();
     // El formulario es el mismo módulo que usa la edición (T-047):
     // aquí, sin prefijo de id (taskName, timesPerDay, extraOptions…).
-    this.form = new TaskForm(this.root.querySelector('#addTaskFormMount'));
+    // El formulario se guarda solo (su submit) y avisa con onSave.
+    this.form = new TaskForm(this.root.querySelector('#addTaskFormMount'), {
+      onSave: (task) => this.creaTarea(task),
+    });
     await this.form.init();
     this.bind();
   }
@@ -26,27 +27,13 @@ export class AddTaskCard {
   }
 
   bind() {
-    this.btn.addEventListener('click', () => this.createTask());
+    // El botón es type="submit" del <form> del formulario: el navegador
+    // lo envía (y Enter en el nombre hace lo mismo). Como el formulario
+    // vive en otro sitio del DOM, se lo asocia con su atributo `form`.
+    this.btn.setAttribute('form', this.form.ids.formId);
   }
 
-  createTask() {
-    // Construye el spec que espera PlannerApi / buildTaskFromSpec. La
-    // validación y construcción por tipo de repetición viven en
-    // back/taskSpec.js: si algo no cuadra, buildTaskFromSpec lanza el
-    // error con el mensaje en español y lo mostramos al usuario.
-    //
-    // La tarea empieza HOY (su fecha de inicio es real, no un offset
-    // respecto a un origen): así la columna en la que sale depende del
-    // día de la semana de verdad y no del día en que se abrió la app.
-    const spec = this.form.buildSpec(todayISO());
-
-    let task;
-    try {
-      task = buildTaskFromSpec(spec);
-    } catch (err) {
-      return alert(err.message);
-    }
-
+  creaTarea(task) {
     this.root.dispatchEvent(new CustomEvent('task-create', { detail: task, bubbles: true }));
     this.form.reset();
   }

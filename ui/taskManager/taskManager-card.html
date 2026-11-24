@@ -13,4 +13,10 @@
   </div>
 
   <div id="taskListMount"></div>
+
+  <!-- Aviso de que la tarea se ha guardado: es una región role="status"
+       que vive siempre en el DOM (reserva su sitio aunque esté vacía)
+       para que los lectores de pantalla la anuncien al cambiar su
+       texto. -->
+  <p id="taskStatus" class="task-status" role="status"></p>
 </div>

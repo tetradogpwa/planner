@@ -3,7 +3,8 @@
 // Para cada uno crea la tarea desde la UI, comprueba la etiqueta de tipo
 // en la lista y verifica en qué celdas (lunes a domingo) aparece su
 // insignia en la vista Semana. Termina con las validaciones del
-// formulario (alert con browser.acceptAlert) y el caso de Veces/día > 1.
+// formulario (el error se muestra junto al campo, sin ventanas de
+// diálogo: T-048) y el caso de Veces/día > 1.
 
 import {
   abrirAppNueva,
@@ -33,21 +34,19 @@ describe('Formulario de tareas: tipos de repetición', () => {
   // listener para 'dialog'. Sin listener, el alert se cierra antes de
   // que nuestro await browser.acceptAlert() pueda encontrarlo.
   //
-  // El criterio del supervisor pide validar con browser.acceptAlert().
-  // Hacemos los dos: registramos el listener para que WebdriverIO
-  // mantenga el alert abierto, lo aceptamos con acceptAlert(), y
-  // mediante un polyfill de window.alert capturamos también el mensaje
-  // para poder comprobarlo (el alert nativo en WebKit headless puede
-  // no reportar el texto de forma fiable, pero sí dispara el evento).
+  // Desde T-048 la aplicación NO abre ninguna ventana de diálogo: los
+  // errores de validación se muestran junto al campo. El polyfill de
+  // window.alert se queda como sonda: si la app volviera a llamar a
+  // alert(), el mensaje quedaría registrado (y la prueba lo vería).
+  // No se llama al alert original, para que un diálogo nativo no
+  // bloquee la sesión.
   // Lo registramos en beforeEach porque la app puede perder
   // listeners al navegar entre vistas (la sesión DOM se reinicia).
   beforeEach(async () => {
     await browser.execute(() => {
       window.__lastAlert = null;
-      const origAlert = window.alert;
       window.alert = (msg) => {
         window.__lastAlert = String(msg);
-        return origAlert ? origAlert.call(window, msg) : undefined;
       };
     });
   });
@@ -56,6 +55,21 @@ describe('Formulario de tareas: tipos de repetición', () => {
     // auto-handle de WebdriverIO y dejamos el alert abierto para
     // poder llamar a acceptAlert().
     browser.on('dialog', () => {});
+  });
+
+  /** Estado del error de validación que se muestra junto al campo del
+   *  nombre: el mensaje, si se ve, y qué marca el campo (T-048).
+   *
+   *  Los atributos se leen con el comando nativo del WebDriver (no con
+   *  un script): leer `aria-describedby` desde un script hace que
+   *  WebKit calcule la descripción accesible del campo y el script
+   *  falla con un error que no es del test. */
+  const errorEnElCampo = async () => ({
+    alerta:   await browser.execute(() => window.__lastAlert),
+    mensaje:  await $('#taskError').getText(),
+    visible:  await $('#taskError').isDisplayed(),
+    invalido: await $('#taskName').getAttribute('aria-invalid'),
+    foco:     await browser.execute(() => document.activeElement?.id ?? ''),
   });
 
   it('la app arranca con la lista de tareas vacía', async () => {
@@ -180,7 +194,7 @@ describe('Formulario de tareas: tipos de repetición', () => {
     });
   });
 
-  it('valida: nombre vacío muestra alert y no crea la tarea', async () => {
+  it('valida: nombre vacío muestra el error junto al campo y no crea la tarea', async () => {
     await $('button.nav-item[data-view="tasks"]').click();
     await $('#view-tasks-heading').waitForDisplayed();
     const antes = await $('#taskCount').getText();
@@ -194,33 +208,20 @@ describe('Formulario de tareas: tipos de repetición', () => {
     await $('input[name="repeat"][value="daily"]').click();
     await $('#addTaskBtn').click();
 
-    // Primero esperamos a que el polyfill haya capturado el alert:
-    // WebKit headless con tauri-driver no siempre expone los alerts
-    // nativos al WebDriver, así que confiamos en el polyfill como
-    // fuente principal de la verdad. Aun así, intentamos aceptar el
-    // alert nativo si está disponible.
-    await browser.waitUntil(
-      async () => await browser.execute(() => window.__lastAlert) !== null,
-      { timeout: 5_000, timeoutMsg: 'No se disparó ningún alert al enviar nombre vacío' },
-    );
-    const mensaje = await browser.execute(() => window.__lastAlert);
-    expect(mensaje).toBe('Nombre requerido');
-
-    // Aceptamos también el alert nativo si sigue abierto. Si el driver
-    // ya lo descartó por su cuenta, lo ignoramos (en headless a veces
-    // ocurre antes de llegar aquí).
-    try {
-      await browser.acceptAlert();
-    } catch (_) {
-      // Ya lo capturó el polyfill; el alert nativo puede haberse
-      // cerrado solo. No es un fallo.
-    }
+    // El error se ve junto al campo del nombre (no en una ventana de
+    // diálogo) y el foco vuelve al campo.
+    const estado = await errorEnElCampo();
+    expect(estado.alerta).toBe(null);
+    expect(estado.mensaje).toBe('Nombre requerido');
+    expect(estado.visible).toBe(true);
+    expect(estado.invalido).toBe('true');
+    expect(estado.foco).toBe('taskName');
 
     const despues = await $('#taskCount').getText();
     expect(despues).toBe(antes);
   });
 
-  it('valida: "Días específicos" sin días muestra alert y no crea la tarea', async () => {
+  it('valida: "Días específicos" sin días muestra el error y no crea la tarea', async () => {
     await $('button.nav-item[data-view="tasks"]').click();
     await $('#view-tasks-heading').waitForDisplayed();
     const antes = await $('#taskCount').getText();
@@ -233,24 +234,16 @@ describe('Formulario de tareas: tipos de repetición', () => {
     // checkboxes desmarcados (flags=0).
     await $('#addTaskBtn').click();
 
-    // Mismo patrón que en "nombre vacío": primero confirmamos con el
-    // polyfill, luego intentamos aceptar el alert nativo.
-    await browser.waitUntil(
-      async () => await browser.execute(() => window.__lastAlert) !== null,
-      { timeout: 5_000, timeoutMsg: 'No se disparó ningún alert al enviar días específicos sin días' },
-    );
-    const mensaje = await browser.execute(() => window.__lastAlert);
-    expect(mensaje).toBe('Selecciona al menos un día');
-    try {
-      await browser.acceptAlert();
-    } catch (_) {
-      // El alert nativo puede haberse cerrado solo; ya lo capturó el polyfill.
-    }
+    const estado = await errorEnElCampo();
+    expect(estado.alerta).toBe(null);
+    expect(estado.mensaje).toBe('Selecciona al menos un día');
+    expect(estado.visible).toBe(true);
+
     const despues = await $('#taskCount').getText();
     expect(despues).toBe(antes);
   });
 
-  it('valida: "Ciclo" con todas las semanas sin días muestra alert y no crea la tarea', async () => {
+  it('valida: "Ciclo" con todas las semanas sin días muestra el error y no crea la tarea', async () => {
     await $('button.nav-item[data-view="tasks"]').click();
     await $('#view-tasks-heading').waitForDisplayed();
     const antes = await $('#taskCount').getText();
@@ -263,17 +256,11 @@ describe('Formulario de tareas: tipos de repetición', () => {
     // desmarcados (flags=0 en cycleWeeks[0]).
     await $('#addTaskBtn').click();
 
-    await browser.waitUntil(
-      async () => await browser.execute(() => window.__lastAlert) !== null,
-      { timeout: 5_000, timeoutMsg: 'No se disparó ningún alert al enviar ciclo sin días' },
-    );
-    const mensaje = await browser.execute(() => window.__lastAlert);
-    expect(mensaje).toBe('Marca al menos un día en el ciclo');
-    try {
-      await browser.acceptAlert();
-    } catch (_) {
-      // El alert nativo puede haberse cerrado solo; ya lo capturó el polyfill.
-    }
+    const estado = await errorEnElCampo();
+    expect(estado.alerta).toBe(null);
+    expect(estado.mensaje).toBe('Marca al menos un día en el ciclo');
+    expect(estado.visible).toBe(true);
+
     const despues = await $('#taskCount').getText();
     expect(despues).toBe(antes);
   });

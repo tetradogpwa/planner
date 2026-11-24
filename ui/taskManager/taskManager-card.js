@@ -31,6 +31,7 @@ export class TaskManagerCard {
     const addRoot = this.root.querySelector('#addTaskMount');
     this.listRoot = this.root.querySelector('#taskListMount');
     this.countEl  = this.root.querySelector('#taskCount');
+    this.statusEl = this.root.querySelector('#taskStatus');
     const toggle  = this.root.querySelector('#editToggle');
 
     toggle.addEventListener('change', () => {
@@ -59,6 +60,8 @@ export class TaskManagerCard {
     addRoot.addEventListener('task-create', (e) => {
       this.context.Tasks.push(e.detail);
       this.renderList();
+      // Aviso para los lectores de pantalla: la tarea se ha añadido.
+      if (this.statusEl) this.statusEl.textContent = `Tarea «${e.detail.Name}» añadida`;
     });
 
     this.renderList();

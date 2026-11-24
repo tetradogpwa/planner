@@ -1,12 +1,22 @@
-<div class="task-form">
+<form class="task-form" id="{{formId}}">
   <div class="form-row">
     <div class="form-group">
       <label for="{{nameId}}">Nombre</label>
       <input type="text" id="{{nameId}}" placeholder="Ej: Gym">
+      <!-- El error de validación se muestra aquí, junto al campo (no en
+           una ventana de diálogo): lo rellena el módulo. -->
+      <p class="form-error" id="{{errorId}}" role="alert"></p>
     </div>
     <div class="form-group form-group--small">
       <label for="{{timesId}}">Veces/día</label>
       <input type="number" id="{{timesId}}" value="1" min="1">
+    </div>
+    <div class="form-group form-group--small form-group--date">
+      <!-- La etiqueta dice "Fecha" cuando la tarea no se repite y
+           "Empieza el" cuando sí: el texto lo cambia el módulo, pero el
+           `for` y el id del campo no se tocan. -->
+      <label for="{{dateId}}">Empieza el</label>
+      <input type="date" id="{{dateId}}">
     </div>
   </div>
 
@@ -37,4 +47,4 @@
   </div>
 
   <div id="{{extraId}}"></div>
-</div>
+</form>

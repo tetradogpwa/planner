@@ -18,7 +18,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,6 +34,9 @@ test('sin prefijo, el formulario usa los ids del alta', () => {
   assert.deepEqual(idsDelFormulario(''), {
     nameId:        'taskName',
     timesId:       'timesPerDay',
+    dateId:        'taskDate',
+    errorId:       'taskError',
+    formId:        'taskForm',
     repeatLabelId: 'repeatLabel',
     extraId:       'extraOptions',
     intervalId:    'interval',
@@ -45,6 +48,9 @@ test('con prefijo "edit", el formulario usa los ids de la edición', () => {
   assert.deepEqual(idsDelFormulario('edit'), {
     nameId:        'editTaskName',
     timesId:       'editTimesPerDay',
+    dateId:        'editTaskDate',
+    errorId:       'editTaskError',
+    formId:        'editTaskForm',
     repeatLabelId: 'editRepeatLabel',
     extraId:       'editExtraOptions',
     intervalId:    'editInterval',
@@ -99,5 +105,70 @@ test('las clases del formulario las define el CSS del módulo compartido', () =>
       `el CSS del alta no tiene que redefinir ${clase}`);
     assert.ok(!edicion.includes(clase),
       `el CSS de la edición no tiene que redefinir ${clase}`);
+  }
+});
+
+// ── 5. El formulario es un <form> con campo de fecha (T-048) ───────────────
+
+test('la plantilla del formulario es un <form> con el campo de fecha', () => {
+  const html = leer('ui', 'taskManager', 'taskForm', 'taskForm-card.html');
+
+  // Un <form> de verdad: es lo que hace que Enter en el nombre envíe la
+  // tarea (y que el botón pueda ser type="submit").
+  assert.match(html, /<form[^>]*class="task-form"/);
+  assert.match(html, /<\/form>/);
+
+  // El campo de fecha, con su etiqueta (los dos con marcador: el módulo
+  // los sustituye por los ids de cada instancia).
+  assert.match(html, /<label for="\{\{dateId\}\}"/);
+  assert.match(html, /<input type="date" id="\{\{dateId\}\}"/);
+
+  // La región del error de validación, junto al campo del nombre.
+  assert.match(html, /id="\{\{errorId\}\}"[^>]*role="alert"/);
+});
+
+test('los botones de alta y de edición son type="submit" de su formulario', () => {
+  const alta    = leer('ui', 'taskManager', 'addTask', 'addTask-card.html');
+  const edicion = leer('ui', 'taskManager', 'editTask', 'editTask-card.html');
+
+  assert.match(alta, /<button id="addTaskBtn" type="submit"/,
+    'el botón de añadir tiene que ser type="submit"');
+  assert.match(edicion, /<button id="saveEditBtn"[^>]*type="submit"/,
+    'el botón de guardar tiene que ser type="submit"');
+});
+
+test('la fecha la lee el formulario, no el llamante', () => {
+  // El llamante no puede pasar la fecha: buildSpec() no la recibe.
+  const form = leer('ui', 'taskManager', 'taskForm', 'taskForm-card.js');
+  assert.match(form, /buildSpec\(\)/,
+    'buildSpec no puede recibir la fecha del llamante');
+
+  for (const [nombre, js] of [
+    ['alta',    leer('ui', 'taskManager', 'addTask', 'addTask-card.js')],
+    ['edición', leer('ui', 'taskManager', 'editTask', 'editTask-card.js')],
+  ]) {
+    assert.doesNotMatch(js, /buildSpec\s*\(/,
+      `la tarjeta de ${nombre} no puede pasar la fecha al formulario`);
+  }
+});
+
+// ── 6. Ni un alert() en la interfaz (T-048) ─────────────────────────────────
+
+test('no queda ningún alert() en ui/', () => {
+  const ficheros = [];
+  const recorrer = (dir) => {
+    for (const entrada of readdirSync(dir, { withFileTypes: true })) {
+      const ruta = join(dir, entrada.name);
+      if (entrada.isDirectory()) recorrer(ruta);
+      else if (entrada.name.endsWith('.js')) ficheros.push(ruta);
+    }
+  };
+  recorrer(join(RAIZ, 'ui'));
+
+  assert.ok(ficheros.length > 0, 'no se ha encontrado ningún .js en ui/');
+  for (const ruta of ficheros) {
+    const codigo = readFileSync(ruta, 'utf8');
+    assert.doesNotMatch(codigo, /\balert\s*\(/,
+      `${ruta.replace(`${RAIZ}/`, '')} no puede llamar a alert(): los errores se muestran junto al campo`);
   }
 });
