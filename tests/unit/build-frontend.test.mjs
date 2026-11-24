@@ -802,7 +802,11 @@ cargo() {
     # El PID de esta compilación se anota: la prueba comprueba que
     # también muere (si no, la build seguiría compilando sola).
     printf '%s\\n' "$BASHPID" >> "$LOG/pids.log"
-    sleep 60
+    # El exec deja el proceso con el MISMO pid (el que se acaba de
+    # anotar): así la compilación de mentira es ese mismo proceso y no
+    # queda ningún proceso vivo detrás sujetando la salida del script
+    # (si queda, la prueba espera a que termine de dormir).
+    exec sleep 60
   fi
   return 0
 }
@@ -842,11 +846,19 @@ trap -p EXIT >> "$LOG/traps.log"
 
     // Se espera a que empiece la segunda compilación (la del frontend
     // marcado): para entonces la copia del frontend ya está hecha.
+    //
+    // Se espera al FICHERO DE PIDS y no al número de compilaciones: el
+    // "cargo" de mentira anota el PID cuando empieza la segunda
+    // compilación, así que cuando el PID está anotado la compilación
+    // está en marcha de verdad. Contando las líneas de build.log se
+    // mataba el script en mitad de la segunda compilación (entre que
+    // empieza y que se anota su PID) y entonces el PID se perdía: la
+    // prueba fallaba de forma aleatoria, según el ritmo de la máquina.
     const esperando = setInterval(() => {
-      const logBuild = join(log, 'build.log');
-      if (!existsSync(logBuild)) return;
-      const lineas = readFileSync(logBuild, 'utf8').split('\n').filter(Boolean);
-      if (lineas.length < 2) return;
+      const logPids = join(log, 'pids.log');
+      if (!existsSync(logPids)) return;
+      const pids = readFileSync(logPids, 'utf8').split('\n').filter(Boolean);
+      if (pids.length === 0) return;
       clearInterval(esperando);
       proc.kill('SIGTERM');
     }, 25);

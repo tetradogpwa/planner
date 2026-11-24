@@ -54,13 +54,18 @@ export class ShortcutsCard {
     if (this._isOpen) return;           // ya abierto: no re-trabar el foco
     this.root.hidden = false;
     this._isOpen = true;
-    // Hay que esperar al siguiente frame para que el modal sea visible
-    // antes de mover el foco y bloquear el scroll.
+    // La trampa de foco (y con ella el manejador de Escape) se registra
+    // AL ABRIR, no en el siguiente frame: si se registrara más tarde,
+    // el Escape que se pulsa nada más abrir se perdería (el modal ya
+    // está visible, pero todavía no escucha y el foco sigue fuera de
+    // él, así que el keydown ni siquiera le llega al contenedor).
+    this.releaseTrap = trapFocus(this.content, { onEscape: () => this.close() });
     requestAnimationFrame(() => {
+      if (!this._isOpen) return;   // se cerró antes del siguiente frame
       document.body.classList.add('shortcuts-modal-open');
-      this.releaseTrap = trapFocus(this.content, { onEscape: () => this.close() });
       // Foco explícito en el contenido para lectores de pantalla
-      // (`role=dialog` no enfoca automáticamente).
+      // (`role=dialog` no enfoca automáticamente), en el siguiente
+      // frame, cuando el modal ya está pintado.
       this.content.focus({ preventScroll: true });
     });
   }

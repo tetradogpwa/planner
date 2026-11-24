@@ -403,6 +403,44 @@ describe('Uso completo con teclado', () => {
     );
   });
 
+  it('Escape cierra la ayuda también si se pulsa nada más abrirla', async () => {
+    // Para que el fallo no dependa del ritmo de la máquina, congelamos
+    // requestAnimationFrame: la ayuda se abre (el modal ya es visible)
+    // pero el siguiente frame no llega a ejecutarse, que es justo la
+    // ventana en la que el Escape se perdía.
+    await browser.execute(() => {
+      window.__rafOriginal = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = () => 0;    // congelado: no se ejecuta
+    });
+
+    try {
+      // El foco está fuera del modal (en el botón de Tareas), como lo
+      // deja una persona que acaba de pulsar '?'.
+      await browser.execute(() => {
+        document.querySelector('button.nav-item[data-view="tasks"]').focus();
+      });
+      await browser.keys([Key.Shift, '/']);        // '?' abre la ayuda
+      await porId('shortcuts-modal').waitForDisplayed();
+
+      // Escape sin esperar a nada: tiene que cerrar la ayuda.
+      await browser.keys(Key.Escape);
+      await browser.waitUntil(
+        async () => (await browser.execute(
+          () => document.getElementById('shortcuts-modal').hidden,
+        )) === true,
+        { timeout: 3_000, timeoutMsg: 'La ayuda no se cerró con Escape justo después de abrirla' },
+      );
+    } finally {
+      // Se restaura requestAnimationFrame para no dejar la app helada.
+      await browser.execute(() => {
+        if (window.__rafOriginal) {
+          window.requestAnimationFrame = window.__rafOriginal;
+          delete window.__rafOriginal;
+        }
+      });
+    }
+  });
+
   it('abrir la ayuda dos veces no duplica #shortcuts-modal', async () => {
     // Pulsamos ? dos veces y contamos cuántos #shortcuts-modal hay
     // en el DOM: debe seguir habiendo exactamente uno.
