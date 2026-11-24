@@ -121,6 +121,12 @@ CODE=$?
 VEREDICTO="$(grep -aE '^VEREDICTO:' "$LOG" | tail -1)"
 
 if [[ -z "$VEREDICTO" ]]; then
+  source "$ROOT/tools/minimax/sin-saldo.sh"
+  if [[ $CODE -ne 124 ]] && sin_saldo "$LOG"; then
+    echo "⏸ El revisor se ha quedado sin saldo o con el límite agotado. Registro: $LOG" >&2
+    tail -n 10 "$LOG" >&2
+    exit "$SIN_SALDO_CODIGO"
+  fi
   echo "✗ El revisor no dio veredicto (código $CODE). Esto NO es un defecto" >&2
   echo "  del trabajo revisado: es un fallo de la revisión. Registro: $LOG" >&2
   tail -n 15 "$LOG" >&2

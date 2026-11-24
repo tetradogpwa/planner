@@ -129,6 +129,17 @@ if [[ $CODE -eq 0 ]] && grep -qiE 'ProviderAuthError|AI_APICallError|APIError|un
   CODE=1
 fi
 
+# Sin saldo o con el límite de peticiones agotado: no es un fallo de la
+# tarea. Vuelve a pendiente sin correcciones y se sale con 75 para que
+# cola.sh espere a que haya saldo y repita sin contar el intento.
+source "$ROOT/tools/minimax/sin-saldo.sh"
+if [[ $CODE -ne 124 ]] && sin_saldo "$LOG"; then
+  $TASKS status "$ID" pendiente --note "MiniMax sin saldo o con el límite de peticiones agotado; se reintentará cuando haya. Ver $LOG" >/dev/null
+  echo "⏸ MiniMax sin saldo o con el límite agotado en $ID. Últimas líneas:"
+  tail -n 10 "$LOG"
+  exit "$SIN_SALDO_CODIGO"
+fi
+
 if [[ $CODE -eq 0 ]]; then
   $TASKS status "$ID" en_revision --note "MiniMax ha terminado" >/dev/null
   echo "✓ $ID lista para revisión. Resumen de MiniMax:"

@@ -60,6 +60,7 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+source "$ROOT/tools/minimax/sin-saldo.sh"   # SIN_SALDO_CODIGO (75)
 mkdir -p .tasks/logs logs
 STAMP="$(date +%Y%m%d-%H%M%S)"
 LOG=".tasks/logs/cola-$STAMP.log"
@@ -223,11 +224,57 @@ trabajar() {  # trabajar <id>
     printf '     %s\n' "$sucios" | tee -a "$LOG"
   fi
   say "▸ [$id] MiniMax trabaja en la tarea (intento ${INTENTOS[$id]}/$MAX_INTENTOS)…"
-  salida="$(bash tools/minimax/run-task.sh "$id" 2>&1)"
+  local rc
+  salida="$(bash tools/minimax/run-task.sh "$id" 2>&1)"; rc=$?
   echo "$salida" >> "$LOG"
   tail -n 3 <<<"$salida" | head -2 | sed 's/^/   /' | tee -a "$LOG"
+  if [[ "$rc" -eq "$SIN_SALDO_CODIGO" ]]; then
+    # Sin saldo no es un intento fallido de la tarea.
+    INTENTOS[$id]=$(( ${INTENTOS[$id]} - 1 ))
+    return "$SIN_SALDO_CODIGO"
+  fi
   return 0
 }
+
+# ── Sin saldo: esperar a que vuelva ─────────────────────────────────
+# MiniMax puede quedarse sin saldo o con el límite de peticiones
+# agotado. No es culpa de la tarea: se espera (5, 10, 20 y luego cada
+# 30 min, sin límite) y se repite el mismo paso. Mientras, el fichero
+# ESPERA_SALDO dice hasta cuándo, para la línea de estado y
+# continuar.sh. Reintentar sin saldo falla al instante y no gasta nada.
+ESPERA_SALDO="$ROOT/.tasks/logs/espera-saldo"
+ESPERA_MIN=0
+dormir_hasta() {  # dormir_hasta <segundos> <motivo>
+  local hasta
+  hasta="$(date -d "+$1 sec" '+%Y-%m-%d %H:%M')"
+  echo "$hasta" > "$ESPERA_SALDO"
+  say "⏸ $2. Se sigue a las $hasta."
+  sleep "$1"
+}
+
+esperar_saldo() {  # esperar_saldo <quién>  (tras un fallo por saldo)
+  # Si la API de cuota dice cuándo se renueva, se espera justo hasta
+  # entonces; si no, esperas escalonadas.
+  local s
+  s="$(segundos_hasta_cuota)"
+  if [[ "$s" -gt 0 ]]; then
+    dormir_hasta "$s" "$1: MiniMax sin cuota; se renueva entonces"
+    return
+  fi
+  if   [[ "$ESPERA_MIN" -eq 0 ]];  then ESPERA_MIN=5
+  elif [[ "$ESPERA_MIN" -lt 30 ]]; then ESPERA_MIN=$(( ESPERA_MIN * 2 > 30 ? 30 : ESPERA_MIN * 2 ))
+  fi
+  dormir_hasta "$(( ESPERA_MIN * 60 ))" "$1: MiniMax sin saldo o con el límite agotado (espera de $ESPERA_MIN min)"
+}
+
+antes_de_gastar() {  # antes_de_gastar <quién>  (no lanzar nada sin cuota)
+  local s
+  while s="$(segundos_hasta_cuota)"; [[ "$s" -gt 0 ]]; do
+    dormir_hasta "$s" "$1: a MiniMax le queda menos del ${CUOTA_MINIMA} % de cuota; se espera a que se renueve"
+  done
+  rm -f "$ESPERA_SALDO"
+}
+saldo_ok() { ESPERA_MIN=0; rm -f "$ESPERA_SALDO"; }
 
 revisar() {  # revisar <id> → 0 si aprueba
   local id="$1" salida diff_fichero base actual
@@ -249,6 +296,9 @@ revisar() {  # revisar <id> → 0 si aprueba
   if grep -qa 'VEREDICTO: APROBADO' <<<"$salida"; then
     say "   ✓ Aprobada"
     return 0
+  fi
+  if grep -qa 'sin saldo o con el límite agotado' <<<"$salida"; then
+    return "$SIN_SALDO_CODIGO"
   fi
   if grep -qa 'no dio veredicto' <<<"$salida"; then
     # La revisión falló (no el trabajo): no se le devuelve la tarea al
@@ -318,7 +368,13 @@ while :; do
       FALLIDAS=$((FALLIDAS+1))
       continue
     fi
+    antes_de_gastar "[$id] desarrollo"
     trabajar "$id"
+    if [[ $? -eq "$SIN_SALDO_CODIGO" ]]; then
+      esperar_saldo "[$id] desarrollo"
+      continue
+    fi
+    saldo_ok
     est="$(estado "$id")"
     if [[ "$est" == "pendiente" ]]; then
       # El trabajador falló: la tarea vuelve a la cola.
@@ -333,7 +389,14 @@ while :; do
     continue
   fi
 
-  if revisar "$id"; then
+  antes_de_gastar "[$id] revisión"
+  revisar "$id"; rc_rev=$?
+  if [[ "$rc_rev" -eq "$SIN_SALDO_CODIGO" ]]; then
+    esperar_saldo "[$id] revisión"
+    continue
+  fi
+  saldo_ok
+  if [[ "$rc_rev" -eq 0 ]]; then
     aprobar_y_commitear "$id"
     case $? in
       0)
@@ -351,7 +414,7 @@ while :; do
         ;;
     esac
   else
-    case $? in
+    case $rc_rev in
       2)
         # La revisión falló (no el trabajo): la tarea se queda en
         # revisión para que la mire una persona. Devolverla al

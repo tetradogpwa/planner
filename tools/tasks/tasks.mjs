@@ -44,7 +44,7 @@ const OPEN = ['pendiente', 'en_curso', 'en_revision'];
 const STATE_LABEL = {
   pendiente: 'Pendiente',
   en_curso: 'En curso (MiniMax)',
-  en_revision: 'En revisión (Claude)',
+  en_revision: 'En revisión (M3)',
   hecha: 'Hecha',
   cancelada: 'Cancelada',
 };

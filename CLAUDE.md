@@ -22,10 +22,18 @@ los comentarios y la documentación van en **español**.
   los ficheros de la tarea. Se lanza desacoplado y sobrevive a `/clear`:
   `setsid -f bash tools/cola.sh > .tasks/logs/cola-nohup.log 2>&1 < /dev/null`.
   Registro de cada recorrido en `.tasks/logs/cola-*.log`.
+- **Sin cuota de MiniMax, la cola espera sola; no gasta intentos.** Antes
+  de cada paso consulta la cuota con `cuota-ias --json` (el script de la
+  barra del usuario, API `token_plan/remains`): si queda menos del
+  `MINIMAX_CUOTA_MINIMA` % (2 por defecto) espera hasta la hora de
+  renovación. Si un paso falla por saldo o límite de peticiones
+  (`tools/minimax/sin-saldo.sh`, código 75), se repite tras esa espera
+  (o tras 5, 10, 20 y luego 30 min si no se puede consultar la cuota).
+  Mientras espera, `.tasks/logs/espera-saldo` dice hasta cuándo.
 - **Claude (supervisor) no desarrolla ni revisa tarea a tarea.** Su papel:
   1. registrar las peticiones del usuario como tareas (skill
      `registrar-tarea`), bien especificadas y con criterios comprobables;
-  2. lanzar `cola.sh` si no está corriendo (`pgrep -f tools/cola.sh`);
+  2. relanzar la cola si está parada (`bash tools/continuar.sh`);
   3. auditar lo ya commiteado (`git log`, `git show`) y los registros:
      si algo aprobado está mal, crear una tarea nueva con `--relacionada`;
   4. atender lo que la cola no resuelve sola: tareas que agotan intentos

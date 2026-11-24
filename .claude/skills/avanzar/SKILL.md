@@ -15,11 +15,10 @@ La conversación no guarda nada; el estado está en `.tasks/`, en
 ## 1. Ver dónde estamos
 
 ```bash
-pgrep -af "tools/cola.sh" || echo "cola parada"
-node tools/tasks/tasks.mjs list
-ls -t .tasks/logs/cola-*.log | head -1 | xargs tail -n 40
-git log --oneline -10
+bash tools/continuar.sh --estado
 ```
+
+Tras reiniciar el PC la cola estará parada: es lo normal.
 
 ## 2. Si la cola está parada y hay tareas abiertas, lanzarla
 
@@ -29,7 +28,7 @@ colarían en el commit de la tarea. Los cambios de una tarea en curso o en
 revisión se dejan: son trabajo de MiniMax.
 
 ```bash
-setsid -f bash tools/cola.sh > .tasks/logs/cola-nohup.log 2>&1 < /dev/null
+bash tools/continuar.sh
 ```
 
 `/avanzar T-00X` → `bash tools/cola.sh T-00X` (solo esa tarea).
