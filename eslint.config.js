@@ -7,6 +7,8 @@
 //
 // Configuración plana (flat config) de ESLint 10.
 //
+// Es un módulo ES: el package.json de la raíz declara "type": "module".
+//
 // Qué se comprueba:
 //   · Lo recomendado de ESLint (`eslint:recommended`): errores de
 //     verdad (variables sin usar, referencias a globales que no
@@ -34,8 +36,8 @@
 //     se siguen mirando.
 // ─────────────────────────────────────────────────────────────────────
 
-const js = require('@eslint/js');
-const globals = require('globals');
+import js from '@eslint/js';
+import globals from 'globals';
 
 // Ficheros que nunca se lintean.
 const IGNORADOS = [
@@ -88,7 +90,7 @@ const STUBS_NAVEGADOR = {
   FileReader: 'readonly',
 };
 
-module.exports = [
+export default [
   { ignores: IGNORADOS },
 
   // ── Base: lo recomendado de ESLint ────────────────────────────────
@@ -235,11 +237,12 @@ module.exports = [
   },
 
   // ── El propio linter ─────────────────────────────────────────────
+  // Es un módulo ES (el package.json de la raíz declara "type": "module").
   {
     files: ['eslint.config.js'],
     languageOptions: {
       ecmaVersion: 'latest',
-      sourceType: 'commonjs',
+      sourceType: 'module',
       globals: { ...globals.node },
     },
   },
