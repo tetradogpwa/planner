@@ -1,21 +1,34 @@
+import { parseLocalDate, todayISO } from './calendar.js';
+
+// ────────────────────────────────────────────────────────────────────
+// back/baseTarea.js — La base de todas las tareas.
+//
+// Una tarea guarda su fecha de inicio ABSOLUTA (`startDate`, formato
+// 'YYYY-MM-DD' en hora local): el día en el que empieza a aplicarse.
+// Antes guardaba `daysFrom`, un offset respecto al origen del
+// planificador, y por eso las tareas se movían de columna cada vez que
+// la app se abría en un día distinto (T-045).
+// ────────────────────────────────────────────────────────────────────
+
 export class TaskBase{
 
     name;
     total=1;
-    daysFrom=0;
+    // Fecha de inicio en formato 'YYYY-MM-DD'. Si nadie la pone, la
+    // tarea empieza hoy.
+    startDate=todayISO();
 
-    get DaysFrom(){
-        return this.daysFrom;
+    get StartDate(){
+        return this.startDate;
     }
 
-    set DaysFrom(daysFrom){
-        this.daysFrom=daysFrom;
+    set StartDate(startDate){
+        this.startDate=startDate;
     }
 
-    getStart(from){
-        const f=new Date(from);
-        f.setDate(f.getDate()+this.DaysFrom);
-        return f;
+    /** Fecha de inicio de la tarea (a las 00:00 en hora local). */
+    getStart(){
+        return parseLocalDate(this.StartDate);
     }
 
     get Total(){
@@ -35,7 +48,9 @@ export class TaskBase{
     }
 
 
-    thisDayHas(from,dayFromOrigin){
+    /** Dice si la tarea se aplica el día `date` (una fecha real: un
+     *  Date o una cadena 'YYYY-MM-DD'). */
+    thisDayHas(date){
         throw new Error("Not implemented");
     }
 

@@ -47,4 +47,26 @@ describe('PlannerApi (capa pública)', () => {
     await expect($('#taskCount')).toHaveText('0');
     expect(await nombresDeTareas()).toEqual([]);
   });
+
+  it('addTask acepta y devuelve la fecha de inicio de la tarea (startDate)', async () => {
+    const creada = await browser.execute(() => window.PlannerApi.addTask({
+      name: 'API con fecha', repeat: 'daily', startDate: '2026-11-25',
+    }));
+    // La API devuelve la fecha de inicio que le han dado.
+    expect(creada.startDate).toBe('2026-11-25');
+
+    // Y la lista también la lleva.
+    const lista = await browser.execute(() => window.PlannerApi.listTasks());
+    const tarea = lista.find(t => t.name === 'API con fecha');
+    expect(tarea.startDate).toBe('2026-11-25');
+
+    // daysFrom se sigue aceptando por compatibilidad: son los días
+    // desde la fecha de inicio del planificador.
+    const conOffset = await browser.execute(() => window.PlannerApi.addTask({
+      name: 'API con offset', repeat: 'daily', daysFrom: 2,
+    }));
+    expect(typeof conOffset.startDate).toBe('string');
+    expect(conOffset.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(conOffset.daysFrom).toBe(2);
+  });
 });

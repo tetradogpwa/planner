@@ -1,4 +1,5 @@
-import { FromJson, ToJson } from './back/serializer.js';
+import { FromJson, ToJson, usaFormatoAntiguo } from './back/serializer.js';
+import { today } from './back/calendar.js';
 
 export class Context {
   static _tasks;
@@ -27,7 +28,9 @@ export class Context {
   }
 
   static SetTasksFromJson(json) {
-    const parsed = FromJson(json);   // lanza si el JSON no es válido
+    // El origen (la fecha de inicio del planificador) sirve para
+    // migrar las tareas del formato viejo a fechas reales.
+    const parsed = FromJson(json, { origin: Context._startDate });   // lanza si el JSON no es válido
     if (!Array.isArray(parsed)) throw new Error('Formato de tareas inválido');
     Context.Tasks = parsed;
   }
@@ -56,6 +59,18 @@ export class Context {
     const tasksJson    = localStorage.getItem(Context.KeyTasks);
     const startDateStr = localStorage.getItem(Context.KeyStartDate);
 
+    // La fecha de inicio del planificador: la que fijó la API, o hoy si
+    // el usuario no ha fijado ninguna. Las tareas ya no dependen de
+    // ella (cada una guarda su fecha de inicio absoluta), pero sigue
+    // siendo el origen de las semanas que se pintan y el punto de
+    // referencia para migrar los datos del formato viejo.
+    if (startDateStr) {
+      const guardada = new Date(Number(startDateStr));
+      Context._startDate = Number.isNaN(guardada.getTime()) ? today() : guardada;
+    } else {
+      Context._startDate = today();
+    }
+
     // Un JSON guardado que ya no se puede leer (guardado a medias, por
     // ejemplo) no puede dejar la app sin arrancar: se avisa y se empieza
     // con la lista vacía. El valor guardado NO se borra, para que el
@@ -63,17 +78,16 @@ export class Context {
     Context._tasks = Context.#observe([]);
     if (tasksJson) {
       try {
-        Context._tasks = Context.#observe(FromJson(tasksJson));
+        const tareas = FromJson(tasksJson, { origin: Context._startDate });
+        Context._tasks = Context.#observe(tareas);
+        // Las tareas del formato viejo (las que guardaban `daysFrom`)
+        // se guardan ya migradas: si no, la migración se repetiría en
+        // cada arranque y, sin fecha de inicio guardada, las tareas
+        // irían un día hacia atrás cada vez (T-045).
+        if (usaFormatoAntiguo(tasksJson)) Context.UpdateTasks();
       } catch (e) {
         console.warn('[contexto] las tareas guardadas no se han podido leer:', e);
       }
-    }
-
-    if (startDateStr) {
-      Context._startDate = new Date(Number(startDateStr));
-    } else {
-      Context._startDate = new Date();
-      Context._startDate.setHours(0, 0, 0, 0);
     }
   }
 }

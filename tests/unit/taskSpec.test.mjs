@@ -64,27 +64,29 @@ test('parseCycle: avisa de por qué no cuadra', () => {
 // ── buildTaskFromSpec: un tipo de repetición cada uno ───────────────────
 
 test('buildTaskFromSpec: "none" crea una OneTimeTask con su DailyTask dentro', () => {
-  const task = buildTaskFromSpec({ name: 'Una vez', repeat: 'none', total: 2 });
+  const task = buildTaskFromSpec({ name: 'Una vez', repeat: 'none', total: 2, startDate: '2026-06-03' });
   assert.equal(task.constructor.name, 'OneTimeTask');
   assert.equal(task.Name, 'Una vez');
   assert.equal(task.Total, 2);
-  assert.equal(task.DaysFrom, 0);
+  assert.equal(task.StartDate, '2026-06-03');
   assert.equal(task.Task.constructor.name, 'DailyTask');
+  // La tarea base empieza el mismo día que la tarea.
+  assert.equal(task.Task.StartDate, '2026-06-03');
 });
 
 test('buildTaskFromSpec: "daily" crea una DailyTask', () => {
-  const task = buildTaskFromSpec({ name: 'Agua', repeat: 'daily', total: 3 });
+  const task = buildTaskFromSpec({ name: 'Agua', repeat: 'daily', total: 3, startDate: '2026-06-01' });
   assert.equal(task.constructor.name, 'DailyTask');
   assert.equal(task.Name, 'Agua');
   assert.equal(task.Total, 3);
-  assert.equal(task.DaysFrom, 0);
+  assert.equal(task.StartDate, '2026-06-01');
 });
 
 test('buildTaskFromSpec: "nDays" crea una NDaysTask con su intervalo', () => {
-  const task = buildTaskFromSpec({ name: 'Regar', repeat: 'nDays', nDays: 5, daysFrom: 2 });
+  const task = buildTaskFromSpec({ name: 'Regar', repeat: 'nDays', nDays: 5, startDate: '2026-06-03' });
   assert.equal(task.constructor.name, 'NDaysTask');
   assert.equal(task.NDays, 5);
-  assert.equal(task.DaysFrom, 2);
+  assert.equal(task.StartDate, '2026-06-03');
 });
 
 test('buildTaskFromSpec: "daysOfWeek" marca solo los días indicados', () => {
@@ -124,7 +126,50 @@ test('buildTaskFromSpec: total inválido', () => {
 });
 
 test('buildTaskFromSpec: daysFrom inválido', () => {
-  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'daily', daysFrom: -1 }), /daysFrom inválido/);
+  // Un daysFrom tiene que ser un número entero de días. Un negativo
+  // sí es válido: significa "antes de la fecha de inicio del
+  // planificador" (es lo que devuelve la API cuando daysFrom es un
+  // valor derivado de la fecha de inicio real de la tarea).
+  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'daily', daysFrom: 1.5 }), /daysFrom inválido/);
+  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'daily', daysFrom: 'dos' }), /daysFrom inválido/);
+});
+
+test('buildTaskFromSpec: startDate inválido', () => {
+  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'daily', startDate: '2026-02-31' }),
+    /Fecha de inicio inválida/);
+  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'daily', startDate: '31-02-2026' }),
+    /Fecha de inicio inválida/);
+});
+
+test('buildTaskFromSpec: sin fecha de inicio, la tarea empieza hoy', () => {
+  const task = buildTaskFromSpec({ name: 'X', repeat: 'daily' });
+  assert.match(task.StartDate, /^\d{4}-\d{2}-\d{2}$/);
+});
+
+test('buildTaskFromSpec: daysFrom se acepta por compatibilidad (origen + días)', () => {
+  // El formato viejo guardaba un offset respecto al origen del
+  // planificador; con el origen del 23/11/2026, 2 días son el 25/11.
+  const task = buildTaskFromSpec(
+    { name: 'X', repeat: 'daily', daysFrom: 2 },
+    { origin: '2026-11-23' },
+  );
+  assert.equal(task.StartDate, '2026-11-25');
+});
+
+test('buildTaskFromSpec: un daysFrom negativo es una fecha antes del origen', () => {
+  const task = buildTaskFromSpec(
+    { name: 'X', repeat: 'daily', daysFrom: -3 },
+    { origin: '2026-11-23' },
+  );
+  assert.equal(task.StartDate, '2026-11-20');
+});
+
+test('buildTaskFromSpec: si viene startDate, manda sobre daysFrom', () => {
+  const task = buildTaskFromSpec(
+    { name: 'X', repeat: 'daily', startDate: '2026-11-25', daysFrom: 2 },
+    { origin: '2026-11-23' },
+  );
+  assert.equal(task.StartDate, '2026-11-25');
 });
 
 test('buildTaskFromSpec: nDays inválido', () => {
@@ -192,13 +237,44 @@ test('taskToJson: cada tipo de repetición vuelve a su forma plana', () => {
 });
 
 test('taskToJson: devuelve los datos planos y deja el índice para el llamador', () => {
-  const json = taskToJson(buildTaskFromSpec({ name: 'Agua', repeat: 'daily', total: 3, daysFrom: 2 }));
+  const json = taskToJson(buildTaskFromSpec({ name: 'Agua', repeat: 'daily', total: 3, startDate: '2026-06-03' }));
   assert.equal(json.name, 'Agua');
   assert.equal(json.total, 3);
-  assert.equal(json.daysFrom, 2);
+  assert.equal(json.startDate, '2026-06-03');
   assert.equal(json.index, -1);
   // Sin clases: es JSON plano y se puede serializar sin perder nada.
   assert.deepEqual(JSON.parse(JSON.stringify(json)), json);
+});
+
+test('taskToJson: con origen, devuelve también los días desde el origen (formato viejo)', () => {
+  const json = taskToJson(
+    buildTaskFromSpec({ name: 'Agua', repeat: 'daily', startDate: '2026-11-25' }),
+    '2026-11-23',
+  );
+  assert.equal(json.daysFrom, 2);
+  assert.equal(json.startDate, '2026-11-25');
+});
+
+test('taskToJson: el daysFrom se DERIVA del origen, no es un dato de la tarea', () => {
+  const tarea = buildTaskFromSpec({ name: 'Agua', repeat: 'daily', startDate: '2026-11-25' });
+
+  // El mismo origen: el daysFrom es el mismo.
+  assert.equal(taskToJson(tarea, '2026-11-23').daysFrom, 2);
+
+  // Si el origen se mueve, el daysFrom cambia (es un valor derivado
+  // del origen actual) pero la fecha de inicio de la tarea no: el
+  // dato que manda es `startDate`.
+  const movido = taskToJson(tarea, '2026-11-26');
+  assert.equal(movido.startDate, '2026-11-25');
+  assert.equal(movido.daysFrom, -1);
+
+  // Y el daysFrom derivado se puede volver a pasar a la API: la API
+  // acepta los negativos (una tarea puede empezar antes del origen).
+  const vuelta = buildTaskFromSpec(
+    { name: 'Agua', repeat: 'daily', daysFrom: movido.daysFrom },
+    { origin: '2026-11-26' },
+  );
+  assert.equal(vuelta.StartDate, '2026-11-25');
 });
 
 // ── La construcción de tareas no vive en api.js ────────────────────────

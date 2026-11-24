@@ -1,4 +1,5 @@
 import { TaskBase } from "./baseTarea.js";
+import { diffDays, parseLocalDate, weekdayIndex } from "./calendar.js";
 
 export class DaysOfWeekTask extends TaskBase {
     flags = 0;
@@ -26,13 +27,17 @@ export class DaysOfWeekTask extends TaskBase {
         // Verifica si el bit está activado
         return (this.flags & (1 << dayOfWeek)) !== 0;
     }
- 
-    thisDayHas(from, dayFromOrigin) {
+
+    thisDayHas(date) {
+        const dia     = parseLocalDate(date);
+        const inicio  = parseLocalDate(this.StartDate);
+
         // Si el día evaluado es anterior al inicio de la tarea, no aplica
-        if (dayFromOrigin < this.DaysFrom) return false;
-        
-        const dayOfWeek = dayFromOrigin % 7;
-        return this.hasDay(dayOfWeek);
+        if (dia.getTime() < inicio.getTime()) return false;
+
+        // El día de la semana es el de la fecha real (0 = lunes en la
+        // interfaz), no el del día en que se abrió la app.
+        return this.hasDay(weekdayIndex(dia));
     }
 }
 
@@ -47,17 +52,29 @@ export class CiclesDaysOfWeekTask extends TaskBase {
         this.cicles = cicles;
     }
 
-    thisDayHas(from, dayFromOrigin) {
-        // Si el día evaluado es anterior al inicio de la tarea, no aplica
-        if (dayFromOrigin < this.DaysFrom) return false;
+    thisDayHas(date) {
+        const dia     = parseLocalDate(date);
+        const inicio  = parseLocalDate(this.StartDate);
 
-        // Necesario usar Math.floor para no obtener decimales
-        const weeks = Math.floor(dayFromOrigin / 7);
-        const dayOfWeek = dayFromOrigin % 7;
-        
+        // Si el día evaluado es anterior al inicio de la tarea, no aplica
+        if (dia.getTime() < inicio.getTime()) return false;
+
+        const cicles = this.Cicles ?? [];
+        // Un ciclo vacío (puede venir de un JSON importado) no aplica
+        // ningún día: antes esto petaba al buscar la semana del ciclo.
+        if (cicles.length === 0) return false;
+
+        // Las semanas del ciclo son semanas reales (lunes a domingo):
+        // la primera es la que contiene la fecha de inicio de la tarea.
+        const lunesInicio = new Date(inicio);
+        lunesInicio.setDate(lunesInicio.getDate() - weekdayIndex(inicio));
+
+        const semanas = Math.floor(diffDays(lunesInicio, dia) / 7);
+
         // Necesario usar módulo (%) para rotar entre los ciclos disponibles
-        const posWeek = weeks % this.Cicles.length;
-        
-        return this.Cicles[posWeek].hasDay(dayOfWeek);
+        const posWeek = semanas % cicles.length;
+
+        const semana = cicles[posWeek];
+        return semana ? semana.hasDay(weekdayIndex(dia)) : false;
     }
 }

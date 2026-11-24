@@ -2,6 +2,7 @@ import { TaskBase }                                          from './baseTarea.j
 import { NDaysTask, DailyTask, WeeklyTask, MonthlyTask, QuaterlyTask } from './nDays.js';
 import { LimitedTimeTask, OneTimeTask }                       from './limitedTime.js';
 import { DaysOfWeekTask, CiclesDaysOfWeekTask }               from './daysOfWeek.js';
+import { addDays, formatLocalDate, parseLocalDate, today }    from './calendar.js';
 
 // ── JSON → objetos ────────────────────────────────────────────────────────────
 
@@ -15,8 +16,13 @@ import { DaysOfWeekTask, CiclesDaysOfWeekTask }               from './daysOfWeek
  *
  *  Un JSON válido pero sin ninguna tarea reconocible (por ejemplo `[]` o
  *  tareas con un `className` desconocido) NO es un error: devuelve una
- *  lista vacía. Quien importe decide qué hacer con esa lista vacía. */
-export function FromJson(dataStr) {
+ *  lista vacía. Quien importe decide qué hacer con esa lista vacía.
+ *
+ *  `opts.origin` es la fecha de inicio del planificador: sirve para
+ *  migrar las tareas del formato viejo (las que guardaban `daysFrom`, un
+ *  offset en días respecto al origen) a una fecha real. Si no se pasa
+ *  ningún origen, la migración usa la fecha de la migración (hoy). */
+export function FromJson(dataStr, opts = {}) {
   let datos;
   try {
     datos = JSON.parse(dataStr);
@@ -37,14 +43,56 @@ export function FromJson(dataStr) {
   }
 
   try {
-    return lista.map(processTask).filter(Boolean);
+    return lista.map(raw => processTask(raw, opts)).filter(Boolean);
   } catch (e) {
     console.warn('[serializer] alguna tarea del JSON no se ha podido leer:', e);
     throw new Error('JSON inválido: alguna tarea del archivo no se ha podido leer', { cause: e });
   }
 }
 
-function processTask(raw) {
+/** Dice si el JSON usa el formato viejo (tareas sin `startDate`). Esas
+ *  tareas se migran al leerlas, así que hay que guardar el resultado ya
+ *  migrado: si no, la migración se repetiría en cada arranque (y, sin
+ *  fecha de inicio guardada, movería las tareas un día cada vez). */
+export function usaFormatoAntiguo(dataStr) {
+  let datos;
+  try {
+    datos = JSON.parse(dataStr);
+  } catch {
+    return false;
+  }
+  const lista = Array.isArray(datos)
+    ? datos
+    : (datos && Array.isArray(datos.tasks) ? datos.tasks : []);
+  if (!Array.isArray(lista)) return false;
+  return lista.some(t => t && typeof t === 'object' && !t.startDate);
+}
+
+/** Fecha de inicio de una tarea que viene del JSON.
+ *  - `startDate` (formato nuevo) manda.
+ *  - Si no viene, la tarea usaba `daysFrom`: un offset en días
+ *    respecto al origen del planificador. El origen es la fecha de
+ *    inicio guardada; si no hay ninguna, la fecha de la migración.
+ *    El offset puede ser negativo (la tarea empezaba antes del
+ *    origen): la API acepta ese mismo valor a la vuelta. */
+function startDateDe(data, opts) {
+  if (data.startDate) {
+    try {
+      return formatLocalDate(parseLocalDate(data.startDate));
+    } catch (e) {
+      throw new Error(`La tarea «${data.name}» tiene una fecha de inicio inválida`, { cause: e });
+    }
+  }
+
+  const origin   = opts.origin ? parseLocalDate(opts.origin) : today();
+  const daysFrom = data.daysFrom ?? 0;
+  if (!Number.isInteger(daysFrom)) {
+    throw new Error(`La tarea «${data.name}» tiene un daysFrom inválido`);
+  }
+  return formatLocalDate(addDays(origin, daysFrom));
+}
+
+function processTask(raw, opts) {
   // Una entrada que no es un objeto (null, un número…) se descarta: no
   // invalida el archivo entero.
   if (!raw || typeof raw !== 'object') return undefined;
@@ -55,7 +103,11 @@ function processTask(raw) {
   switch (className) {
     case CiclesDaysOfWeekTask.name:
       task = new CiclesDaysOfWeekTask();
-      for (const { flags } of data.cicles) task.Cicles.push(new DaysOfWeekTask(flags));
+      // Un ciclo puede venir vacío (o no venir) de un JSON importado:
+      // se deja como está, pero sin petar al leerlo.
+      for (const semana of (Array.isArray(data.cicles) ? data.cicles : [])) {
+        task.Cicles.push(new DaysOfWeekTask(semana?.flags ?? 0));
+      }
       break;
     case DaysOfWeekTask.name:   task = new DaysOfWeekTask(data.flags); break;
     case OneTimeTask.name:      task = new OneTimeTask();               break;
@@ -70,11 +122,11 @@ function processTask(raw) {
 
   switch (className) {
     case OneTimeTask.name:
-      task.Task = processTask(data.task);
+      task.Task = processTask(data.task, opts);
       if (!task.Task) throw new Error(`La tarea «${data.name}» no tiene su tarea base`);
       break;
     case LimitedTimeTask.name:
-      task.Task   = processTask(data.task);
+      task.Task   = processTask(data.task, opts);
       if (!task.Task) throw new Error(`La tarea «${data.name}» no tiene su tarea base`);
       task.Repeat = data.repeat ?? 1;
       break;
@@ -87,7 +139,7 @@ function processTask(raw) {
 
   task.Total    = data.total;
   task.Name     = data.name;
-  task.DaysFrom = data.daysFrom ?? 0;
+  task.StartDate = startDateDe(data, opts);
   return task;
 }
 

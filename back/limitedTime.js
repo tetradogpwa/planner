@@ -1,4 +1,5 @@
 import { TaskBase } from "./baseTarea.js";
+import { parseLocalDate } from "./calendar.js";
 
 
 
@@ -19,18 +20,39 @@ export class LimitedTimeTask extends TaskBase{
     set Repeat(repeat){
         this.repeat=repeat;
     }
-    
-    thisDayHas(from,dayFromOrigin){
-        
+
+    thisDayHas(date){
+        const dia  = parseLocalDate(date);
+        const base = this.Task;
+        if (!base) return false;
+
+        const inicio = parseLocalDate(base.StartDate);
+        if (dia.getTime() < inicio.getTime()) return false;
+
+        // Tampoco antes de la fecha de inicio de la propia tarea.
+        const inicioPropia = parseLocalDate(this.StartDate);
+        if (dia.getTime() < inicioPropia.getTime()) return false;
+
         const MAX=this.Repeat-1;
         let total=0;
-        
-        for(let i=0;i<dayFromOrigin && total <= MAX;i++){
-            if(this.Task.thisDayHas(from,i))total++;
-        };
+
+        // Contamos cuántas veces ha aplicado la tarea base desde su
+        // fecha de inicio hasta el día anterior al evaluado: la tarea
+        // solo se aplica en su Repeat-ésima aparición (una "sin
+        // repetición" solo aparece el primer día).
+        const cursor=new Date(inicio);
+        while (cursor.getTime() < dia.getTime()) {
+            if (base.thisDayHas(cursor)) {
+                total++;
+                // Ya pasó su turno: no puede volver a aparecer.
+                if (total > MAX) return false;
+            }
+            cursor.setDate(cursor.getDate()+1);
+        }
+
         //si no ha pasado hasta ahora y ese dia por casualidad es, entonces lo es
         //el segundo o siguiente no lo es
-        return total===MAX && this.Task.thisDayHas(from,dayFromOrigin);
+        return total===MAX && base.thisDayHas(dia);
     }
 }
 

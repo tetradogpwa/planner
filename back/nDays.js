@@ -1,4 +1,5 @@
 import { TaskBase } from "./baseTarea.js";
+import { diffDays, parseLocalDate } from "./calendar.js";
 
 
 
@@ -10,9 +11,18 @@ export class NDaysTask extends TaskBase {
     set NDays(nDays){
         this.nDays=nDays;
     }
-    thisDayHas(from,dayFromOrigin){
-        return this.nDays===1 
-        || dayFromOrigin >= this.DaysFrom  && (dayFromOrigin - this.daysFrom)%this.nDays === 0 ;
+    thisDayHas(date){
+        const dia    = parseLocalDate(date);
+        const inicio = parseLocalDate(this.StartDate);
+
+        // Antes del inicio de la tarea no aplica.
+        if (dia.getTime() < inicio.getTime()) return false;
+
+        const n = this.NDays;
+        if (!Number.isInteger(n) || n < 1) return false;
+
+        // Cada n días REALES desde la fecha de inicio de la tarea.
+        return diffDays(inicio, dia) % n === 0;
     }
 }
 
@@ -40,5 +50,3 @@ export class QuaterlyTask extends NDaysTask{
         this.NDays=90;
     }
 }
-
-

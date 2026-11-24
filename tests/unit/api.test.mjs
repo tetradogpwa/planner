@@ -112,6 +112,8 @@ test('listTasks y getTask devuelven solo datos planos', () => {
     assert.ok(['none','daily','nDays','daysOfWeek','cycle'].includes(t.repeat));
     assert.equal(typeof t.total, 'number');
     assert.equal(typeof t.daysFrom, 'number');
+    // Y la fecha de inicio real de cada tarea (T-045).
+    assert.match(t.startDate, /^\d{4}-\d{2}-\d{2}$/);
   });
 
   // Round-trip por JSON.stringify sin perder información.
@@ -122,6 +124,70 @@ test('listTasks y getTask devuelven solo datos planos', () => {
   assert.deepEqual(PlannerApi.getTask(1), list[1]);
   assert.equal(PlannerApi.getTask(99), null);
   assert.equal(PlannerApi.getTask(-1), null);
+});
+
+test('addTask acepta la fecha de inicio de la tarea (startDate)', () => {
+  const out = PlannerApi.addTask({
+    name: 'Dentista', repeat: 'none', startDate: '2026-11-25',
+  });
+  assert.equal(out.startDate, '2026-11-25');
+  assert.equal(PlannerApi.getTask(0).startDate, '2026-11-25');
+});
+
+test('addTask acepta daysFrom por compatibilidad (días desde el origen)', () => {
+  // El origen del planificador en esta prueba es el 19/10/2026.
+  const out = PlannerApi.addTask({ name: 'Regar', repeat: 'daily', daysFrom: 3 });
+  assert.equal(out.startDate, '2026-10-22');
+  assert.equal(out.daysFrom, 3);
+});
+
+test('el daysFrom devuelto se deriva del origen actual, no es un dato de la tarea', () => {
+  PlannerApi.setStartDate('2026-11-23');
+  try {
+    const out = PlannerApi.addTask({ name: 'Agua', repeat: 'daily', startDate: '2026-11-25' });
+    assert.equal(out.startDate, '2026-11-25');
+    assert.equal(out.daysFrom, 2);
+
+    // El origen se mueve (como cuando no hay fecha guardada y el
+    // origen es "hoy"): la fecha de inicio de la tarea NO cambia
+    // (ese es el dato que manda) pero el daysFrom derivado sí.
+    PlannerApi.setStartDate('2026-11-26');
+    const despues = PlannerApi.getTask(0);
+    assert.equal(despues.startDate, '2026-11-25');
+    assert.equal(despues.daysFrom, -1);
+
+    // Y lo que se guarda es la fecha de inicio, no el offset.
+    const guardado = JSON.parse(localStorage.getItem('Context_TASKS'));
+    assert.equal(guardado[0].startDate, '2026-11-25');
+    assert.equal(guardado[0].daysFrom, undefined);
+  } finally {
+    PlannerApi.setStartDate('2026-10-19');
+  }
+});
+
+test('una tarea que empieza antes del origen devuelve un daysFrom que la API acepta de vuelta', () => {
+  PlannerApi.setStartDate('2026-11-23');
+  try {
+    const out = PlannerApi.addTask({ name: 'Dentista', repeat: 'none', startDate: '2026-11-20' });
+    assert.equal(out.daysFrom, -3);
+
+    // Ese daysFrom se puede volver a pasar a la API sin que lo rechace
+    // y sin que la tarea cambie de fecha.
+    const actualizada = PlannerApi.updateTask(0, {
+      name: 'Dentista', repeat: 'none', daysFrom: out.daysFrom,
+    });
+    assert.equal(actualizada.startDate, '2026-11-20');
+    assert.equal(actualizada.daysFrom, -3);
+  } finally {
+    PlannerApi.setStartDate('2026-10-19');
+  }
+});
+
+test('las tareas guardadas llevan su fecha de inicio (no un offset)', () => {
+  PlannerApi.addTask({ name: 'Agua', repeat: 'daily', startDate: '2026-11-25' });
+  const guardado = JSON.parse(localStorage.getItem('Context_TASKS'));
+  assert.equal(guardado[0].startDate, '2026-11-25');
+  assert.equal(guardado[0].daysFrom, undefined);
 });
 
 // ── updateTask / deleteTask (incluido índice inválido) ─────────────────
@@ -196,8 +262,9 @@ test('getWeek(0) devuelve 7 días con fecha local (no UTC)', () => {
 
 test('getWeek(0) lista las tareas que tocan cada día', () => {
   // Diaria → todos los días. Días de la semana [0,2] → lunes y miércoles.
-  PlannerApi.addTask({ name: 'Agua',     repeat: 'daily' });
-  PlannerApi.addTask({ name: 'Gimnasio', repeat: 'daysOfWeek', days: [0, 2] });
+  // Las tareas empiezan el 19/10/2026 (la semana que se pinta).
+  PlannerApi.addTask({ name: 'Agua',     repeat: 'daily',        startDate: '2026-10-19' });
+  PlannerApi.addTask({ name: 'Gimnasio', repeat: 'daysOfWeek', days: [0, 2], startDate: '2026-10-19' });
   const week = PlannerApi.getWeek(0);
   // Lunes (i=0): ambas. Miércoles (i=2): Agua + Gimnasio. Resto: solo Agua.
   assert.deepEqual(week[0].tasks, ['Agua', 'Gimnasio']);

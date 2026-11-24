@@ -217,7 +217,7 @@ impl PlannerServer {
     }
 
     /// `crear_tarea` — crea una tarea a partir de un spec JSON plano.
-    #[tool(description = "Crea una tarea nueva a partir de un spec JSON plano validado. Campos: name (str, obligatorio), repeat ('none' | 'daily' | 'nDays' | 'daysOfWeek' | 'cycle'), total (int >= 1, opcional, default 1), daysFrom (int >= 0, opcional, default 0). Para 'nDays' añadir nDays (int >= 2). Para 'daysOfWeek' añadir days ([0..6]). Para 'cycle' añadir cycle ([[0..6], ...], puede incluir semanas de descanso vacías). Devuelve la tarea creada como JSON.")]
+    #[tool(description = "Crea una tarea nueva a partir de un spec JSON plano validado. Campos: name (str, obligatorio), repeat ('none' | 'daily' | 'nDays' | 'daysOfWeek' | 'cycle'), total (int >= 1, opcional, default 1), startDate (str 'YYYY-MM-DD', opcional): el día en el que la tarea empieza a aplicar; si no se pone, empieza hoy. daysFrom (int, opcional) se sigue aceptando por compatibilidad: son los días desde la fecha de inicio del planificador; puede ser negativo si la tarea empieza antes de esa fecha. Para 'nDays' añadir nDays (int >= 2). Para 'daysOfWeek' añadir days ([0..6]). Para 'cycle' añadir cycle ([[0..6], ...], puede incluir semanas de descanso vacías). Devuelve la tarea creada como JSON (con su startDate, que es el dato que manda, y un daysFrom derivado de la fecha de inicio actual del planificador).")]
     async fn crear_tarea(
         &self,
         Parameters(args): Parameters<CrearTareaArgs>,

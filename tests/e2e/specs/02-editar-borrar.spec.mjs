@@ -15,6 +15,8 @@ import {
   irASemana,
   irATareas,
   celdasCon,
+  hoy,
+  celdasDeDiasSemana,
   recargar,
 } from '../helpers.mjs';
 
@@ -131,8 +133,10 @@ describe('Vista Tareas: editar y borrar (interruptor Gestionar)', () => {
 
   it('en la vista Semana, la tarea editada aparece solo en lunes y jueves', async () => {
     await irASemana();
+    // Las columnas son las de los días marcados (lunes y jueves), y solo
+    // a partir del día en que se creó la tarea (T-045).
     expect(await celdasCon('Tarea A editada'))
-      .toEqual([true, false, false, true, false, false, false]);
+      .toEqual(celdasDeDiasSemana([0, 3], hoy()));
   });
 
   it('el cambio sigue guardado tras recargar la app', async () => {
@@ -143,7 +147,7 @@ describe('Vista Tareas: editar y borrar (interruptor Gestionar)', () => {
     // En Semana, la insignia editada sigue respetando los días elegidos.
     await irASemana();
     expect(await celdasCon('Tarea A editada'))
-      .toEqual([true, false, false, true, false, false, false]);
+      .toEqual(celdasDeDiasSemana([0, 3], hoy()));
 
     // Volvemos a la vista Tareas con el menú lateral (como una persona)
     // para que el siguiente test (cancelar edición) opere sobre la

@@ -37,11 +37,38 @@ export function parseLocalDate(isoDate) {
   return next;
 }
 
+/** Devuelve la fecha de hoy a las 00:00 en hora local. */
+export function today() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Devuelve la fecha de hoy en formato YYYY-MM-DD (hora local). */
+export function todayISO() {
+  return formatLocalDate(today());
+}
+
+/** Suma `n` días a una fecha sin mutarla. */
+export function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
 /** Diferencia en días naturales entre dos fechas (ignora el cambio de hora). */
-function diffDays(from, to) {
+export function diffDays(from, to) {
   const utcFrom = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
   const utcTo   = Date.UTC(to.getFullYear(),   to.getMonth(),   to.getDate());
   return Math.round((utcTo - utcFrom) / (1000 * 60 * 60 * 24));
+}
+
+/** Índice del día de la semana en el orden que usa la interfaz
+ *  (0 = lunes … 6 = domingo). `Date.getDay()` va de domingo (0) a
+ *  sábado (6), así que se rota: el lunes de getDay() es el 1 y tiene
+ *  que ser el 0 de la interfaz. */
+export function weekdayIndex(date) {
+  return (date.getDay() + 6) % 7;
 }
 
 /** Devuelve el lunes de la semana que contiene `date`. */
@@ -74,28 +101,34 @@ export function getWeeksInMonth(date) {
 
 // ── Tareas por día ───────────────────────────────────────────────────────────
 
-/** Filtra las tareas que aplican al día `dayFromOrigin` desde `from`. */
-export function GetTasksOfDay(from, dayFromOrigin, tasks) {
+/** Filtra las tareas que aplican el día `date` (una fecha real: Date o
+ *  'YYYY-MM-DD'). Cada tarea decide con su propia fecha de inicio
+ *  absoluta, así que el resultado no depende del día en que se abra la
+ *  app. */
+export function GetTasksOfDay(date, tasks) {
   if (!Array.isArray(tasks)) return [];
   return tasks.filter(t => {
-    try { return t?.thisDayHas?.(from, dayFromOrigin); }
-    catch (e) { console.error('Error checking task for day', dayFromOrigin, e); return false; }
+    try { return t?.thisDayHas?.(date); }
+    catch (e) { console.error('Error checking task for day', date, e); return false; }
   });
 }
 
 // ── Semanas ──────────────────────────────────────────────────────────────────
 
-/** Devuelve los datos de una semana concreta (0-indexed desde `from`). */
+/** Devuelve los datos de una semana concreta: la semana real (lunes a
+ *  domingo) que va `numWeek` semanas después de la que contiene
+ *  `from`. Cada día lleva su fecha real, que es la que decide qué
+ *  tareas le tocan. */
 export function GetWeek(from, numWeek, tasks) {
-  const mondayFrom = getMondayOfWeek(from);
-  const mondayTo   = new Date(mondayFrom);
-  mondayTo.setDate(mondayTo.getDate() + numWeek * 7);
+  const monday = getMondayOfWeek(from);
+  monday.setDate(monday.getDate() + numWeek * 7);
 
-  const dayFromOrigin = numWeek * 7;
-  const weekTasks     = Array.from({ length: 7 }, (_, i) =>
-    GetTasksOfDay(from, dayFromOrigin + i, tasks)
-  );
-  return { mondayTo, weekTasks };
+  const weekTasks = Array.from({ length: 7 }, (_, i) => {
+    const dia = new Date(monday);
+    dia.setDate(dia.getDate() + i);
+    return GetTasksOfDay(dia, tasks);
+  });
+  return { mondayTo: monday, weekTasks };
 }
 
 /** Devuelve las semanas entre dos fechas, saltando `avoidWeeks` al inicio. */
@@ -117,16 +150,16 @@ export function GetNWeeks(from, nWeeks, nWeeksToAvoid = 0, tasks = []) {
 
 /** Devuelve el resto del mes actual desde `from`. */
 export function GetRestoOfMonth(from, tasks = []) {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  return GetWeeks(from, getLastDayOfMonth(today), getDiffWeeks(from, today), tasks);
+  const hoy = today();
+  return GetWeeks(from, getLastDayOfMonth(hoy), getDiffWeeks(from, hoy), tasks);
 }
 
 /** Devuelve las semanas del mes indicado. */
 export function GetMonth(from, month, year, tasks = []) {
   const date = new Date(year, month, 1); date.setHours(0, 0, 0, 0);
   if (from.getTime() > date.getTime()) {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    return GetWeeks(today, getLastDayOfMonth(today), 0, tasks);
+    const hoy = today();
+    return GetWeeks(hoy, getLastDayOfMonth(hoy), 0, tasks);
   }
   return GetWeeks(from, getLastDayOfMonth(date), getDiffWeeks(from, date), tasks);
 }

@@ -176,9 +176,9 @@ export class EditTaskCard {
   saveTask() {
     const name     = this.nameEl.value.trim();
     const total    = parseInt(this.timesEl.value) || 1;
-    const daysFrom = this.task.DaysFrom ?? 0;   // conservar el offset original
+    const startDate = this.task.StartDate;   // conservar la fecha de inicio
 
-    const spec = this.#buildSpec(name, total, daysFrom);
+    const spec = this.#buildSpec(name, total, startDate);
 
     let task;
     try {
@@ -193,30 +193,30 @@ export class EditTaskCard {
   /** Convierte el estado del formulario al spec JSON que valida
    *  back/taskSpec.js (mapeo paralelo al de AddTaskCard). Las
    *  validaciones de días y semanas viven allí (mensajes en español). */
-  #buildSpec(name, total, daysFrom) {
+  #buildSpec(name, total, startDate) {
     switch (this.repeatType) {
       case 'no-repeat':
-        return { name, total, daysFrom, repeat: 'none' };
+        return { name, total, startDate, repeat: 'none' };
 
       case 'daily':
-        return { name, total, daysFrom, repeat: 'daily' };
+        return { name, total, startDate, repeat: 'daily' };
 
       case 'interval': {
         const n = parseInt(this.extra.querySelector('#editInterval')?.value) || 3;
-        return { name, total, daysFrom, repeat: 'nDays', nDays: n };
+        return { name, total, startDate, repeat: 'nDays', nDays: n };
       }
 
       case 'days': {
         const days = [...this.extra.querySelectorAll('input[type="checkbox"]:checked')]
           .map(x => parseInt(x.dataset.day));
-        return { name, total, daysFrom, repeat: 'daysOfWeek', days };
+        return { name, total, startDate, repeat: 'daysOfWeek', days };
       }
 
       case 'cycle': {
         const cycle = this.cycleWeeks.map(flags =>
           [0,1,2,3,4,5,6].filter(i => (flags & (1 << i)) !== 0)
         );
-        return { name, total, daysFrom, repeat: 'cycle', cycle };
+        return { name, total, startDate, repeat: 'cycle', cycle };
       }
     }
     return null;

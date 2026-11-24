@@ -98,6 +98,74 @@ export async function nombresDeTareas() {
     .map(async el => (await el.getProperty('textContent')).trim());
 }
 
+/** Fecha de hoy a las 00:00 en hora local (el mismo reloj que usa la
+ *  app). Desde T-045 las tareas se colocan por su fecha de inicio real,
+ *  así que las pruebas tienen que saber qué día es hoy. */
+export function hoy() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Columna de la semana (0 = lunes … 6 = domingo) del día `d`. */
+export function columnaDe(d) {
+  return (d.getDay() + 6) % 7;
+}
+
+/** Lunes de la semana que contiene `d`. */
+export function lunesDe(d) {
+  const l = new Date(d);
+  l.setDate(l.getDate() - columnaDe(d));
+  return l;
+}
+
+/** Celdas de la semana (0 = lunes … 6 = domingo) en las que sale una
+ *  tarea de "una sola vez" que empieza el día `inicio`: solo en esa. */
+export function celdasDeUnaVez(inicio) {
+  const lunes = lunesDe(inicio);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(lunes);
+    d.setDate(d.getDate() + i);
+    return d.getTime() === inicio.getTime();
+  });
+}
+
+/** Celdas de la semana en las que sale una tarea de "días de la
+ *  semana" (`dias` = índices 0-6, 0 lunes) que empieza el día
+ *  `inicio`: los días marcados, pero solo a partir de esa fecha. */
+export function celdasDeDiasSemana(dias, inicio) {
+  const lunes = lunesDe(inicio);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(lunes);
+    d.setDate(d.getDate() + i);
+    return d.getTime() >= inicio.getTime() && dias.includes(columnaDe(d));
+  });
+}
+
+/** Celdas de la semana en las que sale una tarea de "cada N días" que
+ *  empieza el día `inicio`: cada N días reales desde esa fecha. */
+export function celdasCadaNDias(n, inicio) {
+  const lunes = lunesDe(inicio);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(lunes);
+    d.setDate(d.getDate() + i);
+    const dias = Math.round((d.getTime() - inicio.getTime()) / 86400000);
+    return dias >= 0 && dias % n === 0;
+  });
+}
+
+/** Celdas de la semana en las que sale una tarea diaria que empieza el
+ *  día `inicio`: todos los días desde esa fecha (los anteriores a ella
+ *  la tarea todavía no existía). */
+export function celdasDesde(inicio) {
+  const lunes = lunesDe(inicio);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(lunes);
+    d.setDate(d.getDate() + i);
+    return d.getTime() >= inicio.getTime();
+  });
+}
+
 /** Etiquetas de tipo de cada tarea de la lista de la vista Tareas
  *  ('Una vez', 'Diaria', 'Cada 3d', 'Días esp.', 'Ciclo'…). */
 export async function tiposDeTareas() {

@@ -45,7 +45,10 @@ export class DataManagerCard {
         // tarea(s) importada(s)" (T-031 / R-01).
         let tareas;
         try {
-          tareas = FromJson(ev.target.result);
+          // `origin`: las tareas del formato viejo guardaban un offset
+          // en días respecto al origen del planificador; al importarlas
+          // ese offset se traduce a una fecha real (T-045).
+          tareas = FromJson(ev.target.result, { origin: this.context.StartDate });
         } catch (err) {
           console.warn('[datos] importación descartada:', err);
           this.#setStatus('❌ JSON inválido');

@@ -14,6 +14,11 @@ import {
   tiposDeTareas,
   irASemana,
   celdasCon,
+  hoy,
+  celdasDeUnaVez,
+  celdasDeDiasSemana,
+  celdasCadaNDias,
+  celdasDesde,
 } from '../helpers.mjs';
 
 // Cada `it` se monta sobre el estado dejado por el anterior: los datos
@@ -116,28 +121,33 @@ describe('Formulario de tareas: tipos de repetición', () => {
     ]);
   });
 
-  it('en la Semana, "Diaria" aparece en las 7 celdas y "Una vez" solo en una', async () => {
+  it('en la Semana, "Diaria" aparece todos los días desde que se creó y "Una vez" solo en una', async () => {
     await irASemana();
-    expect(await celdasCon('Tarea diaria')).toEqual([true, true, true, true, true, true, true]);
+    // La tarea diaria se creó hoy: sale todos los días desde ese día
+    // (antes no existía) y en las 7 celdas a partir de ahí.
+    expect(await celdasCon('Tarea diaria')).toEqual(celdasDesde(hoy()));
     const unaVez = await celdasCon('Una sola vez');
     const totalPresencias = unaVez.filter(Boolean).length;
     expect(totalPresencias).toBe(1);
-    // Y la única celda debe ser la primera (lunes): la tarea interna
-    // es una DailyTask y LimitedTimeTask deja pasar solo la primera
-    // aparición, que coincide con daysFrom=0 (el lunes del origen).
-    expect(unaVez[0]).toBe(true);
+    // Y la única celda es la del día en que se creó la tarea: el
+    // calendario va anclado a fechas reales, así que una tarea "sin
+    // repetición" caduca (no vuelve a salir al día siguiente) y sale en
+    // la columna de su día de la semana de verdad.
+    expect(unaVez).toEqual(celdasDeUnaVez(hoy()));
   });
 
-  it('"Cada 3d" aparece en lunes, jueves y domingo (días 0, 3 y 6)', async () => {
-    expect(await celdasCon('Cada 3 días')).toEqual([true, false, false, true, false, false, true]);
+  it('"Cada 3d" aparece cada 3 días reales desde el día en que se creó', async () => {
+    // No es "los días 0, 3 y 6 de la semana": es cada 3 días desde la
+    // fecha de creación de la tarea.
+    expect(await celdasCon('Cada 3 días')).toEqual(celdasCadaNDias(3, hoy()));
   });
 
-  it('"Días esp." aparece solo en lunes y jueves (días 0 y 3)', async () => {
-    expect(await celdasCon('Días puntuales')).toEqual([true, false, false, true, false, false, false]);
+  it('"Días esp." aparece solo en los días marcados (lunes y jueves)', async () => {
+    expect(await celdasCon('Días puntuales')).toEqual(celdasDeDiasSemana([0, 3], hoy()));
   });
 
-  it('"Ciclo" pinta solo los días de la primera semana del ciclo (lunes y miércoles)', async () => {
-    expect(await celdasCon('Ciclo quincenal')).toEqual([true, false, true, false, false, false, false]);
+  it('"Ciclo" pinta los días de la primera semana del ciclo (lunes y miércoles)', async () => {
+    expect(await celdasCon('Ciclo quincenal')).toEqual(celdasDeDiasSemana([0, 2], hoy()));
   });
 
   it('con Veces/día = 2, una tarea diaria muestra dos insignias con los tramos horarios', async () => {
@@ -152,9 +162,10 @@ describe('Formulario de tareas: tipos de repetición', () => {
 
     await irASemana();
     const celdas = await celdasCon('Dos veces');
-    // Aparece todos los días.
-    expect(celdas).toEqual([true, true, true, true, true, true, true]);
-    // Y en cada celda hay dos insignias con los tramos horarios.
+    // Aparece todos los días desde el día en que se creó.
+    expect(celdas).toEqual(celdasDesde(hoy()));
+    // Y en cada una de esas celdas hay dos insignias con los tramos
+    // horarios (en las anteriores no hay ninguna: la tarea no existía).
     const detalle = await browser.execute(() => {
       const cells = Array.from(document.querySelectorAll('#view-week .day-cell'));
       return cells.map(cell =>
@@ -163,9 +174,10 @@ describe('Formulario de tareas: tipos de repetición', () => {
           .filter(t => t.startsWith('DOS VECES'))
       );
     });
-    for (const badges of detalle) {
-      expect(badges).toEqual(['DOS VECES · 0–12H', 'DOS VECES · 12–24H']);
-    }
+    detalle.forEach((badges, i) => {
+      if (celdas[i]) expect(badges).toEqual(['DOS VECES · 0–12H', 'DOS VECES · 12–24H']);
+      else          expect(badges).toEqual([]);
+    });
   });
 
   it('valida: nombre vacío muestra alert y no crea la tarea', async () => {

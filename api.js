@@ -57,26 +57,39 @@ export function emitChanged(action, statusMessage, extra = {}) {
 
 export const PlannerApi = {
 
-  /** Lista todas las tareas como objetos JSON planos. */
+  /** Lista todas las tareas como objetos JSON planos.
+   *
+   *  Cada tarea lleva su `startDate` ('YYYY-MM-DD'): el día en el que
+   *  empieza a aplicar. Es el dato que manda. El `daysFrom` que
+   *  acompaña es un valor DERIVADO de la fecha de inicio actual del
+   *  planificador (días entre esa fecha y la de la tarea), no un dato
+   *  guardado: si la fecha de inicio del planificador se mueve, el
+   *  `daysFrom` de la misma tarea cambia (y puede ser negativo). */
   listTasks() {
-    return Context.Tasks.map((t, i) => ({ ...taskToJson(t), index: i }));
+    return Context.Tasks.map((t, i) => ({ ...taskToJson(t, Context.StartDate), index: i }));
   },
 
   /** Devuelve la tarea en `index` (o null si no existe) como JSON plano. */
   getTask(index) {
     const i = Number(index);
     if (!Number.isInteger(i) || i < 0 || i >= Context.Tasks.length) return null;
-    return { ...taskToJson(Context.Tasks[i]), index: i };
+    return { ...taskToJson(Context.Tasks[i], Context.StartDate), index: i };
   },
 
   /** Añade una tarea desde un spec JSON plano validado. Devuelve la
-   *  tarea recién creada como JSON plano. */
+   *  tarea recién creada como JSON plano.
+   *
+   *  El spec puede traer `startDate` ('YYYY-MM-DD'): el día en el que
+   *  la tarea empieza a aplicar. Por compatibilidad con el formato
+   *  viejo también se acepta `daysFrom` (días desde la fecha de inicio
+   *  del planificador; puede ser negativo si la tarea empieza antes).
+   *  Si no viene ninguno, la tarea empieza hoy. */
   addTask(spec) {
-    const task = buildTaskFromSpec(spec);
+    const task = buildTaskFromSpec(spec, { origin: Context.StartDate });
     Context.Tasks.push(task);
     const newIndex = Context.Tasks.length - 1;
     emitChanged('add', `Tarea «${task.Name}» añadida`, { index: newIndex, name: task.Name });
-    return { ...taskToJson(task), index: newIndex };
+    return { ...taskToJson(task, Context.StartDate), index: newIndex };
   },
 
   /** Sustituye la tarea en `index` por la construida desde `spec`. */
@@ -84,10 +97,10 @@ export const PlannerApi = {
     const i = Number(index);
     if (!Number.isInteger(i) || i < 0 || i >= Context.Tasks.length)
       throw new Error('Índice de tarea inválido');
-    const task = buildTaskFromSpec(spec);
+    const task = buildTaskFromSpec(spec, { origin: Context.StartDate });
     Context.Tasks[i] = task;
     emitChanged('update', `Tarea «${task.Name}» actualizada`, { index: i, name: task.Name });
-    return { ...taskToJson(task), index: i };
+    return { ...taskToJson(task, Context.StartDate), index: i };
   },
 
   /** Elimina la tarea en `index`. Devuelve el nombre de la borrada. */

@@ -218,7 +218,7 @@ describe('Servidor MCP local', () => {
     const client = await mcpClient(port, token);
 
     const { status, body } = await client.call('crear_tarea', {
-      spec: { name: 'Regar', repeat: 'nDays', nDays: 3 },
+      spec: { name: 'Regar', repeat: 'nDays', nDays: 3, startDate: '2026-11-25' },
     });
     expect(status).toBe(200);
     expect(body.result).toBeDefined();
@@ -229,6 +229,8 @@ describe('Servidor MCP local', () => {
     expect(creada.name).toBe('Regar');
     expect(creada.repeat).toBe('nDays');
     expect(creada.nDays).toBe(3);
+    // Y la fecha de inicio de la tarea (T-045).
+    expect(creada.startDate).toBe('2026-11-25');
 
     // Vuelve a Tareas y comprueba que la nueva tarea está en la lista.
     await browser.keys(['Alt', '1']);
@@ -246,6 +248,8 @@ describe('Servidor MCP local', () => {
     const listJson = JSON.parse(listText);
     expect(listJson.some(t => t.name === 'Regar' && t.repeat === 'nDays' && t.nDays === 3))
       .toBe(true);
+    // La fecha de inicio también viaja por el MCP.
+    expect(listJson.find(t => t.name === 'Regar').startDate).toBe('2026-11-25');
 
     // ver_semana(0) devuelve 7 días; ninguno debe romper.
     const semana = await client.call('ver_semana', { offset: 0 });

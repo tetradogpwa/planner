@@ -9,6 +9,11 @@
 //   - `taskToJson` devuelve una copia plana (sin clases ni Proxy) de una
 //     tarea.
 //
+// Cada tarea guarda su fecha de inicio absoluta (`startDate`, formato
+// 'YYYY-MM-DD'): el día en el que empieza a aplicar. Por compatibilidad
+// con el formato viejo, `daysFrom` (un offset respecto al origen del
+// planificador) se sigue aceptando, pero la fecha manda si viene.
+//
 // No toca el DOM ni el estado global: se puede usar y probar sin
 // navegador (ver `tests/unit/taskSpec.test.mjs`).
 // ────────────────────────────────────────────────────────────────────
@@ -20,6 +25,15 @@ import {
   createDaysOfWeekTask,
   createCycleDaysOfWeekTask,
 } from './taskFactory.js';
+
+import {
+  addDays,
+  diffDays,
+  formatLocalDate,
+  parseLocalDate,
+  today,
+  todayISO,
+} from './calendar.js';
 
 // ── Validación ───────────────────────────────────────────────────────────
 
@@ -64,11 +78,41 @@ export function parseCycle(value) {
   return { cycle: out };
 }
 
+/** Resuelve la fecha de inicio de una tarea a partir del spec.
+ *  - `startDate` ('YYYY-MM-DD') es lo nuevo y manda.
+ *  - `daysFrom` se sigue aceptando por compatibilidad: es un offset
+ *    en días respecto al origen del planificador (`opts.origin`). Puede
+ *    ser negativo: la tarea empieza antes del origen (es lo que
+ *    devuelve la API, que lo deriva de la fecha de inicio real).
+ *  - Si no viene ninguno, la tarea empieza hoy. */
+function resolveStartDate(spec, origin) {
+  const startDate = spec.startDate;
+  if (startDate !== undefined && startDate !== null && startDate !== '') {
+    try {
+      return formatLocalDate(parseLocalDate(startDate));
+    } catch (e) {
+      throw new Error('Fecha de inicio inválida (usa YYYY-MM-DD)', { cause: e });
+    }
+  }
+
+  if (spec.daysFrom !== undefined && spec.daysFrom !== null) {
+    const daysFrom = Number(spec.daysFrom);
+    if (!Number.isInteger(daysFrom)) throw new Error('daysFrom inválido');
+    const base = origin ? parseLocalDate(origin) : today();
+    return formatLocalDate(addDays(base, daysFrom));
+  }
+
+  return todayISO();
+}
+
 /** Valida y construye una tarea desde un spec JSON plano. Lanza Error
  *  con mensaje en español si algo no cuadra. La usan PlannerApi.addTask
  *  y PlannerApi.updateTask, y también los formularios (addTask / editTask)
- *  para no duplicar la lógica de construcción por tipo de repetición. */
-export function buildTaskFromSpec(spec) {
+ *  para no duplicar la lógica de construcción por tipo de repetición.
+ *
+ *  `opts.origin` es la fecha de inicio del planificador: solo se usa
+ *  para traducir el `daysFrom` del formato viejo a una fecha real. */
+export function buildTaskFromSpec(spec, opts = {}) {
   if (!spec || typeof spec !== 'object') throw new Error('Especificación de tarea inválida');
 
   const name = typeof spec.name === 'string' ? spec.name.trim() : '';
@@ -77,28 +121,27 @@ export function buildTaskFromSpec(spec) {
   const total = spec.total === undefined ? 1 : Number(spec.total);
   if (!Number.isInteger(total) || total < 1) throw new Error('Total inválido');
 
-  const daysFrom = spec.daysFrom === undefined ? 0 : Number(spec.daysFrom);
-  if (!Number.isInteger(daysFrom) || daysFrom < 0) throw new Error('daysFrom inválido');
+  const startDate = resolveStartDate(spec, opts.origin);
 
   const repeat = spec.repeat;
   switch (repeat) {
     case 'none': {
-      // OneTimeTask: una sola vez envuelve una DailyTask.
-      return createOneTimeTask(createDailyTask(name, total, daysFrom), total, daysFrom);
+      // OneTimeTask: una sola vez envuelve a DailyTask.
+      return createOneTimeTask(createDailyTask(name, total, startDate), total, startDate);
     }
     case 'daily':
-      return createDailyTask(name, total, daysFrom);
+      return createDailyTask(name, total, startDate);
 
     case 'nDays': {
       const nDays = Number(spec.nDays);
       if (!Number.isInteger(nDays) || nDays < 2) throw new Error('nDays inválido');
-      return createNDaysTask(name, nDays, total, daysFrom);
+      return createNDaysTask(name, nDays, total, startDate);
     }
 
     case 'daysOfWeek': {
       const days = parseDayArray(spec.days);
       if (!days || days.length === 0) throw new Error('Selecciona al menos un día');
-      return createDaysOfWeekTask(name, days, total, daysFrom);
+      return createDaysOfWeekTask(name, days, total, startDate);
     }
 
     case 'cycle': {
@@ -106,7 +149,7 @@ export function buildTaskFromSpec(spec) {
       if (parsed.reason === 'empty')    throw new Error('Añade al menos una semana al ciclo');
       if (parsed.reason === 'allEmpty') throw new Error('Marca al menos un día en el ciclo');
       if (parsed.reason === 'invalid')  throw new Error('Días de ciclo inválidos');
-      return createCycleDaysOfWeekTask(name, parsed.cycle, total, daysFrom);
+      return createCycleDaysOfWeekTask(name, parsed.cycle, total, startDate);
     }
 
     default:
@@ -117,18 +160,33 @@ export function buildTaskFromSpec(spec) {
 // ── Serialización plana (para getters) ───────────────────────────────────
 
 /** Devuelve una copia JSON-segura (sin clases, sin Proxy) de la tarea
- *  en `index`. Acepta tanto instancias reales como Proxies: copiamos
- *  los campos manualmente en lugar de hacer JSON.parse(JSON.stringify)
- *  para no perder tipos. */
-export function taskToJson(task) {
+ * en `index`. Acepta tanto instancias reales como Proxies: copiamos
+ * los campos manualmente en lugar de hacer JSON.parse(JSON.stringify)
+ * para no perder tipos.
+ *
+ * `startDate` es el dato que manda: el día en el que la tarea empieza
+ * a aplicar.
+ *
+ * `origin` es la fecha de inicio del planificador. Si se pasa, la copia
+ * incluye además `daysFrom`: los días entre el origen y la fecha de
+ * inicio de la tarea. OJO: ese `daysFrom` es un valor DERIVADO del
+ * origen que se le pasa (no un dato guardado de la tarea): si el
+ * origen se mueve, el `daysFrom` de la misma tarea cambia y puede
+ * ser negativo (una tarea puede empezar antes del origen). Por eso la
+ * API lo acepta de vuelta tal cual. */
+export function taskToJson(task, origin = null) {
   const cn = task.constructor?.name ?? '';
+  const startDate = task.StartDate ?? todayISO();
   const base = {
     index: -1,   // lo rellena el llamador
     name:    task.Name,
     total:   task.Total,
-    daysFrom: task.DaysFrom ?? 0,
+    startDate: startDate,
     repeat:  null,
   };
+  if (origin) {
+    base.daysFrom = diffDays(parseLocalDate(origin), parseLocalDate(startDate));
+  }
   switch (cn) {
     case 'OneTimeTask':  base.repeat = 'none';      break;
     case 'DailyTask':    base.repeat = 'daily';     break;

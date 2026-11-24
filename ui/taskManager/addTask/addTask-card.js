@@ -1,5 +1,6 @@
 import { buildTaskFromSpec } from '../../../back/taskSpec.js';
 import { DAY_NAMES }        from '../../../back/dayNames.js';
+import { todayISO }         from '../../../back/calendar.js';
 
 export class AddTaskCard {
   constructor(root) {
@@ -130,7 +131,11 @@ export class AddTaskCard {
     // validación y construcción por tipo de repetición viven en
     // back/taskSpec.js: si algo no cuadra, buildTaskFromSpec lanza el
     // error con el mensaje en español y lo mostramos al usuario.
-    const spec = this.#buildSpec(name, total, 0);
+    //
+    // La tarea empieza HOY (su fecha de inicio es real, no un offset
+    // respecto a un origen): así la columna en la que sale depende del
+    // día de la semana de verdad y no del día en que se abrió la app.
+    const spec = this.#buildSpec(name, total, todayISO());
 
     let task;
     try {
@@ -147,26 +152,26 @@ export class AddTaskCard {
    *  back/taskSpec.js. La validación de días/semanas vive allí
    *  (mensajes en español); aquí solo mapeamos los campos del
    *  formulario. */
-  #buildSpec(name, total, daysFrom) {
+  #buildSpec(name, total, startDate) {
     switch (this.repeatType) {
       case 'no-repeat':
-        return { name, total, daysFrom, repeat: 'none' };
+        return { name, total, startDate, repeat: 'none' };
       case 'daily':
-        return { name, total, daysFrom, repeat: 'daily' };
+        return { name, total, startDate, repeat: 'daily' };
       case 'interval': {
         const n = parseInt(this.extra.querySelector('#interval')?.value) || 3;
-        return { name, total, daysFrom, repeat: 'nDays', nDays: n };
+        return { name, total, startDate, repeat: 'nDays', nDays: n };
       }
       case 'days': {
         const days = [...this.extra.querySelectorAll('input[type="checkbox"]:checked')]
           .map(x => parseInt(x.dataset.day));
-        return { name, total, daysFrom, repeat: 'daysOfWeek', days };
+        return { name, total, startDate, repeat: 'daysOfWeek', days };
       }
       case 'cycle': {
         const cycle = this.cycleWeeks.map(flags =>
           [0,1,2,3,4,5,6].filter(i => (flags & (1 << i)) !== 0)
         );
-        return { name, total, daysFrom, repeat: 'cycle', cycle };
+        return { name, total, startDate, repeat: 'cycle', cycle };
       }
     }
     return null;

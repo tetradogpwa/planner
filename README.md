@@ -167,13 +167,13 @@ main.js
 
 1. Crea una nueva clase en un archivo separado
 2. Extiende de `TaskBase`
-3. Implementa el método `thisDayHas(dayFromOrigin)`
+3. Implementa el método `thisDayHas(date)` (la fecha real del día)
 4. Agrega la clase a `AllTaskClasses` en `main.js`
 
 Ejemplo:
 ```javascript
 class MiTarea extends TaskBase {
-  thisDayHas(dayFromOrigin) {
+  thisDayHas(date) {
     // Tu lógica aquí
     return true || false;
   }

@@ -1,0 +1,9 @@
+[
+  { "className": "DailyTask",    "name": "Beber agua",     "total": 1, "daysFrom": 0, "nDays": 1 },
+  { "className": "DaysOfWeekTask", "name": "Gimnasio",    "total": 1, "daysFrom": 2, "flags": 5 },
+  { "className": "NDaysTask",    "name": "Regar plantas",  "total": 1, "daysFrom": 5, "nDays": 3 },
+  { "className": "OneTimeTask",  "name": "Dentista",       "total": 1, "daysFrom": 7, "repeat": 1,
+    "task": { "className": "DailyTask", "name": "Dentista", "total": 1, "daysFrom": 7, "nDays": 1 } },
+  { "className": "CiclesDaysOfWeekTask", "name": "Turnos", "total": 1, "daysFrom": 0,
+    "cicles": [ { "flags": 5 }, { "flags": 16 } ] }
+]
