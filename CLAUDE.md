@@ -5,43 +5,49 @@ Frontend en JavaScript sin framework ni bundler; se empaqueta con
 **Tauri 2** para Linux, Windows y Android. Todo el texto de la interfaz,
 los comentarios y la documentación van en **español**.
 
-## Cómo trabajamos: supervisor y desarrollador
+## Cómo trabajamos: MiniMax trabaja solo, Claude supervisa
 
-- **Claude (supervisor)** recibe las peticiones del usuario, las registra
-  como tareas, las delega a MiniMax, revisa el resultado y lo aprueba o lo
-  devuelve con correcciones. Skills: `registrar-tarea`, `delegar-minimax`,
-  `revisar-tarea`.
-- **MiniMax (desarrollador)** implementa una tarea cada vez con OpenCode
-  (`opencode run --agent planner-worker`), lanzado por
-  `tools/minimax/run-task.sh`. Sus permisos están en `opencode.json`
-  (agente `planner-worker`) y sus reglas extra en
-  `tools/minimax/worker-prompt.md`.
+- **MiniMax M3.1 Flash (desarrollador)** implementa una tarea cada vez
+  con OpenCode (`opencode run --agent planner-worker`), lanzado por
+  `tools/minimax/run-task.sh`. Permisos en `opencode.json` (agente
+  `planner-worker`); reglas extra en `tools/minimax/worker-prompt.md`.
+  Modelo: `MINIMAX_WORKER_MODEL` en `.env`.
+- **MiniMax M3 (revisor)** comprueba cada entrega contra sus criterios
+  de aceptación (`tools/minimax/revisar.sh`, agente `planner-reviewer`,
+  sin permiso de edición) y la aprueba o dicta las correcciones, que
+  vuelven al desarrollador. Modelo: `MINIMAX_REVIEWER_MODEL`.
+- **El ciclo es autónomo: `tools/cola.sh`.** Recorre la cola entera:
+  desarrollar → revisar → devolver con correcciones (hasta 4 intentos) o
+  aprobar → `bash tools/test.sh` en ✓ → commit `T-00X: título` solo con
+  los ficheros de la tarea. Se lanza desacoplado y sobrevive a `/clear`:
+  `setsid -f bash tools/cola.sh > .tasks/logs/cola-nohup.log 2>&1 < /dev/null`.
+  Registro de cada recorrido en `.tasks/logs/cola-*.log`.
+- **Claude (supervisor) no desarrolla ni revisa tarea a tarea.** Su papel:
+  1. registrar las peticiones del usuario como tareas (skill
+     `registrar-tarea`), bien especificadas y con criterios comprobables;
+  2. lanzar `cola.sh` si no está corriendo (`pgrep -f tools/cola.sh`);
+  3. auditar lo ya commiteado (`git log`, `git show`) y los registros:
+     si algo aprobado está mal, crear una tarea nueva con `--relacionada`;
+  4. atender lo que la cola no resuelve sola: tareas que agotan intentos
+     o cuya revisión falla (se quedan pendientes o en revisión), añadiendo
+     notas (`amend --nota "Supervisor: …"`) o partiéndolas;
+  5. darle más tareas.
 - El usuario también puede hablar con MiniMax directamente en OpenCode
   ("haz la siguiente tarea" o `/siguiente [T-00X]`). OpenCode solo lee
-  `AGENTS.md`, que le indica usar `tasks.mjs empezar` (foto, estado
-  `en_curso` e instrucciones) y `tasks.mjs terminar T-00X` (pasa a
-  `en_revision`). Revísalas igual que las lanzadas con `run-task.sh`.
+  `AGENTS.md`, que le indica usar `tasks.mjs empezar` y
+  `tasks.mjs terminar T-00X` (pasa a `en_revision`); `cola.sh` revisa
+  esas tareas igual que las demás.
 - Cola de tareas: `.tasks/tasks.json`, gestionada solo con
   `node tools/tasks/tasks.mjs` (ejecútalo sin argumentos para ver la ayuda).
   Una petición que modifica una tarea **no terminada** se añade a esa tarea
   (`amend`); una tarea **hecha** no se modifica, se crea otra con
-  `--relacionada`.
-- **Un commit por funcionalidad implementada y probada.** Claude hace el
-  commit al aprobar cada tarea (con `bash tools/test.sh` en ✓), solo
-  con los archivos de esa tarea y el mensaje `T-00X: título`. MiniMax
-  nunca hace commits, y nadie hace `git push` sin que lo pida el
-  usuario.
-- **Ciclo autónomo, una tarea por conversación.** Claude lanza MiniMax
-  con `tools/minimax/lanzar.sh` (desacoplado: sobrevive a `/clear`) y
-  encadena revisar → devolver y relanzar, o aprobar
-  y hacer commit, sin esperar al usuario entre pasos. Al cerrar la tarea
-  se para: el usuario hace `/clear` y escribe `/avanzar` (skill
-  `avanzar`), que retoma desde la cola. Por eso nada del ciclo puede
-  depender de la conversación: correcciones, notas pendientes
-  (`amend --nota "Supervisor: falta comprobar …"`) y fotos del árbol
-  (`diff --total` cubre todos los intentos) viven en `.tasks/`. La línea
-  de estado de Claude Code (`tools/tasks/statusline.mjs`) le dice al
-  usuario cuándo la tarea está cerrada y ya puede hacer `/clear`.
+  `--relacionada`. El orden de la cola es el de creación: lo urgente se
+  registra antes o se parte.
+- **Un commit por tarea, hecho por `cola.sh`.** MiniMax nunca hace
+  commits a mano. Si Claude cambia herramientas o documentación mientras
+  la cola corre, lo commitea aparte y enseguida (`cola.sh` usa `HEAD`
+  como foto: lo que quede sin commitear se colaría en el commit de la
+  tarea en curso). Nadie hace `git push` sin que lo pida el usuario.
 
 ## Estructura
 

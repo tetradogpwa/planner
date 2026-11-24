@@ -19,7 +19,7 @@
 #   1  hay correcciones (o el revisor no pudo opinar)
 #   2  error de uso o de configuración
 #
-# Del .env solo se leen MINIMAX_MODEL, MINIMAX_TIMEOUT y OPENCODE_BIN.
+# Del .env solo se leen MINIMAX_REVIEWER_MODEL (por defecto minimax/MiniMax-M3), MINIMAX_TIMEOUT y OPENCODE_BIN.
 # ────────────────────────────────────────────────────────────────────
 set -uo pipefail
 
@@ -34,10 +34,10 @@ if [[ -f .env ]]; then
     val="${line#*=}"
     val="${val%\"}"; val="${val#\"}"; val="${val%\'}"; val="${val#\'}"
     export "$key=$val"
-  done < <(grep -E '^(MINIMAX_MODEL|MINIMAX_TIMEOUT|OPENCODE_BIN)=' .env)
+  done < <(grep -E '^(MINIMAX_REVIEWER_MODEL|MINIMAX_TIMEOUT|OPENCODE_BIN)=' .env)
 fi
 
-MINIMAX_MODEL="${MINIMAX_MODEL:-minimax/MiniMax-M3}"
+MINIMAX_MODEL="${MINIMAX_REVIEWER_MODEL:-minimax/MiniMax-M3}"
 MINIMAX_TIMEOUT="${MINIMAX_TIMEOUT:-3600}"
 OPENCODE="${OPENCODE_BIN:-$(command -v opencode || echo "$HOME/.opencode/bin/opencode")}"
 

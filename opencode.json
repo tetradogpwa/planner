@@ -3,9 +3,9 @@
   "default_agent": "planner-worker",
   "agent": {
     "planner-worker": {
-      "description": "Desarrollador (MiniMax) de las tareas del Planificador; toma las tareas de la cola (.tasks) y lo supervisa Claude",
+      "description": "Desarrollador (MiniMax M3.1 Flash) de las tareas del Planificador; toma las tareas de la cola (.tasks); lo revisa MiniMax M3 (planner-reviewer)",
       "mode": "primary",
-      "model": "minimax/MiniMax-M3",
+      "model": "minimax/MiniMax-M3.1-Flash",
       "permission": {
         "*": "allow",
         "read": {
@@ -54,7 +54,7 @@
       }
     },
     "planner-reviewer": {
-      "description": "Revisor (MiniMax) del Planificador Semanal: comprueba el trabajo de una tarea contra sus criterios de aceptación y dicta un veredicto; no edita nada",
+      "description": "Revisor (MiniMax M3) del Planificador Semanal: comprueba el trabajo de una tarea contra sus criterios de aceptación y dicta un veredicto con correcciones; no edita nada",
       "mode": "primary",
       "model": "minimax/MiniMax-M3",
       "permission": {

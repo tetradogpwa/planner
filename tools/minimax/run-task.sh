@@ -14,8 +14,8 @@
 #   bash tools/minimax/run-task.sh --check         comprueba la configuración (sin gasto)
 #   bash tools/minimax/run-task.sh --ping          pide "OK" a MiniMax (gasta unos pocos tokens)
 #
-# Opcional en .env: MINIMAX_MODEL (formato proveedor/modelo de OpenCode;
-# por defecto minimax/MiniMax-M3), MINIMAX_TIMEOUT (segundos; por defecto
+# Opcional en .env: MINIMAX_WORKER_MODEL (formato proveedor/modelo de OpenCode;
+# por defecto minimax/MiniMax-M3.1-Flash), MINIMAX_TIMEOUT (segundos; por defecto
 # 3600) y OPENCODE_BIN.
 # ────────────────────────────────────────────────────────────────────
 set -uo pipefail
@@ -32,10 +32,10 @@ if [[ -f .env ]]; then
     val="${line#*=}"
     val="${val%\"}"; val="${val#\"}"; val="${val%\'}"; val="${val#\'}"
     export "$key=$val"
-  done < <(grep -E '^(MINIMAX_MODEL|MINIMAX_TIMEOUT|OPENCODE_BIN)=' .env)
+  done < <(grep -E '^(MINIMAX_WORKER_MODEL|MINIMAX_TIMEOUT|OPENCODE_BIN)=' .env)
 fi
 
-MINIMAX_MODEL="${MINIMAX_MODEL:-minimax/MiniMax-M3}"
+MINIMAX_MODEL="${MINIMAX_WORKER_MODEL:-minimax/MiniMax-M3.1-Flash}"
 MINIMAX_TIMEOUT="${MINIMAX_TIMEOUT:-3600}"
 OPENCODE="${OPENCODE_BIN:-$(command -v opencode || echo "$HOME/.opencode/bin/opencode")}"
 

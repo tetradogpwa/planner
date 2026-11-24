@@ -17,7 +17,7 @@ bash tools/minimax/run-task.sh --check
 ```
 
 Si falla, sigue las indicaciones que imprime: el modelo no está
-disponible (ajusta `MINIMAX_MODEL` en `.env` con uno de la lista) o
+disponible (ajusta `MINIMAX_WORKER_MODEL` en `.env` con uno de la lista) o
 MiniMax no está conectado en OpenCode (el usuario debe ejecutar
 `opencode auth login`). Nunca le pidas la clave en el chat ni la escribas
 en ningún archivo. `--ping` hace una llamada real mínima si necesitas
@@ -66,7 +66,7 @@ mientras tanto, la skill `avanzar` retoma el ciclo desde la cola.
   - Autenticación o proveedor (`ProviderAuthError`, `APIError`, 401):
     MiniMax no está bien conectado en OpenCode. Avisa al usuario
     (`opencode auth login`).
-  - Modelo desconocido: revisa `MINIMAX_MODEL` con `--check`.
+  - Modelo desconocido: revisa `MINIMAX_WORKER_MODEL` con `--check`.
   - "Permission denied" repetido en algo que la tarea necesita: revisa
     los permisos de `planner-worker` en `opencode.json` antes de
     reintentar.
