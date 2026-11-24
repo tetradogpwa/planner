@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { FromJson, ToJson, usaFormatoAntiguo } from '../../back/serializer.js';
+import { FromJson, ToJson, usaFormatoAntiguo, faltanIds } from '../../back/serializer.js';
 import {
   createDailyTask,
   createNDaysTask,
@@ -173,4 +173,44 @@ test('una tarea sin `startDate` ni `daysFrom` se migra al origen', () => {
   ]);
   const tareas = FromJson(json, { origin: '2026-11-23' });
   assert.equal(tareas[0].StartDate, '2026-11-23');
+});
+
+// ── Identificador de cada tarea (T-049) ─────────────────────────────────
+
+test('cada tarea tiene un id único', () => {
+  const tareas = TAREAS();
+  const ids = tareas.map(t => t.Id);
+  assert.equal(ids.length, 5);
+  ids.forEach(id => assert.equal(typeof id, 'string'));
+  assert.equal(new Set(ids).size, 5, 'dos tareas tienen el mismo id');
+});
+
+test('el id sobrevive a exportar e importar', () => {
+  const originales = TAREAS();
+  const leidas = FromJson(ToJson(originales));
+
+  assert.equal(leidas.length, originales.length);
+  leidas.forEach((leida, i) => {
+    assert.equal(leida.Id, originales[i].Id, `id de ${originales[i].Name}`);
+  });
+});
+
+test('una tarea importada sin id (datos viejos) recibe uno', () => {
+  const json = JSON.stringify([
+    { className: 'DailyTask', name: 'Agua', total: 1, startDate: '2026-11-23', nDays: 1 },
+  ]);
+  const [tarea] = FromJson(json);
+  assert.equal(typeof tarea.Id, 'string');
+  assert.ok(tarea.Id.length > 0);
+});
+
+test('se detecta qué tareas guardadas necesitan id (migración)', () => {
+  // Las tareas guardadas antes de T-049 no tenían id: hay que
+  // guardarlas ya migradas o en cada arrancarían con un id nuevo.
+  assert.equal(faltanIds(ToJson(TAREAS())), false);
+  assert.equal(faltanIds(JSON_VIEJO), true);
+  assert.equal(faltanIds(JSON.stringify([
+    { className: 'DailyTask', name: 'Agua', total: 1, startDate: '2026-11-23', nDays: 1, id: 'abc' },
+  ])), false);
+  assert.equal(faltanIds('{esto no es json'), false);
 });

@@ -1,4 +1,4 @@
-import { FromJson, ToJson, usaFormatoAntiguo } from './back/serializer.js';
+import { FromJson, ToJson, usaFormatoAntiguo, faltanIds } from './back/serializer.js';
 import { today } from './back/calendar.js';
 
 export class Context {
@@ -84,7 +84,12 @@ export class Context {
         // se guardan ya migradas: si no, la migración se repetiría en
         // cada arranque y, sin fecha de inicio guardada, las tareas
         // irían un día hacia atrás cada vez (T-045).
-        if (usaFormatoAntiguo(tasksJson)) Context.UpdateTasks();
+        //
+        // Lo mismo con el identificador: las tareas guardadas antes de
+        // T-049 no tenían `id` y al leerlas se les asigna uno. Si no se
+        // guardara ya migrado, en cada arranque les tocaría un id
+        // nuevo y el identificador no sería estable (T-049).
+        if (usaFormatoAntiguo(tasksJson) || faltanIds(tasksJson)) Context.UpdateTasks();
       } catch (e) {
         console.warn('[contexto] las tareas guardadas no se han podido leer:', e);
       }

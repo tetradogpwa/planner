@@ -1,4 +1,5 @@
 import { parseLocalDate, todayISO } from './calendar.js';
+import { nuevoId }           from './idTarea.js';
 
 // ────────────────────────────────────────────────────────────────────
 // back/baseTarea.js — La base de todas las tareas.
@@ -8,6 +9,10 @@ import { parseLocalDate, todayISO } from './calendar.js';
 // Antes guardaba `daysFrom`, un offset respecto al origen del
 // planificador, y por eso las tareas se movían de columna cada vez que
 // la app se abría en un día distinto (T-045).
+//
+// Y guarda su IDENTIFICADOR (`id`, un UUID): no cambia al editarla ni
+// al guardarla, así que la API, el MCP y la interfaz pueden referirse
+// a una tarea concreta y no a su posición en la lista (T-049).
 // ────────────────────────────────────────────────────────────────────
 
 export class TaskBase{
@@ -17,6 +22,17 @@ export class TaskBase{
     // Fecha de inicio en formato 'YYYY-MM-DD'. Si nadie la pone, la
     // tarea empieza hoy.
     startDate=todayISO();
+    // Identificador único de la tarea. Cada tarea nueva nace con el
+    // suyo; el importador lo conserva si el JSON lo trae.
+    id=nuevoId();
+
+    get Id(){
+        return this.id;
+    }
+
+    set Id(id){
+        this.id=id;
+    }
 
     get StartDate(){
         return this.startDate;

@@ -68,6 +68,24 @@ export function usaFormatoAntiguo(dataStr) {
   return lista.some(t => t && typeof t === 'object' && !t.startDate);
 }
 
+/** Dice si alguna tarea del JSON no tiene `id`. Las tareas guardadas
+ *  antes de T-049 no lo tenían: al leerlas se les asigna uno, y hay
+ *  que guardar el resultado ya migrado (si no, en cada arranque se les
+ *  asignaría un id nuevo y el identificador no sería estable). */
+export function faltanIds(dataStr) {
+  let datos;
+  try {
+    datos = JSON.parse(dataStr);
+  } catch {
+    return false;
+  }
+  const lista = Array.isArray(datos)
+    ? datos
+    : (datos && Array.isArray(datos.tasks) ? datos.tasks : []);
+  if (!Array.isArray(lista)) return false;
+  return lista.some(t => t && typeof t === 'object' && !t.id);
+}
+
 /** Fecha de inicio de una tarea que viene del JSON.
  *  - `startDate` (formato nuevo) manda.
  *  - Si no viene, la tarea usaba `daysFrom`: un offset en días
@@ -140,6 +158,11 @@ function processTask(raw, opts) {
   task.Total    = data.total;
   task.Name     = data.name;
   task.StartDate = startDateDe(data, opts);
+  // El identificador de la tarea: si el JSON lo trae (es lo que pasa
+  // al exportar e importar), se conserva; si no, se deja el que la
+  // tarea ha nacido con (las tareas guardadas antes de T-049 no lo
+  // tenían: es la migración que hace `faltanIds`).
+  if (typeof data.id === 'string' && data.id.trim()) task.Id = data.id.trim();
   return task;
 }
 

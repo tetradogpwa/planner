@@ -326,6 +326,48 @@ describe('Servidor MCP local', () => {
     expect(clientViejo).toBeNull();
   });
 
+  it('las herramientas aceptan el id de la tarea', async () => {
+    const token = await $('#mcpToken').getValue();
+    const port  = await $('#mcpPort').getValue();
+    const client = await mcpClient(port, token);
+
+    // Crear una tarea y quedarse con su id.
+    const creada = await client.call('crear_tarea', {
+      spec: { name: 'Por id', repeat: 'daily' },
+    });
+    const tarea = JSON.parse(creada.body.result.content[0].text);
+    expect(typeof tarea.id).toBe('string');
+    expect(tarea.id.length).toBeGreaterThan(0);
+
+    // listar_tareas la devuelve con su id.
+    const lista = await client.call('listar_tareas', {});
+    const tareas = JSON.parse(lista.body.result.content[0].text);
+    const encontrada = tareas.find(t => t.id === tarea.id);
+    expect(encontrada).toBeDefined();
+    expect(encontrada.name).toBe('Por id');
+
+    // ver_tarea por id.
+    const vista = await client.call('ver_tarea', { id: tarea.id });
+    expect(JSON.parse(vista.body.result.content[0].text).name).toBe('Por id');
+
+    // editar_tarea por id: cambia la tarea y NO su id.
+    const editada = await client.call('editar_tarea', {
+      id: tarea.id,
+      spec: { name: 'Por id editada', repeat: 'daily' },
+    });
+    const editadaJson = JSON.parse(editada.body.result.content[0].text);
+    expect(editadaJson.name).toBe('Por id editada');
+    expect(editadaJson.id).toBe(tarea.id);
+
+    // borrar_tarea por id.
+    const borrada = await client.call('borrar_tarea', { id: tarea.id });
+    expect(JSON.parse(borrada.body.result.content[0].text)).toBe('Por id editada');
+
+    // Ya no está.
+    const despues = await client.call('ver_tarea', { id: tarea.id });
+    expect(JSON.parse(despues.body.result.content[0].text)).toBeNull();
+  });
+
   it('al desactivar el interruptor, el puerto se cierra', async () => {
     // El test anterior tocó el interruptor y navegó: nos aseguramos de
     // estar en Apariencia con el interruptor en un estado conocido.

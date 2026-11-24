@@ -164,6 +164,9 @@ export function buildTaskFromSpec(spec, opts = {}) {
  * los campos manualmente en lugar de hacer JSON.parse(JSON.stringify)
  * para no perder tipos.
  *
+ * `id` es el identificador de la tarea: no cambia al editarla y es lo
+ * que hay que usar para referirse a ella (T-049).
+ *
  * `startDate` es el dato que manda: el día en el que la tarea empieza
  * a aplicar.
  *
@@ -178,7 +181,8 @@ export function taskToJson(task, origin = null) {
   const cn = task.constructor?.name ?? '';
   const startDate = task.StartDate ?? todayISO();
   const base = {
-    index: -1,   // lo rellena el llamador
+    index: -1,   // lo rellena el llamador (obsoleto: se usa el id)
+    id:    task.Id,
     name:    task.Name,
     total:   task.Total,
     startDate: startDate,

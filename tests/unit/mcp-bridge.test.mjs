@@ -93,6 +93,36 @@ test('borrar_tarea devuelve el nombre de la tarea borrada', async () => {
   assert.deepEqual(apiCalls[0], ['deleteTask', 0]);
 });
 
+// ── Las tareas se localizan por su id (T-049) ────────────────────────────
+
+test('ver_tarea pasa el id a api.getTask', async () => {
+  const r = await handleMcpCall({ id: '1', tool: 'ver_tarea', args: { id: 'uuid-1' } }, apiStub);
+  assert.equal(r.ok, true);
+  assert.deepEqual(apiCalls[0], ['getTask', 'uuid-1']);
+});
+
+test('editar_tarea pasa {id, spec} a api.updateTask', async () => {
+  const r = await handleMcpCall(
+    { id: '1', tool: 'editar_tarea', args: { id: 'uuid-1', spec: { name: 'Z', repeat: 'daily' } } },
+    apiStub,
+  );
+  assert.equal(r.ok, true);
+  assert.deepEqual(apiCalls[0], ['updateTask', 'uuid-1', { name: 'Z', repeat: 'daily' }]);
+});
+
+test('borrar_tarea pasa el id a api.deleteTask', async () => {
+  const r = await handleMcpCall({ id: '1', tool: 'borrar_tarea', args: { id: 'uuid-1' } }, apiStub);
+  assert.equal(r.ok, true);
+  assert.deepEqual(apiCalls[0], ['deleteTask', 'uuid-1']);
+});
+
+test('sin id ni index, la herramienta avisa en español', async () => {
+  const r = await handleMcpCall({ id: '1', tool: 'ver_tarea', args: {} }, apiStub);
+  assert.equal(r.ok, false);
+  assert.match(r.payload.message, /id/i);
+  assert.equal(apiCalls.length, 0);
+});
+
 test('ver_semana usa el offset por defecto 0 si no llega', async () => {
   const r = await handleMcpCall({ id: '1', tool: 'ver_semana', args: {} }, apiStub);
   assert.equal(r.ok, true);

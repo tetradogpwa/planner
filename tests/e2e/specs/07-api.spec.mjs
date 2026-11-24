@@ -69,4 +69,35 @@ describe('PlannerApi (capa pública)', () => {
     expect(conOffset.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(conOffset.daysFrom).toBe(2);
   });
+
+  it('cada tarea tiene un id único, y se puede usar para editarla y borrarla', async () => {
+    const creada = await browser.execute(() => window.PlannerApi.addTask({
+      name: 'API con id', repeat: 'daily',
+    }));
+    expect(typeof creada.id).toBe('string');
+    expect(creada.id.length).toBeGreaterThan(0);
+
+    // Los ids de la lista son únicos.
+    const ids = await browser.execute(() => window.PlannerApi.listTasks().map(t => t.id));
+    ids.forEach(id => expect(typeof id).toBe('string'));
+    expect(new Set(ids).size).toBe(ids.length);
+
+    // Editarla por su id no le cambia el id.
+    const editada = await browser.execute(
+      (id) => window.PlannerApi.updateTask(id, { name: 'API con id editada', repeat: 'daily' }),
+      creada.id,
+    );
+    expect(editada.name).toBe('API con id editada');
+    expect(editada.id).toBe(creada.id);
+
+    // Y se puede leer por su id.
+    const leida = await browser.execute((id) => window.PlannerApi.getTask(id), creada.id);
+    expect(leida.name).toBe('API con id editada');
+
+    // Y borrar por su id borra esa tarea y solo esa.
+    const nombre = await browser.execute((id) => window.PlannerApi.deleteTask(id), creada.id);
+    expect(nombre).toBe('API con id editada');
+    const queda = await browser.execute((id) => window.PlannerApi.getTask(id), creada.id);
+    expect(queda).toBeNull();
+  });
 });

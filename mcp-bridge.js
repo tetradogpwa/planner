@@ -10,9 +10,23 @@
 // Se registra DESPUÉS de `requireTerms()` y `startMonetization()` en
 // `index.js` para no aceptar llamadas antes de que el usuario haya
 // aceptado términos y (si hay) consentimiento de anuncios.
+//
+// Las tareas se localizan por su `id` (T-049). El `index` (la posición
+// en la lista) se sigue aceptando, pero está obsoleto: si otra tarea
+// se borra mientras el asistente edita esta, la posición ya no es la
+// misma tarea.
 // ────────────────────────────────────────────────────────────────────
 
 import { PlannerApi } from './api.js';
+
+/** Elige cómo se refiere el asistente a una tarea: por su `id` (lo
+ *  normal) o por su `index` (obsoleto, se conserva por compatibilidad
+ *  con las integraciones antiguas). */
+function referenciaTarea({ index, id } = {}) {
+  if (typeof id === 'string' && id.trim()) return id.trim();
+  if (Number.isInteger(index)) return index;
+  throw new Error('Indica el id de la tarea (o su index, obsoleto)');
+}
 
 /** Procesa un payload { id, tool, args } recibido del backend y devuelve
  *  la respuesta que se enviará con `mcp_reply`. La función de PlannerApi
@@ -25,10 +39,10 @@ export async function handleMcpCall(payload, api = PlannerApi) {
   const { id, tool, args } = payload ?? {};
   const toolMap = {
     listar_tareas:        ()                 => api.listTasks(),
-    ver_tarea:            ({ index })        => api.getTask(index),
+    ver_tarea:            (args)             => api.getTask(referenciaTarea(args)),
     crear_tarea:          (spec)             => api.addTask(spec),
-    editar_tarea:         ({ index, spec })  => api.updateTask(index, spec),
-    borrar_tarea:         ({ index })        => api.deleteTask(index),
+    editar_tarea:         (args)             => api.updateTask(referenciaTarea(args), args.spec),
+    borrar_tarea:         (args)             => api.deleteTask(referenciaTarea(args)),
     ver_semana:           ({ offset = 0 })   => api.getWeek(offset),
     cambiar_fecha_inicio: ({ isoDate })      => api.setStartDate(isoDate),
     abrir_vista:          ({ view })         => { api.navigate(view); return { view }; },

@@ -127,10 +127,17 @@ pub struct McpStatus {
 
 // ── Argumentos de las herramientas ──────────────────────────────────
 
+/// Referencia a una tarea: su `id` (lo normal) o su `index` (obsoleto,
+/// se conserva por compatibilidad con las integraciones antiguas).
+///
+/// `index` es la posición en la lista: si otra tarea se borra mientras
+/// el asistente edita esta, la posición ya no es la misma tarea (T-049).
 #[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
-pub struct VerTareaArgs {
-    #[schemars(description = "Índice de la tarea (0..N-1)")]
-    pub index: i64,
+pub struct ReferenciaTarea {
+    #[schemars(description = "Identificador único de la tarea (el que devuelve listar_tareas). Es lo que hay que usar.")]
+    pub id: Option<String>,
+    #[schemars(description = "Índice de la tarea (0..N-1). OBSOLETO: usa el id, que no cambia aunque se borren otras tareas.")]
+    pub index: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
@@ -141,16 +148,12 @@ pub struct CrearTareaArgs {
 
 #[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct EditarTareaArgs {
-    #[schemars(description = "Índice de la tarea a sustituir")]
-    pub index: i64,
     #[schemars(description = "Spec JSON plano de la nueva tarea")]
     pub spec: serde_json::Value,
-}
-
-#[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
-pub struct BorrarTareaArgs {
-    #[schemars(description = "Índice de la tarea a eliminar")]
-    pub index: i64,
+    #[schemars(description = "Identificador único de la tarea a sustituir. Es lo que hay que usar.")]
+    pub id: Option<String>,
+    #[schemars(description = "Índice de la tarea a sustituir. OBSOLETO: usa el id, que no cambia aunque se borren otras tareas.")]
+    pub index: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
@@ -197,27 +200,30 @@ impl PlannerServer {
 impl PlannerServer {
     /// `listar_tareas` — devuelve la lista de tareas como JSON.
     #[tool(
-        description = "Lista todas las tareas del planificador con su tipo, nombre, total y, si aplica, los días o el ciclo. Equivalente a PlannerApi.listTasks().",
+        description = "Lista todas las tareas del planificador con su id (identificador único y estable), su tipo, nombre, total y, si aplica, los días o el ciclo. Equivalente a PlannerApi.listTasks().",
         annotations(read_only_hint = true)
     )]
     async fn listar_tareas(&self) -> Result<CallToolResult, McpError> {
         self.call_frontend("listar_tareas", serde_json::json!({})).await
     }
 
-    /// `ver_tarea` — devuelve una tarea por índice.
+    /// `ver_tarea` — devuelve una tarea por id (o por índice, obsoleto).
     #[tool(
-        description = "Devuelve la tarea en el índice dado (0..N-1) como JSON plano. Si el índice no existe devuelve null.",
+        description = "Devuelve la tarea con el id dado como JSON plano (el id es el que devuelve listar_tareas). Si no existe devuelve null. El index (posición en la lista) se sigue aceptando por compatibilidad, pero está obsoleto: usa el id.",
         annotations(read_only_hint = true)
     )]
     async fn ver_tarea(
         &self,
-        Parameters(VerTareaArgs { index }): Parameters<VerTareaArgs>,
+        Parameters(args): Parameters<ReferenciaTarea>,
     ) -> Result<CallToolResult, McpError> {
-        self.call_frontend("ver_tarea", serde_json::json!({ "index": index })).await
+        self.call_frontend("ver_tarea", serde_json::json!({
+            "id":    args.id,
+            "index": args.index,
+        })).await
     }
 
     /// `crear_tarea` — crea una tarea a partir de un spec JSON plano.
-    #[tool(description = "Crea una tarea nueva a partir de un spec JSON plano validado. Campos: name (str, obligatorio), repeat ('none' | 'daily' | 'nDays' | 'daysOfWeek' | 'cycle'), total (int >= 1, opcional, default 1), startDate (str 'YYYY-MM-DD', opcional): el día en el que la tarea empieza a aplicar; si no se pone, empieza hoy. daysFrom (int, opcional) se sigue aceptando por compatibilidad: son los días desde la fecha de inicio del planificador; puede ser negativo si la tarea empieza antes de esa fecha. Para 'nDays' añadir nDays (int >= 2). Para 'daysOfWeek' añadir days ([0..6]). Para 'cycle' añadir cycle ([[0..6], ...], puede incluir semanas de descanso vacías). Devuelve la tarea creada como JSON (con su startDate, que es el dato que manda, y un daysFrom derivado de la fecha de inicio actual del planificador).")]
+    #[tool(description = "Crea una tarea nueva a partir de un spec JSON plano validado. Campos: name (str, obligatorio), repeat ('none' | 'daily' | 'nDays' | 'daysOfWeek' | 'cycle'), total (int >= 1, opcional, default 1), startDate (str 'YYYY-MM-DD', opcional): el día en el que la tarea empieza a aplicar; si no se pone, empieza hoy. daysFrom (int, opcional) se sigue aceptando por compatibilidad: son los días desde la fecha de inicio del planificador; puede ser negativo si la tarea empieza antes de esa fecha. Para 'nDays' añadir nDays (int >= 2). Para 'daysOfWeek' añadir days ([0..6]). Para 'cycle' añadir cycle ([[0..6], ...], puede incluir semanas de descanso vacías). Devuelve la tarea creada como JSON (con su id, que es su identificador único y estable, y con su startDate, que es el dato que manda, y un daysFrom derivado de la fecha de inicio actual del planificador).")]
     async fn crear_tarea(
         &self,
         Parameters(args): Parameters<CrearTareaArgs>,
@@ -225,28 +231,32 @@ impl PlannerServer {
         self.call_frontend("crear_tarea", args.spec).await
     }
 
-    /// `editar_tarea` — sustituye la tarea en `index` por un spec nuevo.
-    #[tool(description = "Sustituye la tarea en el índice dado por un spec JSON plano. Mismos campos que crear_tarea. Devuelve la nueva tarea como JSON.")]
+    /// `editar_tarea` — sustituye la tarea con el id dado por un spec nuevo.
+    #[tool(description = "Sustituye la tarea con el id dado por un spec JSON plano. Mismos campos que crear_tarea. El id es lo que hay que usar (el index, la posición en la lista, se sigue aceptando por compatibilidad, pero está obsoleto: no cambia aunque se borren otras tareas). Devuelve la nueva tarea como JSON, con el mismo id.")]
     async fn editar_tarea(
         &self,
         Parameters(args): Parameters<EditarTareaArgs>,
     ) -> Result<CallToolResult, McpError> {
         self.call_frontend("editar_tarea", serde_json::json!({
+            "id":    args.id,
             "index": args.index,
             "spec":  args.spec,
         })).await
     }
 
-    /// `borrar_tarea` — elimina la tarea en `index`.
+    /// `borrar_tarea` — elimina la tarea con el id dado.
     #[tool(
-        description = "Elimina la tarea en el índice dado. Devuelve el nombre de la tarea borrada como JSON.",
+        description = "Elimina la tarea con el id dado. El index (posición en la lista) se sigue aceptando por compatibilidad, pero está obsoleto. Devuelve el nombre de la tarea borrada como JSON.",
         annotations(destructive_hint = true)
     )]
     async fn borrar_tarea(
         &self,
-        Parameters(args): Parameters<BorrarTareaArgs>,
+        Parameters(args): Parameters<ReferenciaTarea>,
     ) -> Result<CallToolResult, McpError> {
-        self.call_frontend("borrar_tarea", serde_json::json!({ "index": args.index })).await
+        self.call_frontend("borrar_tarea", serde_json::json!({
+            "id":    args.id,
+            "index": args.index,
+        })).await
     }
 
     /// `ver_semana` — devuelve los 7 días de la semana `offset`.

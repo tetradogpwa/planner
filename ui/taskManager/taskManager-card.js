@@ -71,7 +71,14 @@ export class TaskManagerCard {
     this.listRoot.innerHTML = '';
     this.countEl.textContent = this.context.Tasks.length;
 
-    this.context.Tasks.forEach((t, i) => {
+    this.context.Tasks.forEach((t) => {
+      // El identificador de la tarea: con él se sabe SIEMPRE qué tarea
+      // es, aunque se mueva de posición. La posición capturada al
+      // pintar deja de ser válida en cuanto se borra otra tarea (por
+      // ejemplo, si un asistente borra una mientras el usuario edita
+      // otra) (T-049).
+      const taskId = t.Id;
+
       // ── Fila de tarea ──
       const row = document.createElement('div');
       row.className = 'task-row';
@@ -87,22 +94,33 @@ export class TaskManagerCard {
       panel.className = 'edit-panel';
 
       row.querySelector('.btn-trash').onclick = () => {
+        // La tarea se busca por su id y no por la posición que tenía
+        // al pintarse la fila: si desde entonces se ha borrado otra,
+        // esa posición ya apunta a otra tarea (T-049).
+        const pos = this.#indiceDe(taskId);
+        if (pos === -1) return;
         // Tras el repintado el foco debe quedarse en el botón
-        // Eliminar de la fila que ahora ocupa la posición `i` (la
+        // Eliminar de la fila que ahora ocupa la posición `pos` (la
         // siguiente tarea), o la anterior si era la última. Si la
         // lista queda vacía, saltamos al interruptor "Gestionar".
-        this.context.Tasks.splice(i, 1);
+        this.context.Tasks.splice(pos, 1);
         this.renderList();
-        this.#focusAfterDelete(i);
+        this.#focusAfterDelete(pos);
       };
 
       row.querySelector('.btn-edit').onclick = () => {
-        this.#togglePanel(i, panel, t);
+        this.#togglePanel(panel, t);
       };
 
       this.listRoot.appendChild(row);
       this.listRoot.appendChild(panel);
     });
+  }
+
+  /** La posición de la tarea con el id `taskId` en la lista, o -1 si
+   *  ya no está (por ejemplo, si la ha borrado un asistente). */
+  #indiceDe(taskId) {
+    return this.context.Tasks.findIndex(t => t.Id === taskId);
   }
 
   /** Tras borrar la tarea en el índice `i`, devuelve el foco a la
@@ -123,7 +141,7 @@ export class TaskManagerCard {
 
   // ── Panel inline de edición ───────────────────────────────────────────────
 
-  #togglePanel(i, panel, task) {
+  #togglePanel(panel, task) {
     const isOpen = panel.classList.contains('open');
 
     // Cerrar todos los paneles abiertos
@@ -131,11 +149,29 @@ export class TaskManagerCard {
 
     if (!isOpen) {
       panel.classList.add('open');
+      // La tarea que se está editando, por su id: el guardado tiene
+      // que ir a ESTA tarea, no a la que ocupaba su posición cuando
+      // se abrió el panel (T-049).
+      const taskId = task.Id;
       const editCard = new EditTaskCard(panel, task);
       editCard.init();
 
       panel.addEventListener('task-update', (e) => {
-        this.context.Tasks[i] = e.detail;
+        const pos = this.#indiceDe(taskId);
+        if (pos === -1) {
+          // La tarea editada ya no está (un asistente la borró
+          // mientras el panel estaba abierto): el cambio no se aplica
+          // a ninguna otra tarea.
+          if (this.statusEl) {
+            this.statusEl.textContent = 'La tarea que estabas editando ya no existe';
+          }
+          this.renderList();
+          return;
+        }
+        // La tarea editada conserva su identificador: sigue siendo la
+        // misma tarea.
+        e.detail.Id = taskId;
+        this.context.Tasks[pos] = e.detail;
         this.renderList();
         // Devolvemos el foco al heading principal; tras un cambio
         // seguido de repintado completo, el heading es el anclaje
@@ -147,11 +183,14 @@ export class TaskManagerCard {
       panel.addEventListener('task-cancel', () => {
         // Cancelar no cambia los datos; devolvemos el foco al botón
         // Editar de la fila correspondiente para mantener el orden
-        // del recorrido.
+        // del recorrido. La fila se busca por su id (y no por la
+        // posición capturada al abrir el panel), que es la que sigue
+        // siendo la misma tarea (T-049).
         panel.classList.remove('open');
         panel.innerHTML = '';
+        const pos = this.#indiceDe(taskId);
         const buttons = this.listRoot.querySelectorAll('.btn-edit');
-        const target  = buttons[i] ?? buttons[buttons.length - 1] ?? this.root.querySelector('#editToggle');
+        const target  = buttons[pos] ?? buttons[buttons.length - 1] ?? this.root.querySelector('#editToggle');
         if (target) target.focus();
       }, { once: true });
     }

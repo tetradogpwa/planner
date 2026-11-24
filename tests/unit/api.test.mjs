@@ -204,7 +204,9 @@ test('updateTask: índice inválido lanza', () => {
   PlannerApi.addTask({ name: 'A', repeat: 'daily' });
   assert.throws(() => PlannerApi.updateTask(5,  { name: 'X', repeat: 'daily' }), /Índice de tarea inválido/);
   assert.throws(() => PlannerApi.updateTask(-1, { name: 'X', repeat: 'daily' }), /Índice de tarea inválido/);
-  assert.throws(() => PlannerApi.updateTask('a', { name: 'X', repeat: 'daily' }), /Índice de tarea inválido/);
+  // Un texto ya no es un índice (obsoleto) sino un id: si no
+  // corresponde a ninguna tarea, el error lo dice (T-049).
+  assert.throws(() => PlannerApi.updateTask('a', { name: 'X', repeat: 'daily' }), /Tarea no encontrada/);
 });
 
 test('deleteTask: borra y devuelve el nombre', () => {
@@ -219,6 +221,79 @@ test('deleteTask: borra y devuelve el nombre', () => {
 test('deleteTask: índice inválido lanza', () => {
   PlannerApi.addTask({ name: 'A', repeat: 'daily' });
   assert.throws(() => PlannerApi.deleteTask(7), /Índice de tarea inválido/);
+});
+
+// ── Identificador estable de cada tarea (T-049) ───────────────────────────
+
+test('cada tarea creada tiene un id único', () => {
+  const a = PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  const b = PlannerApi.addTask({ name: 'B', repeat: 'daily' });
+
+  assert.equal(typeof a.id, 'string');
+  assert.ok(a.id.length > 0);
+  assert.notEqual(a.id, b.id);
+
+  // Y la lista los lleva: es lo que hay que usar para referirse a una
+  // tarea concreta.
+  const ids = PlannerApi.listTasks().map(t => t.id);
+  assert.deepEqual(ids, [a.id, b.id]);
+});
+
+test('getTask, updateTask y deleteTask aceptan el id de la tarea', () => {
+  const a = PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  const b = PlannerApi.addTask({ name: 'B', repeat: 'daily' });
+
+  // Por id.
+  assert.equal(PlannerApi.getTask(a.id).name, 'A');
+  assert.equal(PlannerApi.getTask(b.id).name, 'B');
+  assert.equal(PlannerApi.getTask('no-existe'), null);
+
+  const actualizada = PlannerApi.updateTask(b.id, { name: 'B2', repeat: 'daily' });
+  assert.equal(actualizada.name, 'B2');
+  assert.equal(PlannerApi.getTask(a.id).name, 'A');
+
+  assert.equal(PlannerApi.deleteTask(b.id), 'B2');
+  assert.equal(PlannerApi.listTasks().length, 1);
+});
+
+test('editar una tarea no cambia su id', () => {
+  const a = PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  const editada = PlannerApi.updateTask(a.id, { name: 'A2', repeat: 'daysOfWeek', days: [0] });
+  assert.equal(editada.id, a.id);
+  assert.equal(PlannerApi.getTask(a.id).name, 'A2');
+});
+
+test('un id que no existe lanza "Tarea no encontrada"', () => {
+  PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  assert.throws(() => PlannerApi.updateTask('no-existe', { name: 'X', repeat: 'daily' }), /Tarea no encontrada/);
+  assert.throws(() => PlannerApi.deleteTask('no-existe'), /Tarea no encontrada/);
+});
+
+test('editar una tarea mientras otra se borra por la API modifica la correcta', () => {
+  // El caso del que habla T-049: un asistente borra la tarea 2
+  // mientras el usuario edita la 3. Con la posición, el guardado
+  // acabaría en la tarea equivocada.
+  const a = PlannerApi.addTask({ name: 'A', repeat: 'daily' });
+  const b = PlannerApi.addTask({ name: 'B', repeat: 'daily' });
+  const c = PlannerApi.addTask({ name: 'C', repeat: 'daily' });
+
+  // Se borra la del medio.
+  assert.equal(PlannerApi.deleteTask(b.id), 'B');
+
+  // La 3 se sigue editando (por su id) y la lista ya es [A, C].
+  const editada = PlannerApi.updateTask(c.id, { name: 'C editada', repeat: 'daily' });
+  assert.equal(editada.name, 'C editada');
+  assert.equal(editada.id, c.id);
+
+  const lista = PlannerApi.listTasks();
+  assert.deepEqual(lista.map(t => t.name), ['A', 'C editada']);
+  assert.deepEqual(lista.map(t => t.id), [a.id, c.id]);
+});
+
+test('el id sobrevive a recargar: se guarda con la tarea', () => {
+  const a = PlannerApi.addTask({ name: 'Agua', repeat: 'daily' });
+  const guardado = JSON.parse(localStorage.getItem('Context_TASKS'));
+  assert.equal(guardado[0].id, a.id);
 });
 
 // ── Eventos 'planner:changed' con status ────────────────────────────────
