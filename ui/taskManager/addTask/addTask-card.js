@@ -1,6 +1,5 @@
-import { buildTaskFromSpec } from '../../../api.js';
-
-const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+import { buildTaskFromSpec } from '../../../back/taskSpec.js';
+import { DAY_NAMES }        from '../../../back/dayNames.js';
 
 export class AddTaskCard {
   constructor(root) {
@@ -128,9 +127,9 @@ export class AddTaskCard {
     const total = parseInt(this.times.value) || 1;
 
     // Construye el spec que espera PlannerApi / buildTaskFromSpec. La
-    // validación y construcción por tipo de repetición viven en api.js:
-    // si algo no cuadra, buildTaskFromSpec lanza el error con el
-    // mensaje en español y lo mostramos al usuario.
+    // validación y construcción por tipo de repetición viven en
+    // back/taskSpec.js: si algo no cuadra, buildTaskFromSpec lanza el
+    // error con el mensaje en español y lo mostramos al usuario.
     const spec = this.#buildSpec(name, total, 0);
 
     let task;
@@ -144,9 +143,10 @@ export class AddTaskCard {
     this.reset();
   }
 
-  /** Convierte el estado del formulario al spec JSON que valida api.js.
-   *  La validación de días/semanas vive allí (mensajes en español);
-   *  aquí solo mapeamos los campos del formulario. */
+  /** Convierte el estado del formulario al spec JSON que valida
+   *  back/taskSpec.js. La validación de días/semanas vive allí
+   *  (mensajes en español); aquí solo mapeamos los campos del
+   *  formulario. */
   #buildSpec(name, total, daysFrom) {
     switch (this.repeatType) {
       case 'no-repeat':

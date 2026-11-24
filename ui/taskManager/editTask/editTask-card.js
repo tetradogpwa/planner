@@ -1,7 +1,6 @@
-import { buildTaskFromSpec } from '../../../api.js';
-import { escapeHtml }     from '../../escape.js';
-
-const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+import { buildTaskFromSpec } from '../../../back/taskSpec.js';
+import { DAY_NAMES }        from '../../../back/dayNames.js';
+import { escapeHtml }       from '../../escape.js';
 
 /** Convierte un objeto tarea a estado del formulario. */
 function taskToFormState(task) {
@@ -191,9 +190,9 @@ export class EditTaskCard {
     this.root.dispatchEvent(new CustomEvent('task-update', { detail: task, bubbles: true }));
   }
 
-  /** Convierte el estado del formulario al spec JSON que valida api.js
-   *  (mapeo paralelo al de AddTaskCard). Las validaciones de días y
-   *  semanas viven allí (mensajes en español). */
+  /** Convierte el estado del formulario al spec JSON que valida
+   *  back/taskSpec.js (mapeo paralelo al de AddTaskCard). Las
+   *  validaciones de días y semanas viven allí (mensajes en español). */
   #buildSpec(name, total, daysFrom) {
     switch (this.repeatType) {
       case 'no-repeat':

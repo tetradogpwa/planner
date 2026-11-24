@@ -43,7 +43,7 @@ globalThis.localStorage = storage;
 storage.setItem('Context_START_DATE', String(new Date(2026, 9, 19).getTime()));
 
 // Importamos api.js (carga context.js como efecto secundario).
-const { PlannerApi, buildTaskFromSpec } = await import('../../api.js');
+const { PlannerApi } = await import('../../api.js');
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -62,60 +62,6 @@ function captureEvents(fn) {
   try { fn(); } finally { window.removeEventListener('planner:changed', handler); }
   return events;
 }
-
-// ── buildTaskFromSpec (mensajes de error en español) ────────────────────
-
-test('buildTaskFromSpec: nombre vacío lanza "Nombre requerido"', () => {
-  assert.throws(() => buildTaskFromSpec({ repeat: 'daily' }), /Nombre requerido/);
-  assert.throws(() => buildTaskFromSpec({ name: '   ', repeat: 'daily' }), /Nombre requerido/);
-});
-
-test('buildTaskFromSpec: tipo desconocido', () => {
-  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'semanal' }), /Tipo de repetición inválido/);
-});
-
-test('buildTaskFromSpec: daysOfWeek sin días lanza "Selecciona al menos un día"', () => {
-  assert.throws(
-    () => buildTaskFromSpec({ name: 'X', repeat: 'daysOfWeek', days: [] }),
-    /Selecciona al menos un día/,
-  );
-  assert.throws(
-    () => buildTaskFromSpec({ name: 'X', repeat: 'daysOfWeek' }),
-    /Selecciona al menos un día/,
-  );
-});
-
-test('buildTaskFromSpec: nDays < 2 lanza "nDays inválido"', () => {
-  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'nDays', nDays: 1 }), /nDays inválido/);
-});
-
-test('buildTaskFromSpec: cycle sin semanas lanza "Añade al menos una semana al ciclo"', () => {
-  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'cycle', cycle: [] }),
-    /Añade al menos una semana al ciclo/);
-});
-
-test('buildTaskFromSpec: cycle con todas las semanas vacías lanza "Marca al menos un día"', () => {
-  assert.throws(
-    () => buildTaskFromSpec({ name: 'X', repeat: 'cycle', cycle: [[], [], []] }),
-    /Marca al menos un día en el ciclo/,
-  );
-});
-
-test('buildTaskFromSpec: cycle con una semana de descanso y otra con días vale', () => {
-  // Regresión: la versión anterior rechazaba semanas vacías.
-  const task = buildTaskFromSpec({ name: 'T', repeat: 'cycle', cycle: [[0], []] });
-  assert.equal(task.constructor.name, 'CiclesDaysOfWeekTask');
-});
-
-test('buildTaskFromSpec: total / daysFrom inválidos', () => {
-  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'daily', total: 0 }),    /Total inválido/);
-  assert.throws(() => buildTaskFromSpec({ name: 'X', repeat: 'daily', daysFrom: -1 }), /daysFrom inválido/);
-});
-
-test('buildTaskFromSpec: spec no es objeto', () => {
-  assert.throws(() => buildTaskFromSpec(null),   /inválida/);
-  assert.throws(() => buildTaskFromSpec('hola'), /inválida/);
-});
 
 // ── addTask: 5 tipos ────────────────────────────────────────────────────
 

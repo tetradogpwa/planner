@@ -1,4 +1,5 @@
 import { GetNWeeks } from '../../back/calendar.js';
+import { DAY_NAMES } from '../../back/dayNames.js';
 import { escapeHtml } from '../escape.js';
 
 export class PrintCard {
@@ -35,7 +36,6 @@ export class PrintCard {
     this.#setStatus('⏳ Generando PDF…');
 
     const weeks    = GetNWeeks(this.context.StartDate, nWeeks, avoid, this.context.Tasks);
-    const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     const fmt      = d => d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
 
     const container = document.createElement('div');
@@ -46,7 +46,7 @@ export class PrintCard {
       const sunday = new Date(monday);
       sunday.setDate(sunday.getDate() + 6);
 
-      const grid = dayNames.map((dayName, di) => {
+      const grid = DAY_NAMES.map((dayName, di) => {
         const tasks   = week.weekTasks[di] || [];
         const dayDate = new Date(monday);
         dayDate.setDate(dayDate.getDate() + di);

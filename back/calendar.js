@@ -1,4 +1,41 @@
+import { DAY_NAMES } from './dayNames.js';
+
 // ── Helpers de fecha ─────────────────────────────────────────────────────────
+
+/** Fecha en formato YYYY-MM-DD usando la zona horaria LOCAL (no UTC,
+ *  como haría `Date.toISOString().slice(0,10)`). La comparten getStartDate
+ *  y buildWeekJson para que las fechas no se desfase un día al cruzar
+ *  medianoche en UTC. */
+export function formatLocalDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Convierte una fecha (string ISO YYYY-MM-DD o Date) en un Date local a
+ *  las 00:00. Lanza Error con un mensaje en español si no es válida:
+ *  '2026-02-31' se desplazaría al 3 de marzo sin avisar, así que se
+ *  comprueba que el Date construido coincide con la cadena original. */
+export function parseLocalDate(isoDate) {
+  let next;
+  if (isoDate instanceof Date) {
+    if (Number.isNaN(isoDate.getTime())) throw new Error('Fecha inválida');
+    // Copiamos para no mutar el objeto recibido.
+    next = new Date(isoDate.getFullYear(), isoDate.getMonth(), isoDate.getDate());
+  } else if (typeof isoDate === 'string') {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate.trim());
+    if (!m) throw new Error('Fecha inválida (usa YYYY-MM-DD)');
+    const y = Number(m[1]), mo = Number(m[2]) - 1, da = Number(m[3]);
+    const d = new Date(y, mo, da);
+    // Si JS desbordó el día (p. ej. 31-feb → 3-mar), el mes ya no
+    // coincide con el que pedimos.
+    if (d.getFullYear() !== y || d.getMonth() !== mo || d.getDate() !== da)
+      throw new Error('Fecha inválida');
+    next = d;
+  } else {
+    throw new Error('Fecha inválida');
+  }
+  next.setHours(0, 0, 0, 0);
+  return next;
+}
 
 /** Diferencia en días naturales entre dos fechas (ignora el cambio de hora). */
 function diffDays(from, to) {
@@ -92,4 +129,23 @@ export function GetMonth(from, month, year, tasks = []) {
     return GetWeeks(today, getLastDayOfMonth(today), 0, tasks);
   }
   return GetWeeks(from, getLastDayOfMonth(date), getDiffWeeks(from, date), tasks);
+}
+
+// ── Semana en JSON plano ─────────────────────────────────────────────────────
+
+/** Devuelve los 7 días de la semana `offset` desde `from`, cada uno con
+ *  su fecha ISO local y los nombres de las tareas que tocan. */
+export function buildWeekJson(from, offset, tasks) {
+  const weeks = GetNWeeks(from, 1, offset, tasks);
+  const week  = weeks[0];
+  if (!week) return [];
+  return week.weekTasks.map((dayTasks, i) => {
+    const d = new Date(week.mondayTo);
+    d.setDate(d.getDate() + i);
+    return {
+      date:    formatLocalDate(d),
+      weekday: DAY_NAMES[i],
+      tasks:   dayTasks.map(t => t.Name),
+    };
+  });
 }

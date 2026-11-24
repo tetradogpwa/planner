@@ -1,6 +1,5 @@
 import { TaskItemCard } from './taskItem/taskItem-card.js';
-
-const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+import { DAY_NAMES_LONG } from '../../back/dayNames.js';
 
 export class WeekCard {
   constructor(root, weekData, index) {
@@ -46,7 +45,7 @@ export class WeekCard {
       const dayDate = new Date(monday);
       dayDate.setDate(dayDate.getDate() + dayIndex);
 
-      const label = DAY_NAMES[dayIndex];
+      const label = DAY_NAMES_LONG[dayIndex];
 
       // Pasamos también la fecha real del día para detectar "hoy" y
       // el id del contenedor padre (la semana) para que los IDs únicos
