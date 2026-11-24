@@ -24,12 +24,9 @@ import {
   BASES,
   CONTRAST_CHECKS,
 } from './preferences.js';
+import { escapeHtml } from '../escape.js';
 
 const formatRatio = (r) => r.toFixed(2).replace('.', ',');
-
-const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c]));
 
 export class SettingsCard {
   constructor(root) {
@@ -319,14 +316,17 @@ export class SettingsCard {
     container.innerHTML = themes.map(theme => {
       const scheme = theme.scheme ?? BASES[theme.base]?.scheme ?? 'dark';
       const icon = scheme === 'light' ? '☀' : '🌙';
+      // El `id` de un tema guardado viene del `localStorage`: se escapa
+      // como el nombre (el HTML lo vuelve a decodificar al leer el
+      // atributo, así que `dataset.id` sigue siendo el mismo id).
       const deleteBtn = this.editMode
-        ? `<button type="button" class="settings-btn saved-theme-delete" data-id="${theme.id}"
+        ? `<button type="button" class="settings-btn saved-theme-delete" data-id="${escapeHtml(theme.id)}"
                  aria-label="Eliminar el tema «${escapeHtml(theme.name)}»">Eliminar</button>`
         : '';
       return `
         <div class="saved-theme-row">
           <label class="settings-option saved-theme-option">
-            <input type="radio" name="theme" value="saved:${theme.id}">
+            <input type="radio" name="theme" value="saved:${escapeHtml(theme.id)}">
             <span aria-hidden="true">${icon}</span>
             <span class="saved-theme-name">${escapeHtml(theme.name)} <small>(creado por ti)</small></span>
           </label>

@@ -1,5 +1,6 @@
 import { AddTaskCard }  from './addTask/addTask-card.js';
 import { EditTaskCard } from './editTask/editTask-card.js';
+import { escapeHtml }   from '../escape.js';
 
 // Estado del interruptor "Gestionar" (T-026). `index.js` recrea la
 // TaskManagerCard en cada navegación a la vista 'tasks', así que sin
@@ -72,10 +73,10 @@ export class TaskManagerCard {
       const row = document.createElement('div');
       row.className = 'task-row';
       row.innerHTML = `
-        <button class="btn-trash" title="Eliminar" aria-label="Eliminar la tarea «${this.#escape(t.Name)}»">🗑️</button>
-        <button class="btn-edit"  title="Editar"    aria-label="Editar la tarea «${this.#escape(t.Name)}»">✏️</button>
-        <span class="task-name">${this.#escape(t.Name)}</span>
-        <span class="task-type">${this.#typeLabel(t)}</span>
+        <button class="btn-trash" title="Eliminar" aria-label="Eliminar la tarea «${escapeHtml(t.Name)}»">🗑️</button>
+        <button class="btn-edit"  title="Editar"    aria-label="Editar la tarea «${escapeHtml(t.Name)}»">✏️</button>
+        <span class="task-name">${escapeHtml(t.Name)}</span>
+        <span class="task-type">${escapeHtml(this.#typeLabel(t))}</span>
       `;
 
       // ── Panel de edición (colapsado por defecto) ──
@@ -115,14 +116,6 @@ export class TaskManagerCard {
     }
     const target = buttons[Math.min(i, buttons.length - 1)];
     if (target) target.focus();
-  }
-
-  /** Escapa comillas / corchetes angulares para que un nombre con
-   *  caracteres especiales no rompa los atributos `aria-label`. */
-  #escape(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) => (
-      { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
-    ));
   }
 
   // ── Panel inline de edición ───────────────────────────────────────────────

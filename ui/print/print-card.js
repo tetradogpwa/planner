@@ -1,4 +1,5 @@
 import { GetNWeeks } from '../../back/calendar.js';
+import { escapeHtml } from '../escape.js';
 
 export class PrintCard {
   constructor(root, context) {
@@ -53,9 +54,14 @@ export class PrintCard {
         const badges = tasks.flatMap(t =>
           Array.from({ length: t.Total }, (_, i) => {
             const slot = t.Total > 1 ? (i === 0 ? ' (0-12h)' : ' (12-24h)') : '';
+            // El nombre lo escribe el usuario (teclado, importado de un
+            // JSON o creado por un asistente): si se mete sin escapar en
+            // el HTML, `<img src=x onerror=…>` deja de ser texto y pasa a
+            // ser una etiqueta viva con su manejador en línea (el
+            // WebView tiene acceso a `window.__TAURI__`).
             return `<div style="background:#ede9fe;color:#4f46e5;font-size:9px;
                                 padding:2px 5px;border-radius:4px;margin-bottom:2px;
-                                line-height:1.4;">${t.Name}${slot}</div>`;
+                                line-height:1.4;">${escapeHtml(t.Name)}${slot}</div>`;
           })
         ).join('');
 

@@ -1,4 +1,5 @@
 import { buildTaskFromSpec } from '../../../api.js';
+import { escapeHtml }     from '../../escape.js';
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -92,7 +93,7 @@ export class EditTaskCard {
       this.extra.innerHTML = `
         <div class="extra-interval">
           <label for="editInterval">Repetir cada</label>
-          <input type="number" id="editInterval" value="${this.initialNDays}" min="2">
+          <input type="number" id="editInterval" value="${escapeHtml(this.initialNDays)}" min="2">
           <span>días</span>
         </div>`;
     }
