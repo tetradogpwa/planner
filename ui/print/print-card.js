@@ -1,4 +1,4 @@
-import { GetNWeeks } from '../../back/calendar.js';
+import { GetNWeeks, today } from '../../back/calendar.js';
 import { DAY_NAMES } from '../../back/dayNames.js';
 import { escapeHtml } from '../escape.js';
 
@@ -35,13 +35,16 @@ export class PrintCard {
   async export(nWeeks, avoid) {
     this.#setStatus('⏳ Generando PDF…');
 
-    const weeks    = GetNWeeks(this.context.StartDate, nWeeks, avoid, this.context.Tasks);
+    // El PDF parte de la semana que contiene hoy (no de la fecha de
+    // inicio del planificador).
+    const weeks    = GetNWeeks(today(), nWeeks, avoid, this.context.Tasks);
     const fmt      = d => d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+    const fmtAnio  = d => d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     const container = document.createElement('div');
     container.style.cssText = 'font-family:system-ui,sans-serif;padding:16px;background:#fff;color:#111;';
 
-    weeks.forEach((week, wi) => {
+    weeks.forEach((week) => {
       const monday = week.mondayTo;
       const sunday = new Date(monday);
       sunday.setDate(sunday.getDate() + 6);
@@ -78,7 +81,7 @@ export class PrintCard {
         <div style="margin-bottom:20px;page-break-inside:avoid;">
           <div style="font-size:13px;font-weight:700;color:#4f46e5;margin-bottom:6px;
                       border-bottom:2px solid #e5e7eb;padding-bottom:4px;">
-            Semana ${wi + 1} &nbsp; ${fmt(monday)} – ${fmt(sunday)}
+            Semana del ${fmtAnio(monday)} al ${fmtAnio(sunday)}
           </div>
           <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">
             ${grid}

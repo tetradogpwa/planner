@@ -7,6 +7,12 @@
   gap: 0.6rem;
 }
 
+/* Región que envuelve al título: en la vista "Semana actual" lleva
+   role="status" para que el cambio de semana se anuncie. */
+.week-title-region {
+  min-width: 0;
+}
+
 .week-title {
   margin: 0;
   font-size: calc(1rem * var(--fs-title));
@@ -16,6 +22,22 @@
   letter-spacing: 0.06em;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+/* Controles ◀ Anterior · Hoy · Siguiente ▶. Se envuelven en varias
+   líneas si no caben (letra al 200 % en un móvil de 390 px). */
+.week-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.week-nav-btn {
+  margin: 0;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 /* Con letra grande, ningún hijo debe forzar un ancho mayor que la tarjeta. */

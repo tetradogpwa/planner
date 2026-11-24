@@ -135,6 +135,45 @@ test('GetWeek: una tarea de los lunes sale en la columna del lunes', () => {
   ]);
 });
 
+// ── La semana que contiene "hoy" (base de la vista "Semana actual") ──
+// La vista "Semana actual" pinta la semana (lunes a domingo) que
+// contiene hoy y de ahí se sale una semana hacia atrás o hacia
+// adelante (los controles Anterior / Siguiente). Estas pruebas fijan
+// la fecha: lunes 09/03/2026 – domingo 15/03/2026 (fuera del cambio
+// de hora de marzo, que es el domingo 29/03).
+
+test('GetWeek: la semana 0 va del lunes al domingo que contienen ese día', () => {
+  // Miércoles 11/03/2026.
+  const miercoles = GetWeek(new Date(2026, 2, 11), 0, []);
+  mismoDia(miercoles.mondayTo, new Date(2026, 2, 9));
+  assert.equal(miercoles.weekTasks.length, 7);
+
+  // El domingo 15/03/2026 sigue siendo la misma semana.
+  const domingo = GetWeek(new Date(2026, 2, 15), 0, []);
+  mismoDia(domingo.mondayTo, new Date(2026, 2, 9));
+
+  // Y el lunes 09/03/2026 también.
+  const lunes = GetWeek(new Date(2026, 2, 9), 0, []);
+  mismoDia(lunes.mondayTo, new Date(2026, 2, 9));
+});
+
+test('GetWeek: la semana anterior y la siguiente saltan 7 días', () => {
+  const hoy       = new Date(2026, 2, 11);
+  const anterior  = GetWeek(hoy, -1, []);
+  const siguiente = GetWeek(hoy,  1, []);
+
+  mismoDia(anterior.mondayTo,  new Date(2026, 2, 2));    // lunes 02/03/2026
+  mismoDia(siguiente.mondayTo, new Date(2026, 2, 16));   // lunes 16/03/2026
+});
+
+test('GetNWeeks: desde hoy salen 12 semanas empezando en la de hoy', () => {
+  // Es lo que pinta la vista "Todas semanas".
+  const semanas = GetNWeeks(new Date(2026, 2, 11), 12, 0, []);
+  assert.equal(semanas.length, 12);
+  mismoDia(semanas[0].mondayTo,  new Date(2026, 2, 9));    // la de hoy
+  mismoDia(semanas[11].mondayTo, new Date(2026, 4, 25));   // 11 semanas después
+});
+
 // ── getDiffWeeks ─────────────────────────────────────────────────────────
 // Redondea hacia arriba la diferencia en días dividida por 7 (un día de
 // más ya suma una semana). Usa meses de junio para evitar el cambio de

@@ -1,5 +1,5 @@
 import { Context }         from './context.js';
-import { GetNWeeks }       from './back/calendar.js';
+import { GetNWeeks, GetWeek, today } from './back/calendar.js';
 import { TaskManagerCard } from './ui/taskManager/taskManager-card.js';
 import { WeekCard }        from './ui/week/week-card.js';
 import { AjustesCard }     from './ui/ajustes/ajustes-card.js';
@@ -69,7 +69,27 @@ const views = {
 
 const navButtons = () => Array.from(document.querySelectorAll('.nav-item[data-view]'));
 
+// ── Vista "Semana actual" ─────────────────────────────────
+// La semana que se está viendo: 0 es la que contiene hoy, -1 la
+// anterior y +1 la siguiente.
+let weekOffset = 0;
+// La tarjeta de la vista Semana se conserva entre pintados: su
+// región role="status" tiene que seguir viva en el DOM para que el
+// cambio de semana se anuncie.
+let currentWeekCard = null;
+
+/** Cambia la semana que muestra la vista "Semana actual": -1 la
+ *  anterior, +1 la siguiente y 0 la que contiene hoy. */
+async function moverSemana(delta) {
+  weekOffset = delta === 0 ? 0 : weekOffset + delta;
+  await render('week');
+}
+
 async function setView(name, { focus = true, tab = null, focusTab = false } = {}) {
+  // Al abrir la vista "Semana actual" se muestra la semana que
+  // contiene hoy (no la que se estaba viendo antes).
+  if (name === 'week') weekOffset = 0;
+
   Object.values(views).forEach(v => v.classList.remove('active'));
   views[name].classList.add('active');
   await render(name, { tab });
@@ -204,6 +224,7 @@ syncNavTabindex();
 
 // ── Render ───────────────────────────────────────────────
 let currentAjustesCard = null;
+
 async function render(view, { tab = null } = {}) {
   switch (view) {
     case 'tasks':
@@ -211,20 +232,28 @@ async function render(view, { tab = null } = {}) {
       break;
 
     case 'week': {
-      views.week.innerHTML = '<div id="view-week-body"></div>';
-      const weeks = GetNWeeks(Context.StartDate, 1, 0, Context.Tasks);
-      const body = views.week.querySelector('#view-week-body');
-      if (weeks.length > 0) {
-        await new WeekCard(body, weeks[0], 0).init();
+      // La semana que contiene hoy, no la semana 0 desde la fecha de
+      // inicio: de esa base se sale una semana hacia atrás o hacia
+      // adelante.
+      const semana = GetWeek(today(), weekOffset, Context.Tasks);
+      if (!currentWeekCard) {
+        views.week.innerHTML = '<div id="view-week-body"></div>';
+        const body = views.week.querySelector('#view-week-body');
+        currentWeekCard = new WeekCard(body, semana, 0, {
+          nav: true,
+          onNav: (delta) => moverSemana(delta),
+        });
+        await currentWeekCard.init();
       } else {
-        body.innerHTML = '<p style="color:var(--muted)">Sin tareas para mostrar.</p>';
+        currentWeekCard.setWeek(semana);
       }
       break;
     }
 
     case 'allWeeks': {
       views.allWeeks.innerHTML = '<h2 id="view-allWeeks-heading" tabindex="-1" style="margin-top:0">Vista completa</h2>';
-      const weeks = GetNWeeks(Context.StartDate, 12, 0, Context.Tasks);
+      // La vista completa empieza en la semana que contiene hoy.
+      const weeks = GetNWeeks(today(), 12, 0, Context.Tasks);
       if (!weeks.length) {
         views.allWeeks.innerHTML += '<p style="color:var(--muted)">Sin tareas para mostrar.</p>';
         break;
@@ -348,6 +377,16 @@ document.addEventListener('keydown', (e) => {
   // dentro del formulario). También pulsamos preventDefault para que
   // no se active el menú nativo del navegador.
   if (e.altKey && !e.ctrlKey && !e.metaKey) {
+    // Vista "Semana actual": Alt+← / Alt+→ cambian de semana y Alt+H
+    // vuelve a la semana que contiene hoy. Solo actúan con la vista
+    // Semana abierta.
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'h' || e.key === 'H') {
+      if (currentViewName() === 'week') {
+        e.preventDefault();
+        moverSemana(e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0);
+        return;
+      }
+    }
     const viewMap = {
       '1': 'tasks',
       '2': 'week',
