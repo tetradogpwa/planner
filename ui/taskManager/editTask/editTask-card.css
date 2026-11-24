@@ -1,8 +1,15 @@
-/* El formulario reutiliza las clases de addTask-card.css
-   (.form-row, .form-group, .repeat-option, .days-grid, .day-toggle,
-    .extra-interval, .cycle-builder, .cycle-week, etc.)
-   que ya están inyectadas en el documento por AddTaskCard.
-   Aquí solo definimos los estilos exclusivos del editor. */
+/* ────────────────────────────────────────────────────────────────────
+   editTask-card.css — Estilos de la TARJETA DE EDICIÓN.
+
+   El formulario (nombre, tipo de repetición y opciones extra) lo
+   estiliza el módulo compartido ui/taskManager/taskForm/taskForm-card.css:
+   esta tarjeta no depende del CSS del alta (T-047).
+
+   Aquí solo están los estilos exclusivos del editor, y ninguno usa
+   `!important`: la regla global `button` de index.css es de
+   especificidad (0,0,1) y los selectores de clase de aquí la
+   superan sin necesidad de forzarla.
+   ──────────────────────────────────────────────────────────────────── */
 
 .edit-task-card {
   background: var(--surface);
@@ -36,20 +43,20 @@
 }
 
 .btn-close-edit {
-  background: transparent !important;
+  background: transparent;
   color: var(--muted);
-  border: none !important;
-  padding: 0.2rem 0.4rem !important;
-  border-radius: 6px !important;
+  border: none;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
   font-size: calc(1rem * var(--fs-button));
   cursor: pointer;
-  margin: 0 !important;
+  margin: 0;
   line-height: 1;
   transition: color 0.15s, background 0.15s;
 }
 .btn-close-edit:hover {
   color: var(--text);
-  background: var(--hover-bg) !important;
+  background: var(--hover-bg);
 }
 
 /* ── Acciones ── */
@@ -60,31 +67,31 @@
 }
 
 .btn-save-edit {
-  background: var(--btn-bg) !important;
-  color: var(--on-btn) !important;
-  border: none !important;
-  padding: 0.6rem 1.1rem !important;
-  border-radius: 10px !important;
+  background: var(--btn-bg);
+  color: var(--on-btn);
+  border: none;
+  padding: 0.6rem 1.1rem;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 700;
   font-size: calc(0.9375rem * var(--fs-button));
   letter-spacing: 0.02em;
-  margin: 0 !important;
+  margin: 0;
   flex: 1;
 }
-.btn-save-edit:hover { background: var(--btn-bg-hover) !important; opacity: 1; }
+.btn-save-edit:hover { background: var(--btn-bg-hover); opacity: 1; }
 
 .btn-cancel-edit {
-  background: transparent !important;
-  color: var(--text-secondary) !important;
-  border: 1px solid var(--input-border) !important;
-  padding: 0.6rem 1rem !important;
-  border-radius: 10px !important;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--input-border);
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
   cursor: pointer;
   font-size: calc(0.9375rem * var(--fs-button));
-  margin: 0 !important;
+  margin: 0;
 }
 .btn-cancel-edit:hover {
-  background: var(--hover-bg) !important;
-  color: var(--text) !important;
+  background: var(--hover-bg);
+  color: var(--text);
 }

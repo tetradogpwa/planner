@@ -4,44 +4,10 @@
     <button class="btn-close-edit" id="cancelEditBtn" title="Cancelar" aria-label="Cancelar edición">✕</button>
   </div>
 
-  <div class="form-row">
-    <div class="form-group">
-      <label for="editTaskName">Nombre</label>
-      <input type="text" id="editTaskName" placeholder="Ej: Gym">
-    </div>
-    <div class="form-group form-group--small">
-      <label for="editTimesPerDay">Veces/día</label>
-      <input type="number" id="editTimesPerDay" value="1" min="1">
-    </div>
-  </div>
-
-  <div class="form-group" role="radiogroup" aria-labelledby="editRepeatLabel">
-    <span class="form-group-label" id="editRepeatLabel">Tipo de repetición</span>
-    <div class="repeat-options">
-      <label class="repeat-option">
-        <input type="radio" name="edit-repeat" value="no-repeat">
-        <span>Sin repetición</span>
-      </label>
-      <label class="repeat-option">
-        <input type="radio" name="edit-repeat" value="daily">
-        <span>Diario</span>
-      </label>
-      <label class="repeat-option">
-        <input type="radio" name="edit-repeat" value="interval">
-        <span>Cada N días</span>
-      </label>
-      <label class="repeat-option">
-        <input type="radio" name="edit-repeat" value="days">
-        <span>Días específicos</span>
-      </label>
-      <label class="repeat-option">
-        <input type="radio" name="edit-repeat" value="cycle">
-        <span>Ciclo</span>
-      </label>
-    </div>
-  </div>
-
-  <div id="editExtraOptions"></div>
+  <!-- El formulario (nombre, tipo de repetición y opciones extra) lo
+       pone el módulo compartido con el alta: ui/taskManager/taskForm/.
+       Aquí, con prefijo de id: editTaskName, editTimesPerDay… -->
+  <div id="editTaskFormMount"></div>
 
   <div class="edit-actions">
     <button id="saveEditBtn" class="btn-save-edit">💾 Guardar cambios</button>
