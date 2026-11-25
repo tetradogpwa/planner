@@ -699,6 +699,105 @@ label { color: var(--text); }
 }
 
 /* ============================================================
+   AVISOS Y DIÁLOGOS
+   ============================================================ */
+
+/* El aviso con «Deshacer» (ui/avisos.js): sale al borrar una tarea,
+   un tema guardado o todas las tareas. Vive en <body> (no en la
+   vista), así que sobrevive a un cambio de vista. Se cierra solo a los
+   ~8 s. Los avisos se apilan en una columna (puede haber más de uno). */
+.avisos {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(12px, 3vw, 1.5rem);
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: min(92vw, 34rem);
+  pointer-events: none;
+}
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  width: max-content;
+  max-width: min(92vw, 34rem);
+  padding: 0.75rem clamp(12px, 3vw, 1rem);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 40px var(--shadow);
+  font-size: calc(0.9375rem * var(--fs-body));
+  pointer-events: auto;
+}
+.aviso-texto {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.aviso-accion {
+  font-size: calc(0.9375rem * var(--fs-button));
+  min-height: 2.25rem;
+  white-space: nowrap;
+}
+
+/* El diálogo propio (ui/avisos.js): sustituye al confirm() del
+   navegador, que no se puede teñir con el tema y no avisa a los
+   lectores de pantalla. */
+.dialogo-capa {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 2vw, 1rem);
+  background: var(--overlay);
+}
+.dialogo {
+  width: min(30rem, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: clamp(12px, 3vw, 1.25rem);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 40px var(--shadow);
+}
+.dialogo-titulo {
+  margin: 0;
+  font-size: calc(1.05rem * var(--fs-title));
+}
+.dialogo-mensaje {
+  margin: 0;
+  font-size: calc(0.9375rem * var(--fs-body));
+  overflow-wrap: anywhere;
+}
+.dialogo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+.dialogo-btn {
+  font-size: calc(0.9375rem * var(--fs-button));
+  min-height: 2.25rem;
+}
+.dialogo-btn-peligro {
+  background: var(--danger-btn);
+  color: var(--on-btn);
+}
+
+/* ============================================================
    RESPONSIVE HELPERS
    ============================================================ */
 

@@ -325,7 +325,13 @@ window.addEventListener('planner:changed', (e) => {
   // día). Repintar aquí destruiría la casilla que el usuario acaba de
   // pulsar y perdería el foco del teclado.
   if (action !== 'mark' && action !== 'unmark') {
-    if (view === 'tasks' || view === 'week' || view === 'allWeeks') render(view);
+    if (view === 'tasks' || view === 'week' || view === 'allWeeks') {
+      const pintada = render(view);
+      // Un «Deshacer» (T-053) repinta la vista entera: el foco se
+      // lleva al encabezado, que es el anclaje más estable (las filas
+      // se recrean y el botón del aviso que lo tenía ya no existe).
+      if (action === 'restore') pintada.then(() => focusHeading(views[view]));
+    }
   }
   // Mensaje a la región role="status" para lectores de pantalla.
   if (plannerStatusEl && status) plannerStatusEl.textContent = status;

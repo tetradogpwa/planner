@@ -3,8 +3,10 @@
 // Exportar rango). Recorre la app como lo haría una persona: el JSON
 // del import sale del fixture, la descarga se intercepta envolviendo
 // HTMLAnchorElement.prototype.click y leyendo el blob con fetch desde
-// la propia página, los confirm se aceptan y se cancelan con
-// browser.acceptAlert / dismissAlert.
+// la propia página.
+//
+// «Borrar todo» pide confirmación en el diálogo propio de la app
+// (T-053): no en el confirm() del navegador, que ya no se usa.
 
 import { join as joinPath } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -50,44 +52,6 @@ async function escucharCambios() {
 }
 
 describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
-
-  // Listener global para los diálogos nativos de WebKitWebDriver:
-  // registramos uno vacío para que WebdriverIO NO auto-dispare el
-  // confirm (lo cierra con dismiss), y podamos controlar nosotros la
-  // respuesta con acceptAlert / dismissAlert. El polyfill de
-  // window.confirm (en beforeEach) captura el mensaje para
-  // comprobarlo sin tocar la app.
-  //
-  // En WebKitGTK headless dentro de un weston sin pantalla el diálogo
-  // nativo puede auto-resolverse antes de que llegue la orden del
-  // driver: por eso el polyfill no llama al confirm nativo, sino que
-  // espera de forma síncrona a una respuesta explícita que el test
-  // publica en window.__confirmAnswer (true=accept, false=dismiss).
-  // El test sigue intentando browser.acceptAlert / browser.dismissAlert
-  // para mantener el contrato del supervisor, pero esos comandos
-  // pueden fallar con "no such alert" en este entorno: si pasan, todo
-  // bien; si no, el polyfill ya tiene la respuesta.
-  before(() => {
-    browser.on('dialog', () => {});
-  });
-  beforeEach(async () => {
-    await browser.execute(() => {
-      window.__lastConfirm = null;
-      window.__confirmAnswer = null;
-      window.confirm = (msg) => {
-        window.__lastConfirm = String(msg);
-        // Busy-wait: el JS del click handler está parado aquí hasta
-        // que el test publique la respuesta vía window.__confirmAnswer.
-        // Sin respuesta en 2 s, devolvemos false (dismiss) por
-        // seguridad.
-        const inicio = Date.now();
-        while (window.__confirmAnswer === null && Date.now() - inicio < 2_000) {
-          /* spin */
-        }
-        return window.__confirmAnswer === true;
-      };
-    });
-  });
 
   // ── Importar ───────────────────────────────────────────────────────
 
@@ -146,22 +110,17 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
 
   // ── Borrar todo: cancelar y aceptar ─────────────────────────────────
 
-  it('cancelar el confirm de Borrar no elimina las tareas', async () => {
+  it('cancelar el diálogo de Borrar todo no elimina las tareas', async () => {
     await irAGestionDatos();
-    // Publicamos la respuesta del confirm: false = dismiss (cancelar).
-    await browser.execute(() => { window.__confirmAnswer = false; window.__lastConfirm = null; });
     await $('#clearAllBtn').click();
 
-    // El confirm se ha disparado: comprobamos el mensaje capturado.
+    // El diálogo de la app pide la confirmación (no el del navegador).
+    await $('.dialogo-capa .dialogo').waitForDisplayed({ timeout: 5_000 });
+    await $('.dialogo-capa .dialogo-btn[data-accion="cancelar"]').click();
     await browser.waitUntil(
-      async () => await browser.execute(() => window.__lastConfirm) !== null,
-      { timeout: 5_000, timeoutMsg: 'No se disparó ningún confirm al pulsar Borrar' },
+      async () => (await $$('.dialogo-capa')).length === 0,
+      { timeout: 5_000, timeoutMsg: 'El diálogo no se cerró' },
     );
-    const mensaje = await browser.execute(() => window.__lastConfirm);
-    expect(mensaje).toBe('¿Borrar todas las tareas?');
-    // Intentamos dismissAlert por contrato (puede fallar con "no such
-    // alert" en WebKit headless; el polyfill ya tiene la respuesta).
-    try { await browser.dismissAlert(); } catch (_) { /* el polyfill respondió en mock* */ }
 
     // La lista sigue con las 3 tareas importadas: nada cambió.
     await irATareas();
@@ -170,16 +129,11 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     ]);
   });
 
-  it('aceptar el confirm vacía la lista, deja el estado y persiste', async () => {
+  it('aceptar el diálogo de Borrar todo vacía la lista, deja el estado y persiste', async () => {
     await irAGestionDatos();
-    await browser.execute(() => { window.__confirmAnswer = true; window.__lastConfirm = null; });
     await $('#clearAllBtn').click();
-
-    await browser.waitUntil(
-      async () => await browser.execute(() => window.__lastConfirm) !== null,
-      { timeout: 5_000, timeoutMsg: 'No se disparó ningún confirm al pulsar Borrar' },
-    );
-    try { await browser.acceptAlert(); } catch (_) { /* el polyfill respondió */ }
+    await $('.dialogo-capa .dialogo').waitForDisplayed({ timeout: 5_000 });
+    await $('.dialogo-capa .dialogo-btn[data-accion="aceptar"]').click();
 
     // La tarjeta avisa con el emoji exacto.
     await esperarStatus('#dataStatus', '🗑️ Datos borrados');
@@ -289,14 +243,10 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     );
     const exportado = await browser.execute(() => window.__exportedTexto);
 
-    // Borramos todo (aceptando el confirm).
-    await browser.execute(() => { window.__confirmAnswer = true; window.__lastConfirm = null; });
+    // Borramos todo (aceptando el diálogo de la app).
     await $('#clearAllBtn').click();
-    await browser.waitUntil(
-      async () => await browser.execute(() => window.__lastConfirm) !== null,
-      { timeout: 5_000, timeoutMsg: 'No se disparó ningún confirm al pulsar Borrar' },
-    );
-    try { await browser.acceptAlert(); } catch (_) { /* el polyfill respondió */ }
+    await $('.dialogo-capa .dialogo').waitForDisplayed({ timeout: 5_000 });
+    await $('.dialogo-capa .dialogo-btn[data-accion="aceptar"]').click();
     await esperarStatus('#dataStatus', '🗑️ Datos borrados');
     await irATareas();
     expect(await nombresDeTareas()).toEqual([]);

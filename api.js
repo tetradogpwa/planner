@@ -54,9 +54,10 @@ const VIEW_TAB_ALIAS = {
 
 /** Despacha `planner:changed` en window con un mensaje listo para una
  *  región role="status". El evento lleva la causa ('add' | 'update' |
- *  'delete' | 'startDate' | 'navigate' | 'import') para que la app
- *  decida qué repintar. La importación de JSON (Ajustes › Datos) lo
- *  exporta porque también cambia la lista de tareas (T-031). */
+ *  'delete' | 'startDate' | 'navigate' | 'import' | 'clear' |
+ *  'restore') para que la app decida qué repintar. La importación de
+ *  JSON (Ajustes › Datos) lo exporta porque también cambia la lista
+ *  de tareas (T-031); «Borrar todo» y su «Deshacer» también (T-053). */
 export function emitChanged(action, statusMessage, extra = {}) {
   window.dispatchEvent(new CustomEvent('planner:changed', {
     detail: { action, status: statusMessage, ...extra },

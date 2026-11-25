@@ -19,12 +19,14 @@ import {
   addSavedTheme,
   applySavedTheme,
   deleteSavedTheme,
+  saveSavedThemes,
   autoTargetOptions,
   COLOR_GROUPS,
   BASES,
   CONTRAST_CHECKS,
 } from './preferences.js';
 import { escapeHtml } from '../escape.js';
+import { mostrarAviso } from '../avisos.js';
 
 const formatRatio = (r) => r.toFixed(2).replace('.', ',');
 
@@ -275,7 +277,12 @@ export class SettingsCard {
     }
   }
 
-  /** Elimina el tema guardado cuyo botón «Eliminar» se ha pulsado. */
+  /** Elimina el tema guardado cuyo botón «Eliminar» se ha pulsado.
+   *
+   *  El borrado se puede deshacer: sale un aviso con «Deshacer» que
+   *  vuelve a guardar el tema tal como estaba (T-053). Por eso no
+   *  hace falta la pregunta de confirmación del navegador (que además
+   *  no se puede teñir con el tema). */
   removeSavedTheme(button) {
     const id = button.dataset.id;
     if (!id) return;
@@ -286,8 +293,6 @@ export class SettingsCard {
       this.renderSavedThemes();
       return;
     }
-    const ok = confirm(`¿Eliminar el tema guardado «${theme.name}»?`);
-    if (!ok) return;
     deleteSavedTheme(id);
     this.renderBaseOptions();
     this.renderSavedThemes();
@@ -296,8 +301,32 @@ export class SettingsCard {
     this.markActiveThemeRadio();
     this.syncDraftStatus();
     this.$('#savedThemesStatus').textContent = `Tema «${theme.name}» eliminado.`;
+    mostrarAviso({
+      texto: `Tema «${theme.name}» eliminado`,
+      alPulsarAccion: () => this.#restaurarTema(theme),
+    });
     const firstRadio = this.$('input[name="theme"]');
     if (firstRadio) firstRadio.focus();
+    else this.$('#customEditToggle')?.focus();
+  }
+
+  /** Vuelve a guardar un tema que se había borrado (T-053): con su
+   *  id, sus colores y su base, tal como estaba. */
+  #restaurarTema(theme) {
+    const lista = getSavedThemes();
+    if (lista.some(t => t.id === theme.id)) return;   // ya está
+    saveSavedThemes([...lista, theme]);
+    this.renderBaseOptions();
+    this.renderSavedThemes();
+    this.syncAutoMapping();
+    this.syncCustomTheme();
+    this.markActiveThemeRadio();
+    this.syncDraftStatus();
+    this.$('#savedThemesStatus').textContent = `Tema «${theme.name}» restaurado.`;
+    // El aviso ya no está: el foco vuelve al tema restaurado.
+    const radios = Array.from(this.root.querySelectorAll('input[name="theme"]'));
+    const radio  = radios.find(r => r.value === `saved:${theme.id}`);
+    if (radio) radio.focus();
     else this.$('#customEditToggle')?.focus();
   }
 

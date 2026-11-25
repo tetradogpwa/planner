@@ -174,6 +174,101 @@ export class Context {
     Context.#guardarMarcas({});
   }
 
+  // ── Deshacer un borrado (T-053) ───────────────────────────────────────
+  //
+  // Borrar una tarea (o todas) ya no es irreversible: la interfaz
+  // guarda una «foto» de lo que había y, si el usuario pulsa
+  // «Deshacer», lo devuelve tal como estaba: en su posición, con su
+  // id y con sus marcas de «hecho».
+  //
+  // La foto guarda las tareas en el mismo formato que se guardan en
+  // el almacenamiento (back/serializer.js), así que al restaurarlas
+  // vuelven a ser tareas de verdad (con su clase y su id), no datos
+  // sueltos.
+
+  /** Las marcas de «hecho» de una tarea, como una copia:
+   *  { <fecha ISO>: [<números de vez>] }.
+   *
+   *  Es una copia: la que se guarda en la foto no cambia cuando la
+   *  tarea se borra y sus marcas se van con ella. */
+  static GetMarks(id) {
+    const tarea = Context.#validarId(id);
+    const porDia = Context.#leerMarcas()[tarea];
+    if (!porDia) return {};
+    const copia = {};
+    for (const [dia, veces] of Object.entries(porDia)) {
+      if (Array.isArray(veces)) copia[dia] = [...veces];
+    }
+    return copia;
+  }
+
+  /** Vuelve a guardar las marcas de «hecho» de una tarea.
+   *
+   *  `marcas` tiene la forma que devuelve `GetMarks`. */
+  static RestoreMarks(id, marcas) {
+    const tarea = Context.#validarId(id);
+    if (!marcas || typeof marcas !== 'object') return;
+    const todas = Context.#leerMarcas();
+    const porDia = {};
+    for (const [dia, veces] of Object.entries(marcas)) {
+      if (!Array.isArray(veces) || veces.length === 0) continue;
+      porDia[dia] = [...veces].sort((a, b) => a - b);
+    }
+    if (Object.keys(porDia).length === 0) delete todas[tarea];
+    else todas[tarea] = porDia;
+    Context.#guardarMarcas(todas);
+  }
+
+  /** Una foto de una tarea y de sus marcas de «hecho», para poder
+   *  deshacer su borrado.
+   *
+   *  La foto guarda también la posición que tenía, para devolverla al
+   *  mismo sitio. Devuelve null si la tarea no existe. */
+  static FotoTarea(id) {
+    const tarea = Context.#validarId(id);
+    const i = Context.Tasks.findIndex(t => t.Id === tarea);
+    if (i === -1) return null;
+    return {
+      json: ToJson([Context.Tasks[i]]),
+      marcas: { [tarea]: Context.GetMarks(tarea) },
+      posicion: i,
+    };
+  }
+
+  /** Vuelve a poner en la lista la tarea de una foto: en su posición,
+   *  con su id y con sus marcas de «hecho». */
+  static RestaurarTarea(foto) {
+    if (!foto?.json) return null;
+    const tareas = FromJson(foto.json, { origin: Context.StartDate });
+    if (tareas.length === 0) return null;
+    const pos = Math.max(0, Math.min(foto.posicion ?? 0, Context.Tasks.length));
+    Context.Tasks.splice(pos, 0, tareas[0]);
+    for (const [id, marcas] of Object.entries(foto.marcas ?? {})) {
+      Context.RestoreMarks(id, marcas);
+    }
+    return tareas[0];
+  }
+
+  /** Una foto de TODAS las tareas y de sus marcas de «hecho», para
+   *  poder deshacer un «Borrar todo». */
+  static FotoTodas() {
+    const marcas = {};
+    for (const t of Context.Tasks) marcas[t.Id] = Context.GetMarks(t.Id);
+    return { json: ToJson(Context.Tasks), marcas };
+  }
+
+  /** Vuelve a poner en la lista todas las tareas de una foto, con sus
+   *  id y con sus marcas de «hecho». */
+  static RestaurarTodas(foto) {
+    if (!foto?.json) return [];
+    const tareas = FromJson(foto.json, { origin: Context.StartDate });
+    Context.Tasks = tareas;
+    for (const [id, marcas] of Object.entries(foto.marcas ?? {})) {
+      Context.RestoreMarks(id, marcas);
+    }
+    return tareas;
+  }
+
   static #observe(obj) {
     return new Proxy(obj, {
       get(target, prop) {

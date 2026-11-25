@@ -1,5 +1,6 @@
 import { FromJson, ToJson } from '../../back/serializer.js';
 import { emitChanged }         from '../../api.js';
+import { abrirDialogo, mostrarAviso } from '../avisos.js';
 
 export class DataManagerCard {
   constructor(root, context) {
@@ -77,14 +78,53 @@ export class DataManagerCard {
     };
 
     // Borrar todo
-    this.root.querySelector('#clearAllBtn').onclick = () => {
-      if (confirm('¿Borrar todas las tareas?')) {
-        this.context.Tasks.length = 0;
-        // Con las tareas se van también sus marcas de «hecho» (T-050).
-        this.context.ClearAllMarks();
-        this.#setStatus('🗑️ Datos borrados');
+    this.root.querySelector('#clearAllBtn').onclick = async () => {
+      const total = this.context.Tasks.length;
+      if (total === 0) {
+        this.#setStatus('No hay tareas que borrar');
+        return;
       }
+      // Diálogo propio de la app, no la pregunta de confirmación del
+      // navegador: este se puede teñir con el tema, avisa a los lectores
+      // de pantalla y devuelve el foco a donde estaba (T-053).
+      const respuesta = await abrirDialogo({
+        titulo: 'Borrar todas las tareas',
+        mensaje: `Se borrarán las ${total} ${total === 1 ? 'tarea' : 'tareas'} que tienes. Puedes deshacerlo después.`,
+        textoAceptar: 'Borrar todo',
+        textoCancelar: 'Cancelar',
+        peligro: true,
+      });
+      if (respuesta !== 'aceptar') return;
+
+      // Foto de las tareas (y de sus marcas de «hecho») para poder
+      // deshacer el borrado (T-053).
+      const foto = this.context.FotoTodas();
+      this.context.Tasks.length = 0;
+      // Con las tareas se van también sus marcas de «hecho» (T-050).
+      this.context.ClearAllMarks();
+      this.#setStatus('🗑️ Datos borrados');
+      // La app entera tiene que enterarse del cambio: sin este aviso,
+      // las demás vistas no se repintan (T-053).
+      emitChanged('clear', '🗑️ Datos borrados');
+      // Y se puede deshacer.
+      mostrarAviso({
+        texto: `Tareas borradas (${total})`,
+        alPulsarAccion: () => this.#deshacerBorrado(foto),
+      });
     };
+  }
+
+  /** Deshace el «Borrar todo»: vuelve a poner las tareas que había,
+   *  con sus id y con sus marcas de «hecho» (T-053). */
+  #deshacerBorrado(foto) {
+    const tareas = this.context.RestaurarTodas(foto);
+    if (tareas.length === 0) return;
+    this.#setStatus('↩️ Tareas restauradas');
+    emitChanged('restore', 'Tareas restauradas');
+    // El aviso ya no está (el botón que tenía el foco ha
+    // desaparecido): el foco vuelve al botón de Borrar, si se ve.
+    const btn = this.root.querySelector('#clearAllBtn');
+    if (btn && btn.offsetParent !== null) btn.focus();
   }
 
   #setStatus(msg) {

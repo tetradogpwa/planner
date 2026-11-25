@@ -2,6 +2,8 @@ import { AddTaskCard }  from './addTask/addTask-card.js';
 import { EditTaskCard } from './editTask/editTask-card.js';
 import { escapeHtml }   from '../escape.js';
 import { taskSummary }  from '../../back/taskSummary.js';
+import { mostrarAviso } from '../avisos.js';
+import { emitChanged }  from '../../api.js';
 
 // Estado del interruptor "Gestionar" (T-026). `index.js` recrea la
 // TaskManagerCard en cada navegación a la vista 'tasks', así que sin
@@ -104,6 +106,10 @@ export class TaskManagerCard {
         // esa posición ya apunta a otra tarea (T-049).
         const pos = this.#indiceDe(taskId);
         if (pos === -1) return;
+        const nombre = this.context.Tasks[pos].Name;
+        // Foto de la tarea (con sus marcas de «hecho») para poder
+        // deshacer el borrado (T-053).
+        const foto = this.context.FotoTarea(taskId);
         // Tras el repintado el foco debe quedarse en el botón
         // Eliminar de la fila que ahora ocupa la posición `pos` (la
         // siguiente tarea), o la anterior si era la última. Si la
@@ -114,6 +120,12 @@ export class TaskManagerCard {
         this.context.ClearMarks(taskId);
         this.renderList();
         this.#focusAfterDelete(pos);
+        // Borrar ya no es irreversible: sale un aviso con «Deshacer»
+        // (T-053).
+        mostrarAviso({
+          texto: `Tarea «${nombre}» eliminada`,
+          alPulsarAccion: () => this.#deshacerBorrado(foto),
+        });
       };
 
       row.querySelector('.btn-edit').onclick = () => {
@@ -145,6 +157,19 @@ export class TaskManagerCard {
     }
     const target = buttons[Math.min(i, buttons.length - 1)];
     if (target) target.focus();
+  }
+
+  /** Deshace el borrado de una tarea: la vuelve a poner en su
+   *  posición, con su id y con sus marcas de «hecho» (T-053).
+   *
+   *  El cambio se avisa con `planner:changed` para que se repinten
+   *  todas las vistas (la lista de tareas, la semana…), no solo la que
+   *  estaba en pantalla cuando se borró: el aviso con «Deshacer»
+   *  sobrevive a un cambio de vista. */
+  #deshacerBorrado(foto) {
+    const tarea = this.context.RestaurarTarea(foto);
+    if (!tarea) return;
+    emitChanged('restore', `Tarea «${tarea.Name}» restaurada`, { id: tarea.Id });
   }
 
   // ── Panel inline de edición ───────────────────────────────────────────────
