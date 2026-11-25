@@ -1,35 +1,37 @@
 // ────────────────────────────────────────────────────────────────────
 // settings-card.js — Pestaña "Apariencia" de Ajustes (T-022): tema
-// (incluido uno propio con guardado), comprobación de contraste y
-// vista previa. Antes era la vista completa de ui/settings; ahora
-// solo cubre esto. Los tamaños de letra (general y por partes) y el
-// tamaño del icono del menú contraído están en
-// ui/accessibility/fontSizes-card; la sección "Control por asistente
-// (MCP)" está en ui/mcp/mcp-card.
+// (incluido uno propio con guardado) y las acciones que lo cambian.
+// Antes era la vista completa de ui/settings; ahora solo cubre esto.
+// Los tamaños de letra (general y por partes) y el tamaño del icono
+// del menú contraído están en ui/accessibility/fontSizes-card; la
+// sección "Control por asistente (MCP)" está en ui/mcp/mcp-card.
+// El panel de colores y contraste: ui/settings/contrastPanel. Las
+// listas de temas: ui/settings/savedThemesList.
 // ────────────────────────────────────────────────────────────────────
 
 import {
   getPreferences,
   setPreferences,
   customColors,
-  contrastRatio,
-  isHexColor,
-  suggestContrastFixes,
   getSavedThemes,
   addSavedTheme,
   applySavedTheme,
   deleteSavedTheme,
   saveSavedThemes,
-  autoTargetOptions,
-  COLOR_GROUPS,
   BASES,
-  CONTRAST_CHECKS,
 } from './preferences.js';
-import { escapeHtml, escapeAttr } from '../html.js';
 import { montarTarjeta } from '../base-card.js';
 import { mostrarAviso } from '../avisos.js';
-
-const formatRatio = (r) => r.toFixed(2).replace('.', ',');
+import {
+  renderColorRows,
+  renderContrast as renderContrastPanel,
+  syncColorInputs as syncColorInputsPanel,
+} from './contrastPanel.js';
+import {
+  renderBaseOptions as renderBaseOptionsList,
+  renderSavedThemes as renderSavedThemesList,
+  syncAutoMapping as syncAutoMappingPanel,
+} from './savedThemesList.js';
 
 export class SettingsCard {
   constructor(root) {
@@ -60,7 +62,9 @@ export class SettingsCard {
     this.editMode = false;
 
     this.renderBaseOptions();
-    this.renderColorRows();
+    renderColorRows(this.$('#colorGroups'), {
+      onColor: (clave, valor, opciones) => this.setColor(clave, valor, opciones),
+    });
     this.renderSavedThemes();
 
     this.markActiveThemeRadio();
@@ -87,13 +91,6 @@ export class SettingsCard {
         this.syncCustomTheme();
         this.syncDraftStatus();
       }
-    });
-
-    // Botón Eliminar de cada tema guardado (delegado en la raíz).
-    this.root.addEventListener('click', (e) => {
-      const btn = e.target.closest('.saved-theme-delete');
-      if (!btn) return;
-      this.removeSavedTheme(btn);
     });
 
     this.$('#autoLight').addEventListener('change', () => {
@@ -134,51 +131,9 @@ export class SettingsCard {
 
   // ── Tema propio ───────────────────────────────────────────────────
 
+  /** Pinta el desplegable «Empezar desde»: estilos base y temas guardados. */
   renderBaseOptions() {
-    const baseOptions = Object.entries(BASES)
-      .map(([id, base]) => `<option value="${id}">${base.label}</option>`)
-      .join('');
-    const savedThemes = getSavedThemes();
-    const savedOptions = savedThemes.length === 0 ? '' :
-      `<optgroup label="Tus temas guardados">${
-        savedThemes.map(t => {
-          const scheme = t.scheme ?? BASES[t.base]?.scheme ?? 'dark';
-          const icon = scheme === 'light' ? '☀' : '🌙';
-          return `<option value="saved:${escapeAttr(t.id)}">${icon} ${escapeHtml(t.name)}</option>`;
-        }).join('')
-      }</optgroup>`;
-    this.$('#customBase').innerHTML = baseOptions + savedOptions;
-  }
-
-  renderColorRows() {
-    this.$('#colorGroups').innerHTML = COLOR_GROUPS.map(group => `
-      <fieldset class="color-group">
-        <legend>${group.title}</legend>
-        ${group.items.map(item => `
-          <div class="color-row">
-            <label for="color-${item.id}">${item.label}</label>
-            <input type="color" id="color-${item.id}" data-color="${item.id}">
-            <input type="text" id="hex-${item.id}" data-hex="${item.id}" class="hex-input"
-                   inputmode="text" maxlength="7" spellcheck="false" autocomplete="off"
-                   aria-label="Código de color: ${item.label}">
-          </div>`).join('')}
-      </fieldset>`).join('');
-
-    // Selector visual: cambio inmediato.
-    this.root.querySelectorAll('[data-color]').forEach(input =>
-      input.addEventListener('input', () => this.setColor(input.dataset.color, input.value))
-    );
-    // Código hexadecimal: para teclado y para sistemas sin selector de color.
-    this.root.querySelectorAll('[data-hex]').forEach(input => {
-      input.addEventListener('input', () => {
-        let value = input.value.trim();
-        if (value && !value.startsWith('#')) value = `#${value}`;
-        const valid = isHexColor(value);
-        input.setAttribute('aria-invalid', String(!valid && value.length > 0));
-        if (valid) this.setColor(input.dataset.hex, value.toLowerCase(), { fromHex: true });
-      });
-      input.addEventListener('blur', () => this.syncColorInputs());
-    });
+    renderBaseOptionsList(this.$('#customBase'), getSavedThemes());
   }
 
   setColor(key, value, { fromHex = false } = {}) {
@@ -339,34 +294,10 @@ export class SettingsCard {
   renderSavedThemes() {
     const container = this.$('#savedThemeOptions');
     if (!container) return;
-    const themes = getSavedThemes();
-
-    if (themes.length === 0) {
-      container.innerHTML = '';
-      this.syncAutoMapping();
-      return;
-    }
-
-    container.innerHTML = themes.map(theme => {
-      const scheme = theme.scheme ?? BASES[theme.base]?.scheme ?? 'dark';
-      const icon = scheme === 'light' ? '☀' : '🌙';
-      // El `id` de un tema guardado viene del `localStorage`: se escapa
-      // como el nombre (el HTML lo vuelve a decodificar al leer el
-      // atributo, así que `dataset.id` sigue siendo el mismo id).
-      const deleteBtn = this.editMode
-        ? `<button type="button" class="settings-btn saved-theme-delete" data-id="${escapeAttr(theme.id)}"
-                 aria-label="Eliminar el tema «${escapeAttr(theme.name)}»">Eliminar</button>`
-        : '';
-      return `
-        <div class="saved-theme-row">
-          <label class="settings-option saved-theme-option">
-            <input type="radio" name="theme" value="saved:${escapeAttr(theme.id)}">
-            <span aria-hidden="true">${icon}</span>
-            <span class="saved-theme-name">${escapeHtml(theme.name)} <small>(creado por ti)</small></span>
-          </label>
-          ${deleteBtn}
-        </div>`;
-    }).join('');
+    renderSavedThemesList(container, getSavedThemes(), {
+      editable: this.editMode,
+      onRemove: btn => this.removeSavedTheme(btn),
+    });
     this.syncAutoMapping();
   }
 
@@ -447,98 +378,19 @@ export class SettingsCard {
 
   /** Sincroniza el bloque de mapeo del modo automático. */
   syncAutoMapping() {
-    const isAuto = getPreferences().theme === 'auto';
-    const section = this.$('#autoMapping');
-    section.hidden = !isAuto;
-    if (isAuto) {
-      const prefs = getPreferences();
-      this.populateAutoSelect(this.$('#autoLight'), autoTargetOptions('light'), prefs.autoLight);
-      this.populateAutoSelect(this.$('#autoDark'),  autoTargetOptions('dark'),  prefs.autoDark);
-    }
-  }
-
-  populateAutoSelect(select, options, currentValue) {
-    select.replaceChildren();
-    for (const { value, label } of options) {
-      const opt = document.createElement('option');
-      opt.value = value;
-      opt.textContent = label;
-      select.appendChild(opt);
-    }
-    const hasCurrent = options.some(o => o.value === currentValue);
-    select.value = hasCurrent ? currentValue : options[0]?.value ?? '';
+    const prefs = getPreferences();
+    syncAutoMappingPanel(this.$('#autoMapping'), {
+      isAuto: prefs.theme === 'auto',
+      autoLight: prefs.autoLight,
+      autoDark: prefs.autoDark,
+    });
   }
 
   syncColorInputs() {
-    const colors = customColors();
-    for (const [key, value] of Object.entries(colors)) {
-      const picker = this.$(`#color-${key}`);
-      const hex = this.$(`#hex-${key}`);
-      if (picker) picker.value = value;
-      if (hex) { hex.value = value; hex.removeAttribute('aria-invalid'); }
-    }
+    syncColorInputsPanel(this.$('#colorGroups'));
   }
 
   renderContrast() {
-    const colors = customColors();
-    let failures = 0;
-    this.$('#contrastList').innerHTML = CONTRAST_CHECKS.map(check => {
-      const fg = colors[check.fg];
-      const bg = colors[check.bg];
-      const ratio = contrastRatio(fg, bg);
-      const ok = ratio >= check.min;
-      if (!ok) failures++;
-
-      let fixesHtml = '';
-      if (!ok) {
-        const fixes = suggestContrastFixes(fg, bg, check.min);
-        const buttons = [];
-        if (fixes.lighter) {
-          const f = fixes.lighter;
-          const what = f.target === 'fg' ? 'texto' : 'fondo';
-          buttons.push(`
-            <button type="button" class="contrast-fix" data-target="${f.target}" data-value="${f.value}"
-                    title="Aplicar ${f.value} (contraste ${formatRatio(f.ratio)}:1)"
-                    aria-label="Aclarar ${what} a ${f.value} para que se lea mejor">
-              <span class="contrast-fix-preview"
-                    style="background:${bg};color:${f.value}" aria-hidden="true">Aa</span>
-              <span class="contrast-fix-info">
-                <span class="contrast-fix-action">↗ Aclarar ${what}</span>
-                <span class="contrast-fix-value">${f.value} · ${formatRatio(f.ratio)}:1</span>
-              </span>
-            </button>`);
-        }
-        if (fixes.darker) {
-          const f = fixes.darker;
-          const what = f.target === 'fg' ? 'texto' : 'fondo';
-          buttons.push(`
-            <button type="button" class="contrast-fix" data-target="${f.target}" data-value="${f.value}"
-                    title="Aplicar ${f.value} (contraste ${formatRatio(f.ratio)}:1)"
-                    aria-label="Oscurecer ${what} a ${f.value} para que se lea mejor">
-              <span class="contrast-fix-preview"
-                    style="background:${f.value};color:${fg}" aria-hidden="true">Aa</span>
-              <span class="contrast-fix-info">
-                <span class="contrast-fix-action">↘ Oscurecer ${what}</span>
-                <span class="contrast-fix-value">${f.value} · ${formatRatio(f.ratio)}:1</span>
-              </span>
-            </button>`);
-        }
-        if (buttons.length > 0) {
-          fixesHtml = `<div class="contrast-fixes" role="group" aria-label="Sugerencias para corregir el contraste">${buttons.join('')}</div>`;
-        }
-      }
-
-      return `
-        <li class="contrast-item ${ok ? 'is-ok' : 'is-bad'}">
-          <span class="contrast-swatch" style="background:${bg};color:${fg}" aria-hidden="true">Aa</span>
-          <span class="contrast-label">${check.label}</span>
-          <span class="contrast-ratio">${formatRatio(ratio)}:1</span>
-          <span class="contrast-verdict">${ok ? '✓ Se lee bien' : `✗ Poco contraste (mín. ${formatRatio(check.min)}:1)`}</span>
-          ${fixesHtml}
-        </li>`;
-    }).join('');
-    this.$('#contrastSummary').textContent = failures === 0
-      ? 'Todos los textos se leen con contraste suficiente.'
-      : `${failures} ${failures === 1 ? 'combinación tiene' : 'combinaciones tienen'} poco contraste. Cambia alguno de sus colores.`;
+    renderContrastPanel(this.$('.contrast-panel'), customColors());
   }
 }
