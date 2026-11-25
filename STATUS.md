@@ -5,7 +5,7 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 17:26 UTC
+Actualizado: 2026-11-25 17:28 UTC
 
 ## Ahora
 
@@ -17,9 +17,9 @@ Actualizado: 2026-11-25 17:26 UTC
 
 ## Resumen
 
-- Abiertas: 32 (1 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 23 media · 🔴 1 difícil
-- Delicadeza: 🟢 4 baja · 🟡 20 media · 🔴 7 alta
+- Abiertas: 32 (0 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 24 media · 🔴 1 difícil
+- Delicadeza: 🟢 4 baja · 🟡 21 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -60,7 +60,7 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-102 | Pendiente | 🔴 difícil | 🔴 alta | 0 | MCP en Rust: arrancar y parar el servidor por turnos |
 | T-103 | Pendiente | 🟢 fácil | 🟡 media | 0 | Una sola función para bloquear la app detrás de una pantalla |
 | T-104 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de términos atrapa el foco y bloquea la app de detrás |
-| T-105 | Pendiente | — sin evaluar | — | 0 | El CI encuentra el hash del frontend en el binario |
+| T-105 | Pendiente | 🟡 media | 🟡 media | 0 | El CI encuentra el hash del frontend en el binario |
 
 ## El reto de cada tarea
 
@@ -252,9 +252,9 @@ La pantalla de términos atrapa el teclado y bloquea la app de detrás. Es un a�
 
 ### T-105 · El CI encuentra el hash del frontend en el binario
 
-— sin evaluar · delicadeza — · sigue a T-040
+🟡 media · delicadeza 🟡 media · sigue a T-040
 
-Aún no la ha evaluado MiniMax.
+Las pruebas automáticas de GitHub dejan de fallar al buscar la marca del frontend en el binario. Tres piezas y una prueba nueva; lo difícil es el enlazador. Un fallo solo daría un hash raro en «Acerca de».
 
 ## Últimas terminadas
 
