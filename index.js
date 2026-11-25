@@ -13,18 +13,6 @@ import { startMcpBridge }  from './mcp-bridge.js';
 import { leerEstadoMcp }   from './ui/mcp/mcp-state.js';
 import './api.js';   // monta window.PlannerApi
 
-// ── Service Worker ────────────────────────────────────────
-// En Tauri el Service Worker no aporta nada (los recursos ya están
-// locales). Solo se activa en modo PWA puro (sin Tauri), pero
-// actualmente está desactivado por defecto.
-// El Service Worker está desactivado a propósito (su lista de assets
-// está obsoleta; ver R-13/T-054). La condición es constante a
-// propósito, y por eso ESLint avisa.
-// eslint-disable-next-line no-constant-condition
-if ('serviceWorker' in navigator && false) {
-  navigator.serviceWorker.register('./sw.js').catch(console.warn);
-}
-
 // ── Términos de uso ───────────────────────────────────────
 // Lo primero que ve el usuario. Sin aceptarlos no se usa la app: si
 // los rechaza, se cierra (ui/terms/).

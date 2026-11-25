@@ -72,7 +72,6 @@ const WEB_ASSETS: &[&str] = &[
     "monetization.js",
     "theme-boot.js",
     "manifest.json",
-    "sw.js",
     "icon-192x192.png",
     "icon-512x512.png",
     "ads",

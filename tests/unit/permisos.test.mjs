@@ -13,7 +13,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,7 +30,7 @@ const PLUGINS_SIN_USO = ['fs', 'dialog'];
 const FRONTEND_DIRS = ['ads', 'back', 'ui'];
 const FRONTEND_ARCHIVOS = [
   'index.js', 'context.js', 'api.js', 'mcp-bridge.js',
-  'monetization.js', 'theme-boot.js', 'sw.js',
+  'monetization.js', 'theme-boot.js',
 ];
 
 const leer = (...partes) => readFileSync(join(RAIZ, ...partes), 'utf8');
@@ -240,5 +240,33 @@ test('build.rs inyecta la CSP con TAURI_CONFIG', () => {
   assert.ok(
     build.includes('GOOGLE_ADSENSE_CLIENT'),
     'build.rs debe decidir con las claves de AdSense si la build lleva anuncios',
+  );
+});
+
+// ── El service worker no existe (T-077) ──────────────────────────────
+//
+// La app es de Tauri: los recursos ya están en local, así que un
+// service worker no aporta nada. El que había estaba desactivado
+// (`&& false`) y su lista de assets estaba obsoleta: se borró entero.
+//
+// Un service worker vivo es una capacidad de más del WebView (sirve
+// una copia cacheada de la app, sin avisar) y, con la lista vieja,
+// serviría una versión antigua de la app. Por eso se vigila que no
+// vuelvan ni el fichero ni el registro.
+
+test('no hay service worker: ni el fichero ni el registro', () => {
+  assert.ok(
+    !existsSync(join(RAIZ, 'sw.js')),
+    'sw.js no debe existir: el service worker se borró (T-077)',
+  );
+
+  assert.ok(
+    !leer('index.js').includes('serviceWorker'),
+    'index.js no debe registrar ningún service worker (T-077)',
+  );
+
+  assert.ok(
+    !/"sw\.js"/.test(leer('src-tauri', 'build.rs')),
+    'build.rs no debe copiar sw.js al frontend (T-077)',
   );
 });
