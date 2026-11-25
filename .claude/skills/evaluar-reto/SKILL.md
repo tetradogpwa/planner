@@ -71,6 +71,10 @@ Mal (y por qué):
 - `…una mejora de算法 de reordenación…` → otro alfabeto.
 - `…con un guard de limpieza en Rust async…` → jerga en inglés; di
   «una limpieza automática en el servidor de asistentes».
+- `…un fallo alters los contrastes…`, `…mislead al usuario…` → verbos
+  en inglés colados en mitad de la frase. **Antes de dar cada línea,
+  reléela palabra por palabra**: si una palabra no es español, cámbiala
+  («cambiaría», «engañaría»).
 
 ## Formato de la respuesta (obligatorio)
 
