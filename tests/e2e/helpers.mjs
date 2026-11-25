@@ -624,3 +624,75 @@ export async function navegarVistaAlt(n) {
     { timeout: 5_000, timeoutMsg: `Alt+${n} no abrió la vista ${vista}` },
   );
 }
+
+/** Elige un tema de la lista de Ajustes › Apariencia (como una
+ *  persona: clic sobre el radio). */
+export async function elegirTema(radioValue) {
+  await navegarVistaAlt(6);
+  await browser.waitUntil(
+    async () => await browser.execute(
+      () => document.querySelectorAll('input[name="theme"]').length > 0,
+    ),
+    { timeout: 5_000, timeoutMsg: 'Los radios de Tema no se han pintado' },
+  );
+  await $(`input[name="theme"][value="${radioValue}"]`).click();
+  await browser.waitUntil(
+    async () => await browser.execute(
+      (v) => document.querySelector(`input[name="theme"][value="${v}"]`)?.checked === true,
+      radioValue,
+    ),
+    { timeout: 5_000, timeoutMsg: `El tema ${radioValue} no quedó marcado` },
+  );
+}
+
+/** El contraste (WCAG) entre el texto de un elemento y su fondo real
+ *  (componiendo las capas translúcidas) y si se ve tachado. */
+export const aspectoDe = (selector) => browser.execute((sel) => {
+  const analizar = (color) => {
+    const m = /rgba?\(([^)]+)\)/.exec(color);
+    if (!m) return null;
+    const p = m[1].split(/[,\s/]+/).filter(Boolean).map(Number);
+    return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+  };
+  const encima = (capa, fondo) => {
+    const a = capa.a;
+    return {
+      r: capa.r * a + fondo.r * (1 - a),
+      g: capa.g * a + fondo.g * (1 - a),
+      b: capa.b * a + fondo.b * (1 - a),
+      a: 1,
+    };
+  };
+  const luminancia = (c) => {
+    const f = (v) => {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+  };
+
+  const el = document.querySelector(sel);
+  if (!el) return null;
+  const estilos = getComputedStyle(el);
+
+  // El fondo real: se componen las capas desde el <html> hacia abajo
+  // (la del elemento está encima).
+  const cadena = [];
+  for (let nodo = el; nodo; nodo = nodo.parentElement) cadena.push(nodo);
+  let fondo = { r: 255, g: 255, b: 255, a: 1 };
+  for (let i = cadena.length - 1; i >= 0; i--) {
+    const capa = analizar(getComputedStyle(cadena[i]).backgroundColor);
+    if (!capa || capa.a === 0) continue;
+    fondo = encima(capa, fondo);
+  }
+
+  const texto = analizar(estilos.color);
+  const l1 = luminancia(texto);
+  const l2 = luminancia(fondo);
+  const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+  return {
+    ratio: (hi + 0.05) / (lo + 0.05),
+    tachado: estilos.textDecorationLine,
+    texto: estilos.color,
+  };
+}, selector);

@@ -19,6 +19,8 @@
 
 import {
   abrirAppNueva,
+  aspectoDe,
+  elegirTema,
   navegarVistaAlt,
 } from '../helpers.mjs';
 
@@ -250,7 +252,6 @@ describe('Legal: URL pública de los documentos (T-029)', () => {
       return {
         textoAviso: (hint?.textContent ?? '').trim(),
         avisoVisible: !!hint && getComputedStyle(hint).display !== 'none',
-        colorAviso: hint ? getComputedStyle(hint).color : '',
         enlaces: enlaces.map(a => ({
           clave: a.dataset.doc,
           texto: a.textContent.trim(),
@@ -261,9 +262,6 @@ describe('Legal: URL pública de los documentos (T-029)', () => {
     // Hay un aviso visible para toda la lista.
     expect(info.textoAviso).toMatch(/navegador/i);
     expect(info.avisoVisible).toBe(true);
-    // El aviso no usa un color fijo (lo toma de una variable CSS).
-    expect(info.colorAviso).not.toBe('rgb(0, 0, 0)');
-    expect(info.colorAviso).not.toBe('');
 
     // Cada enlace anuncia de forma accesible si se abre en el
     // navegador o si se muestra dentro de la app. El texto visible
@@ -274,6 +272,26 @@ describe('Legal: URL pública de los documentos (T-029)', () => {
       expect(e.aria).toMatch(esperado);
       // El texto visible sigue siendo el principio del nombre accesible.
       expect(e.aria.startsWith(e.texto)).toBe(true);
+    }
+  });
+
+  // El aviso no basta con existir: tiene que LEERSE. Se mide su
+  // contraste WCAG contra su fondo real (4,5:1, nivel AA) en el tema
+  // claro y en el oscuro: comprobar que «no es negro» no dice nada de
+  // si se ve o no.
+
+  describe('el aviso del navegador se lee en cada tema', () => {
+    for (const tema of ['light', 'dark']) {
+      it(`mantiene el contraste AA en el tema "${tema}"`, async () => {
+        // Elegir el tema deja la vista en Apariencia: se vuelve a Legal.
+        await elegirTema(tema);
+        await navegarVistaAlt(7);
+        await $('#ajustes-panel-legal .legal-hint').waitForDisplayed();
+
+        const aviso = await aspectoDe('#ajustes-panel-legal .legal-hint');
+        expect(aviso).not.toBeNull();
+        expect(aviso.ratio).toBeGreaterThanOrEqual(4.5);
+      });
     }
   });
 
