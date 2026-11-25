@@ -95,44 +95,81 @@ describe('Edición gratuita sin anuncios (T-023)', () => {
     // Tras T-023 estos dos .md se mueven a docs/publicacion-comercial/legal/
     // (fuera de WEB_ASSETS y de bundle.resources), así que un fetch desde
     // el WebView NO debe devolver un 200 con el contenido de esos
-    // documentos. WRY puede responder 404 o, en algunos montajes,
-    // redirigir a index.html; en cualquier caso el cuerpo no debe ser el
-    // del fichero buscado. Comprobamos código + longitud/tipo del
-    // cuerpo para descartar el falso positivo del SPA fallback.
+    // documentos.
+    //
+    // Solo valen dos respuestas: 404 (el archivo no está) o 200 con el
+    // cuerpo del index.html (el fallback del SPA, que no es el documento
+    // buscado). WRY puede responder de las dos formas según el montaje.
+    //
+    // Un fetch que LANZA no dice nada del documento: también rechazaría
+    // una URL mal escrita o un problema de protocolo. Por eso su error
+    // se guarda y hace FALLAR la prueba, nunca se cuenta como «no se
+    // distribuye».
+    //
+    // Como control positivo se pide con el MISMO fetch
+    // ./legal/PRIVACY.md: tiene que servirse con 200 y con el texto del
+    // documento (no con el app shell). Así se demuestra que este mismo
+    // fetch sí encuentra un documento que sí existe.
     const resultados = await browser.execute(async () => {
-      const out = {};
-      for (const url of ['./legal/ADS_DISCLOSURE.md', './legal/REFUNDS.md']) {
+      const esAppShell = (txt) =>
+        txt.trim().startsWith('<!DOCTYPE') || txt.includes('<div id="view-');
+      const pedir = async (url, tituloEsperado) => {
         try {
           const r = await fetch(url, { cache: 'no-store' });
           const txt = await r.text();
-          out[url] = {
+          return {
             status: r.status,
-            ok: r.ok,
             len: txt.length,
-            looksLikeAppShell:
-              txt.trim().startsWith('<!DOCTYPE') ||
-              txt.includes('<div id="view-'),
+            looksLikeAppShell: esAppShell(txt),
+            // ¿El cuerpo es el del documento (y no una página cualquiera)?
+            tieneTitulo: tituloEsperado ? txt.includes(tituloEsperado) : null,
+            error: null,
           };
         } catch (e) {
-          out[url] = { status: 0, ok: false, error: e.message };
+          return {
+            status: null,
+            len: 0,
+            looksLikeAppShell: false,
+            tieneTitulo: false,
+            error: String(e && e.message ? e.message : e),
+          };
         }
+      };
+      const out = {};
+      out['./legal/PRIVACY.md'] =
+        await pedir('./legal/PRIVACY.md', 'Política de Privacidad');
+      for (const url of ['./legal/ADS_DISCLOSURE.md', './legal/REFUNDS.md']) {
+        out[url] = await pedir(url, null);
       }
       return out;
     });
-    for (const [url, info] of Object.entries(resultados)) {
-      // La app no debe servir el contenido del documento. Si el status
-      // fuera 200, el cuerpo tiene que ser claramente el de otra cosa
-      // (no el del .md que estamos buscando).
-      if (info.status === 200 && info.ok && !info.looksLikeAppShell) {
+
+    // ── Control positivo: este mismo fetch sí sirve un documento ──────
+    const control = resultados['./legal/PRIVACY.md'];
+    if (control.error) {
+      throw new Error(
+        `El fetch de ./legal/PRIVACY.md falló (${control.error}): ` +
+        `no se ha podido comprobar nada`,
+      );
+    }
+    expect(control.status).toBe(200);
+    expect(control.looksLikeAppShell).toBe(false);
+    expect(control.tieneTitulo).toBe(true);
+
+    // ── Lo que no debe distribuirse ───────────────────────────────────
+    for (const url of ['./legal/ADS_DISCLOSURE.md', './legal/REFUNDS.md']) {
+      const info = resultados[url];
+      // Un fetch que lanza no prueba nada: la prueba falla con su error.
+      if (info.error) {
         throw new Error(
-          `${url} devolvió 200 con un cuerpo que parece un documento legal: ` +
-          `status=${info.status} len=${info.len}`,
+          `El fetch de ${url} falló (${info.error}): un fetch fallido no ` +
+          `prueba que el documento no se distribuya`,
         );
       }
-      // Cualquier otro resultado (404, redirect a app shell, error) es
-      // aceptable: demuestra que el archivo no se distribuye.
-      expect(info.status === 200 ? info.looksLikeAppShell : true)
-        .toBe(true);
+      // Solo se aceptan 404 o el 200 con el cuerpo del index.html.
+      const noDistribuido =
+        info.status === 404 || (info.status === 200 && info.looksLikeAppShell);
+      expect(noDistribuido).toBe(true);
     }
   });
 
