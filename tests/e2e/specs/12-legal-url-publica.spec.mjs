@@ -328,4 +328,35 @@ describe('Legal: URL pública de los documentos (T-029)', () => {
     });
     await ventanaMovil(1280, 800);
   });
+
+  // ── 7. El documento se enseña como Markdown (T-061) ──────────────────
+
+  it('el documento del modal enseña sus enlaces como enlaces', async () => {
+    // Sin navegador: se muestra la copia local, ya renderizada.
+    await ponerAbridor({ fallar: true });
+    await $('a[data-doc="ACCESSIBILITY"]').click();
+
+    await browser.waitUntil(
+      async () => (await estadoModal()).oculto === false,
+      { timeout: 5_000, timeoutMsg: 'El modal no se abrió' },
+    );
+
+    const enlaces = await browser.execute(() => {
+      const cuerpo = document.getElementById('legal-modal-body');
+      return Array.from(cuerpo?.querySelectorAll('a[href]') ?? []).map(a => ({
+        href: a.getAttribute('href'),
+        rel: a.getAttribute('rel'),
+        target: a.getAttribute('target'),
+        texto: a.textContent.trim(),
+      }));
+    });
+
+    // El documento de accesibilidad enlaza con el protocolo MCP: en el
+    // modal tiene que ser un enlace de verdad, con su URL entera.
+    const mcp = enlaces.find(e => e.texto.includes('Model Context Protocol'));
+    expect(mcp).toBeDefined();
+    expect(mcp.href).toBe('https://modelcontextprotocol.io/');
+    expect(mcp.rel).toBe('noopener noreferrer');
+    expect(mcp.target).toBe('_blank');
+  });
 });

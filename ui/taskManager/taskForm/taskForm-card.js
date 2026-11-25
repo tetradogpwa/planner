@@ -1,7 +1,7 @@
 import { buildTaskFromSpec } from '../../../back/taskSpec.js';
 import { todayISO }         from '../../../back/calendar.js';
 import { DAY_NAMES }        from '../../../back/dayNames.js';
-import { escapeHtml }       from '../../escape.js';
+import { escapeAttr }      from '../../html.js';
 
 // ────────────────────────────────────────────────────────────────────
 // taskForm-card.js — El FORMULARIO DE TAREA, compartido por el alta y
@@ -175,7 +175,7 @@ export class TaskForm {
       this.extra.innerHTML = `
         <div class="extra-interval">
           <label for="${this.ids.intervalId}">Repetir cada</label>
-          <input type="number" id="${this.ids.intervalId}" value="${escapeHtml(this.nDays)}" min="2">
+          <input type="number" id="${this.ids.intervalId}" value="${escapeAttr(this.nDays)}" min="2">
           <span>días</span>
         </div>`;
     }

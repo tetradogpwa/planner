@@ -19,6 +19,7 @@
 
 import { trapFocus } from '../a11y.js';
 import { publicUrlFor, isHttpsUrl } from './legal-urls.js';
+import { renderMarkdown } from './legal-markdown.js';
 
 const DOCS = {
   PRIVACY:               { title: 'Política de privacidad',   file: './legal/PRIVACY.md' },
@@ -168,76 +169,4 @@ export class LegalCard {
     // trapFocus devuelve el foco al elemento previamente enfocado
     // (el enlace que abrió el modal) al hacer release().
   }
-}
-
-// ── Mini-render de Markdown → HTML ─────────────────────────────────
-// Suficiente para los textos legales (encabezados, listas, tablas,
-// código, links, énfasis). Sin dependencias externas para no
-// añadir peso al bundle.
-// ────────────────────────────────────────────────────────────────────
-
-function escapeHtml(s) {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-export function renderMarkdown(md) {
-  // 1. Escapar HTML.
-  let text = escapeHtml(md);
-
-  // 2. Código en bloque ``` … ```.
-  text = text.replace(/```([\s\S]*?)```/g, (_, code) =>
-    `<pre><code>${code.replace(/^\n+|\n+$/g, '')}</code></pre>`);
-
-  // 3. Títulos (h1, h2, h3).
-  text = text.replace(/^###### (.*)$/gm, '<h6>$1</h6>')
-             .replace(/^##### (.*)$/gm, '<h5>$1</h5>')
-             .replace(/^#### (.*)$/gm, '<h4>$1</h4>')
-             .replace(/^### (.*)$/gm, '<h3>$1</h3>')
-             .replace(/^## (.*)$/gm, '<h2>$1</h2>')
-             .replace(/^# (.*)$/gm, '<h1>$1</h1>');
-
-  // 3b. Separadores horizontales.
-  text = text.replace(/^-{3,}$/gm, '<hr>');
-
-  // 4. Negrita y cursiva.
-  text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-             .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
-
-  // 5. Listas (muy simple).
-  text = text.replace(/(^|\n)(- .+(?:\n- .+)*)/g, (_, lead, block) => {
-    const items = block.split('\n').map(l => `<li>${l.slice(2)}</li>`).join('');
-    return `${lead}<ul>${items}</ul>`;
-  });
-  text = text.replace(/(^|\n)(\d+\. .+(?:\n\d+\. .+)*)/g, (_, lead, block) => {
-    const items = block.split('\n').map(l => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('');
-    return `${lead}<ol>${items}</ol>`;
-  });
-
-  // 6. Enlaces [texto](url).
-  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" rel="noopener noreferrer" target="_blank">$1</a>');
-
-  // 7. Tablas (simple).
-  text = text.replace(/((?:\|[^\n]+\|\n)+)/g, (block) => {
-    const lines = block.trim().split('\n').filter(l => l.trim());
-    if (lines.length < 2) return block;
-    const headers = lines[0].split('|').slice(1, -1).map(s => s.trim());
-    const align   = lines[1].split('|').slice(1, -1).map(s => s.trim());
-    if (!align.every(c => /^:?-+:?$/.test(c))) return block;
-    const rows = lines.slice(2).map(l => l.split('|').slice(1, -1).map(s => s.trim()));
-    const th = headers.map(h => `<th>${h}</th>`).join('');
-    const tr = rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
-    return `<table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`;
-  });
-
-  // 8. Párrafos (líneas sueltas separadas por doble salto).
-  text = text
-    .split(/\n{2,}/)
-    .map(p => /^<(h\d|ul|ol|pre|table|hr)/.test(p) ? p : `<p>${p.replace(/\n/g, '<br>')}</p>`)
-    .join('\n');
-
-  return text;
 }

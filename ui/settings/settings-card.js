@@ -25,7 +25,7 @@ import {
   BASES,
   CONTRAST_CHECKS,
 } from './preferences.js';
-import { escapeHtml } from '../escape.js';
+import { escapeHtml, escapeAttr } from '../html.js';
 import { mostrarAviso } from '../avisos.js';
 
 const formatRatio = (r) => r.toFixed(2).replace('.', ',');
@@ -139,7 +139,7 @@ export class SettingsCard {
         savedThemes.map(t => {
           const scheme = t.scheme ?? BASES[t.base]?.scheme ?? 'dark';
           const icon = scheme === 'light' ? '☀' : '🌙';
-          return `<option value="saved:${escapeHtml(t.id)}">${icon} ${escapeHtml(t.name)}</option>`;
+          return `<option value="saved:${escapeAttr(t.id)}">${icon} ${escapeHtml(t.name)}</option>`;
         }).join('')
       }</optgroup>`;
     this.$('#customBase').innerHTML = baseOptions + savedOptions;
@@ -349,13 +349,13 @@ export class SettingsCard {
       // como el nombre (el HTML lo vuelve a decodificar al leer el
       // atributo, así que `dataset.id` sigue siendo el mismo id).
       const deleteBtn = this.editMode
-        ? `<button type="button" class="settings-btn saved-theme-delete" data-id="${escapeHtml(theme.id)}"
-                 aria-label="Eliminar el tema «${escapeHtml(theme.name)}»">Eliminar</button>`
+        ? `<button type="button" class="settings-btn saved-theme-delete" data-id="${escapeAttr(theme.id)}"
+                 aria-label="Eliminar el tema «${escapeAttr(theme.name)}»">Eliminar</button>`
         : '';
       return `
         <div class="saved-theme-row">
           <label class="settings-option saved-theme-option">
-            <input type="radio" name="theme" value="saved:${escapeHtml(theme.id)}">
+            <input type="radio" name="theme" value="saved:${escapeAttr(theme.id)}">
             <span aria-hidden="true">${icon}</span>
             <span class="saved-theme-name">${escapeHtml(theme.name)} <small>(creado por ti)</small></span>
           </label>

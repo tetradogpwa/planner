@@ -10,6 +10,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { recargarApp } from './helpers/recargar-app.mjs';
+
 /** localStorage mínimo basado en Map: suficiente para context.js. */
 class MemoryStorage {
   constructor() { this.m = new Map(); }
@@ -94,23 +96,34 @@ test('las marcas se guardan en su propia clave del almacenamiento', () => {
   assert.deepEqual(marcas['tarea-9']['2026-11-25'], [2]);
 });
 
-test('las marcas sobreviven a recargar la app', async () => {
+test('las marcas sobreviven a recargar la app', () => {
   Context.Mark('tarea-3', '2026-12-01', 0);
 
-  // Recargar la app es volver a cargar el módulo: lee el
+  // Recargar la app es abrirla en un proceso nuevo: lee el
   // almacenamiento otra vez.
-  const recargado = await import('../../context.js?recarga=1');
-  assert.equal(recargado.Context.IsMarked('tarea-3', '2026-12-01', 0), true);
-  assert.equal(recargado.Context.IsMarked('tarea-3', '2026-12-02', 0), false);
+  const recargado = recargarApp(localStorage, `({
+    marcada: Context.IsMarked('tarea-3', '2026-12-01', 0),
+    otroDia: Context.IsMarked('tarea-3', '2026-12-02', 0),
+  })`);
+
+  assert.equal(recargado.marcada, true);
+  assert.equal(recargado.otroDia, false);
 });
 
-test('un almacenamiento de marcas que no se puede leer no rompe la app', async () => {
+test('un almacenamiento de marcas que no se puede leer no rompe la app', () => {
   localStorage.setItem('Context_MARKS', '{esto no es json');
-  const recargado = await import('../../context.js?recarga=2');
-  assert.equal(recargado.Context.IsMarked('tarea-3', '2026-12-01', 0), false);
-  // Y se puede seguir marcando con normalidad.
-  recargado.Context.Mark('tarea-4', '2026-12-03', 0);
-  assert.equal(recargado.Context.IsMarked('tarea-4', '2026-12-03', 0), true);
+
+  const recargado = recargarApp(localStorage, `(() => {
+    // Y se puede seguir marcando con normalidad.
+    Context.Mark('tarea-4', '2026-12-03', 0);
+    return {
+      antes: Context.IsMarked('tarea-3', '2026-12-01', 0),
+      nueva: Context.IsMarked('tarea-4', '2026-12-03', 0),
+    };
+  })()`);
+
+  assert.equal(recargado.antes, false);
+  assert.equal(recargado.nueva, true);
 });
 
 // ── Datos que no valen ────────────────────────────────────────────────

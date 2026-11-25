@@ -1,9 +1,11 @@
 // Pruebas de la capa de preferencias de apariencia (ui/settings/preferences.js).
-// Lógica pura: nada toca el DOM. preferences.js usa `window.matchMedia`
-// al importarse (línea 158) y `resolveAutoTarget` consulta
-// `localStorage` (vía `getSavedThemes`) cuando el destino es de un tema
-// guardado por el usuario. Por eso montamos un stub mínimo antes del
-// import dinámico. Solo preparamos entorno; no imitamos lógica.
+// preferences.js usa `window.matchMedia` al importarse (línea 158) y
+// `resolveAutoTarget` consulta `localStorage` (vía `getSavedThemes`)
+// cuando el destino es de un tema guardado por el usuario. Además,
+// `applyPreferences` toca el documento: el atributo `data-theme` de la
+// raíz, las variables CSS y el color de la barra del navegador. Por eso
+// montamos stubs mínimos antes del import dinámico. Solo preparamos
+// entorno; no imitamos lógica.
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -22,10 +24,38 @@ class MemoryStorage {
 
 const storage = new MemoryStorage();
 globalThis.localStorage = storage;
-// `prefers-color-scheme` por defecto en claro: el supervisor no necesita
-// distinguir los temas oficiales por esquema en estos tests.
-globalThis.window = {
-  matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+
+// `prefers-color-scheme`: por defecto el sistema está en claro (los
+// tests que no lo dicen no necesitan distinguir los temas oficiales por
+// esquema). El objeto es el mismo que guarda preferences.js, así que
+// estos tests pueden cambiar `matches` para simular el sistema en
+// oscuro.
+const mediaQuery = {
+  matches: false,
+  listeners: new Map(),
+  addEventListener(tipo, fn) { this.listeners.set(tipo, fn); },
+  removeEventListener(tipo, fn) {
+    if (this.listeners.get(tipo) === fn) this.listeners.delete(tipo);
+  },
+};
+globalThis.window = { matchMedia: () => mediaQuery };
+
+// El `document` de mentira: lo mínimo que usa `applyPreferences` (el
+// atributo `data-theme` de la raíz, las variables CSS y el color de la
+// barra del navegador).
+class Estilo {
+  constructor() { this.propiedades = new Map(); }
+  setProperty(nombre, valor) { this.propiedades.set(nombre, valor); }
+  removeProperty(nombre) { this.propiedades.delete(nombre); }
+  get(nombre) { return this.propiedades.get(nombre); }
+  [Symbol.iterator]() { return this.propiedades.keys(); }
+}
+
+const raiz = { dataset: {}, style: new Estilo() };
+const metaThemeColor = { atributos: {}, setAttribute(n, v) { this.atributos[n] = v; } };
+globalThis.document = {
+  documentElement: raiz,
+  querySelector: (sel) => (sel === 'meta[name="theme-color"]' ? metaThemeColor : null),
 };
 
 const {
@@ -34,12 +64,36 @@ const {
   suggestContrastFixes,
   resolveAutoTarget,
   savedThemeScheme,
+  autoTargetOptions,
+  getPreferences,
+  sanitizePreferences,
+  setPreferences,
+  customColors,
+  resolvedTheme,
+  applyPreferences,
+  getSavedThemes,
+  saveSavedThemes,
+  addSavedTheme,
+  applySavedTheme,
+  deleteSavedTheme,
   BASES,
   CONTRAST_CHECKS,
   SAVED_PREFIX,
+  THEMES,
+  AUTO_TARGETS,
+  SIZE_MIN,
+  SIZE_MAX,
+  NAV_ICON_MIN,
+  NAV_ICON_MAX,
 } = await import('../../ui/settings/preferences.js');
 
-beforeEach(() => storage.clear());
+beforeEach(() => {
+  storage.clear();
+  mediaQuery.matches = false;
+  raiz.dataset = {};
+  raiz.style = new Estilo();
+  metaThemeColor.atributos = {};
+});
 
 // Luminosidad HSL (mismo cálculo que preferences.js:hexToHsl) para
 // medir la cercanía entre una sugerencia y el color original.
@@ -299,3 +353,430 @@ for (const baseName of Object.keys(BASES)) {
     }
   });
 }
+
+// ── Lectura de las preferencias ────────────────────────────────────────
+
+test('getPreferences: sin nada guardado sale la configuración por defecto', () => {
+  const prefs = getPreferences();
+  assert.equal(prefs.theme, 'auto');
+  assert.equal(prefs.textScale, 100);
+  assert.deepEqual(prefs.sizes, {});
+  assert.equal(prefs.autoLight, 'light');
+  assert.equal(prefs.autoDark, 'dark');
+  assert.deepEqual(prefs.custom, {
+    base: 'dark', colors: {}, navIconSize: null, scheme: null, savedId: null,
+  });
+});
+
+test('getPreferences: lo que está guardado se devuelve', () => {
+  storage.setItem('a11yPrefs', JSON.stringify({
+    theme: 'dark', textScale: 130, sizes: { title: 120 },
+  }));
+
+  const prefs = getPreferences();
+  assert.equal(prefs.theme, 'dark');
+  assert.equal(prefs.textScale, 130);
+  assert.deepEqual(prefs.sizes, { title: 120 });
+});
+
+test('getPreferences: unas preferencias guardadas que no se pueden leer no rompen la app', () => {
+  storage.setItem('a11yPrefs', '{esto no es json');
+  assert.equal(getPreferences().theme, 'auto');
+});
+
+// ── Saneado de las preferencias ────────────────────────────────────────
+
+test('sanitizePreferences: un tema que no existe se descarta', () => {
+  assert.equal(sanitizePreferences({ theme: 'fantasma' }).theme, 'auto');
+  assert.equal(sanitizePreferences({ theme: 'dark' }).theme, 'dark');
+  assert.ok(THEMES.includes(sanitizePreferences({ theme: 'fantasma' }).theme));
+});
+
+test('sanitizePreferences: un tamaño de letra que no está en la lista se descarta', () => {
+  assert.equal(sanitizePreferences({ textScale: 120 }).textScale, 100);
+  assert.equal(sanitizePreferences({ textScale: 130 }).textScale, 130);
+});
+
+test('sanitizePreferences: los tamaños por parte fuera de rango se descartan', () => {
+  const prefs = sanitizePreferences({
+    sizes: { title: SIZE_MIN - 1, label: SIZE_MAX + 1, nav: 120 },
+  });
+  assert.deepEqual(prefs.sizes, { nav: 120 });
+});
+
+test('sanitizePreferences: una base de tema que no existe cae en la de por defecto', () => {
+  assert.equal(sanitizePreferences({ custom: { base: 'fantasma' } }).custom.base, 'dark');
+  assert.equal(sanitizePreferences({ custom: { base: 'light' } }).custom.base, 'light');
+});
+
+test('sanitizePreferences: solo se guardan los colores que son hex válidos', () => {
+  const prefs = sanitizePreferences({
+    custom: { colors: { text: '#AABBCC', bg: 'no es un color', inventado: '#ffffff' } },
+  });
+  assert.deepEqual(prefs.custom.colors, { text: '#aabbcc' });
+});
+
+test('sanitizePreferences: el tamaño del icono fuera de rango se descarta', () => {
+  assert.equal(sanitizePreferences({ custom: { navIconSize: NAV_ICON_MIN - 4 } }).custom.navIconSize, null);
+  assert.equal(sanitizePreferences({ custom: { navIconSize: NAV_ICON_MAX + 4 } }).custom.navIconSize, null);
+  assert.equal(sanitizePreferences({ custom: { navIconSize: 64 } }).custom.navIconSize, 64);
+});
+
+test('sanitizePreferences: el esquema del tema propio solo acepta claro u oscuro', () => {
+  assert.equal(sanitizePreferences({ custom: { scheme: 'light' } }).custom.scheme, 'light');
+  assert.equal(sanitizePreferences({ custom: { scheme: 'fantasma' } }).custom.scheme, null);
+});
+
+test('sanitizePreferences: un savedId que no existe se descarta', () => {
+  assert.equal(sanitizePreferences({ custom: { savedId: 'no-existe' } }).custom.savedId, null);
+
+  storage.setItem('savedCustomThemes', JSON.stringify([
+    { id: 'a1', name: 'Mío', base: 'dark' },
+  ]));
+  assert.equal(sanitizePreferences({ custom: { savedId: 'a1' } }).custom.savedId, 'a1');
+});
+
+test('sanitizePreferences: un destino automático que no vale cae en el de por defecto', () => {
+  const prefs = sanitizePreferences({ autoLight: 'fantasma', autoDark: 'fantasma' });
+  assert.equal(prefs.autoLight, 'light');
+  assert.equal(prefs.autoDark, 'dark');
+  assert.ok(AUTO_TARGETS.includes(prefs.autoLight));
+  assert.ok(AUTO_TARGETS.includes(prefs.autoDark));
+});
+
+test('sanitizePreferences: un destino automático que apunta a un tema guardado se conserva', () => {
+  storage.setItem('savedCustomThemes', JSON.stringify([
+    { id: 'a1', name: 'Claro', base: 'light', scheme: 'light' },
+  ]));
+  assert.equal(sanitizePreferences({ autoLight: SAVED_PREFIX + 'a1' }).autoLight, SAVED_PREFIX + 'a1');
+});
+
+// ── Escritura de las preferencias ──────────────────────────────────────
+
+test('setPreferences: guarda las preferencias y las aplica', () => {
+  setPreferences({ theme: 'dark' });
+
+  assert.equal(getPreferences().theme, 'dark');
+  assert.equal(raiz.dataset.theme, 'dark', 'el tema se aplica a la raíz');
+});
+
+test('setPreferences: lo que no se cambia se conserva', () => {
+  setPreferences({ theme: 'dark' });
+  setPreferences({ textScale: 130 });
+
+  const prefs = getPreferences();
+  assert.equal(prefs.theme, 'dark');
+  assert.equal(prefs.textScale, 130);
+});
+
+test('setPreferences: en el almacenamiento quedan el esquema y las variables CSS', () => {
+  setPreferences({ theme: 'contrast-dark' });
+
+  const guardado = JSON.parse(storage.getItem('a11yPrefs'));
+  assert.equal(guardado.scheme, 'dark');
+  assert.equal(guardado.vars['--bg'], BASES['contrast-dark'].colors.bg);
+});
+
+// ── Los colores del tema propio ───────────────────────────────────────
+
+test('customColors: son los colores de la base con los cambios del usuario', () => {
+  const colores = customColors({ base: 'light', colors: { text: '#123456' } });
+  assert.equal(colores.text, '#123456');
+  assert.equal(colores.bg, BASES.light.colors.bg);
+});
+
+// ── El tema que se aplica ──────────────────────────────────────────────
+
+test('resolvedTheme: un tema claro u oscuro se queda como está', () => {
+  assert.equal(resolvedTheme('light'), 'light');
+  assert.equal(resolvedTheme('dark'), 'dark');
+});
+
+test('resolvedTheme: el alto contraste devuelve su esquema', () => {
+  assert.equal(resolvedTheme('contrast-dark'), 'dark');
+  assert.equal(resolvedTheme('contrast-light'), 'light');
+});
+
+test('resolvedTheme: en automático sigue al sistema', () => {
+  mediaQuery.matches = false;
+  assert.equal(resolvedTheme('auto'), 'light');
+  mediaQuery.matches = true;
+  assert.equal(resolvedTheme('auto'), 'dark');
+});
+
+test('resolvedTheme: en automático, el esquema es el del sistema', () => {
+  // El destino automático NO puede cambiar el esquema: solo puede ser un
+  // tema del esquema del sistema (es lo que comprueba el saneado de las
+  // preferencias, ver la prueba siguiente). Por eso el esquema que se
+  // aplica es siempre el del sistema; lo que el destino sí cambia son
+  // los colores (prueba de más abajo).
+  storage.setItem('a11yPrefs', JSON.stringify({
+    theme: 'auto', autoLight: 'contrast-light', autoDark: 'contrast-dark',
+  }));
+
+  mediaQuery.matches = false;
+  assert.equal(resolvedTheme('auto'), 'light');
+  mediaQuery.matches = true;
+  assert.equal(resolvedTheme('auto'), 'dark');
+});
+
+test('sanitizePreferences: el destino automático siempre es del esquema del sistema', () => {
+  // Un destino del esquema contrario no vale (si valiera, el tema que se
+  // aplica en automático podría no ser el del sistema).
+  const prefs = sanitizePreferences({ autoLight: 'contrast-dark', autoDark: 'contrast-light' });
+  assert.equal(prefs.autoLight, 'light', 'un destino oscuro no vale para el sistema en claro');
+  assert.equal(prefs.autoDark, 'dark', 'un destino claro no vale para el sistema en oscuro');
+});
+
+test('en automático, el destino elegido es el que se aplica', () => {
+  // El destino automático se nota en los COLORES: con el sistema en
+  // claro y el destino «alto contraste claro», se aplican los colores
+  // del alto contraste, no los del tema claro normal.
+  mediaQuery.matches = false;
+  applyPreferences(prefsDePrueba({
+    theme: 'auto', autoLight: 'contrast-light', autoDark: 'contrast-dark',
+  }));
+
+  assert.equal(raiz.dataset.theme, 'light');
+  assert.equal(raiz.style.get('--bg'), BASES['contrast-light'].colors.bg,
+    'se aplican los colores del destino automático');
+  assert.notEqual(raiz.style.get('--bg'), BASES.light.colors.bg,
+    'no son los colores del tema claro normal');
+});
+
+test('en automático, se puede seguir un tema guardado por el usuario', () => {
+  storage.setItem('savedCustomThemes', JSON.stringify([
+    { id: 'a1', name: 'Mío claro', base: 'light', scheme: 'light', colors: { text: '#123456' } },
+  ]));
+
+  mediaQuery.matches = false;
+  applyPreferences(prefsDePrueba({
+    theme: 'auto', autoLight: SAVED_PREFIX + 'a1', autoDark: 'dark',
+  }));
+
+  assert.equal(raiz.style.get('--text'), '#123456',
+    'se aplican los colores del tema guardado por el usuario');
+  assert.equal(raiz.style.get('--bg'), BASES.light.colors.bg,
+    'y los de su base');
+});
+
+// ── La aplicación de las preferencias ──────────────────────────────────
+
+/** unas preferencias válidas, para las pruebas de `applyPreferences`. */
+const prefsDePrueba = (cambios = {}) => ({
+  theme: 'dark', textScale: 100, sizes: {}, autoLight: 'light', autoDark: 'dark',
+  custom: { base: 'dark', colors: {}, navIconSize: null, scheme: null, savedId: null },
+  ...cambios,
+});
+
+test('applyPreferences: aplica el esquema, el tamaño de letra y las variables', () => {
+  applyPreferences(prefsDePrueba({ theme: 'contrast-dark', textScale: 130, sizes: { title: 120 } }));
+
+  assert.equal(raiz.dataset.theme, 'dark');
+  assert.equal(raiz.style.fontSize, '130%');
+  assert.equal(raiz.style.get('--fs-title'), '1.2');
+  assert.equal(raiz.style.get('--bg'), BASES['contrast-dark'].colors.bg);
+});
+
+test('applyPreferences: quita las variables que había puesto el arranque', () => {
+  raiz.style.setProperty('--fs-title', '2');
+
+  applyPreferences(prefsDePrueba({ theme: 'light' }));
+
+  assert.equal(raiz.style.get('--fs-title'), undefined, 'la variable vieja está quitada');
+});
+
+test('applyPreferences: el color de la barra del navegador es el del panel del tema', () => {
+  applyPreferences(prefsDePrueba({ theme: 'contrast-dark' }));
+  assert.equal(metaThemeColor.atributos.content, BASES['contrast-dark'].colors.panel);
+});
+
+// ── Los temas guardados por el usuario ─────────────────────────────────
+
+test('getSavedThemes: sin nada guardado no hay ninguno', () => {
+  assert.deepEqual(getSavedThemes(), []);
+});
+
+test('getSavedThemes: una lista que no se puede leer se ignora', () => {
+  storage.setItem('savedCustomThemes', '{esto no es json');
+  assert.deepEqual(getSavedThemes(), []);
+
+  storage.setItem('savedCustomThemes', '{"no":"es una lista"}');
+  assert.deepEqual(getSavedThemes(), []);
+});
+
+test('getSavedThemes: los temas sin nombre se descartan', () => {
+  storage.setItem('savedCustomThemes', JSON.stringify([
+    { id: 'a1', name: '   ' },
+    { id: 'a2', name: 'Mío' },
+  ]));
+
+  const temas = getSavedThemes();
+  assert.equal(temas.length, 1);
+  assert.equal(temas[0].name, 'Mío');
+});
+
+test('saveSavedThemes: guarda la lista y la devuelve', () => {
+  const lista = [{ id: 'a1', name: 'Mío', base: 'dark', colors: {} }];
+
+  assert.equal(saveSavedThemes(lista), lista);
+  assert.equal(JSON.parse(storage.getItem('savedCustomThemes')).length, 1);
+});
+
+test('addSavedTheme: guarda un tema nuevo con sus colores', () => {
+  const lista = addSavedTheme('Mío', { text: '#123456' }, 'light');
+
+  assert.equal(lista.length, 1);
+  assert.equal(lista[0].name, 'Mío');
+  assert.equal(lista[0].colors.text, '#123456');
+  assert.equal(lista[0].scheme, 'light');
+  assert.equal(getSavedThemes().length, 1);
+});
+
+test('addSavedTheme: un nombre vacío se rechaza', () => {
+  assert.throws(() => addSavedTheme('   ', {}, null), /no puede estar vacío/);
+});
+
+test('addSavedTheme: guardar un tema con el mismo nombre lo sobreescribe', () => {
+  const primero = addSavedTheme('Mío', { text: '#111111' }, 'light');
+  const segundo = addSavedTheme('Mío', { text: '#222222' }, 'light');
+
+  assert.equal(segundo.length, 1);
+  assert.equal(segundo[0].id, primero[0].id, 'conserva el identificador');
+  assert.equal(segundo[0].colors.text, '#222222');
+});
+
+test('addSavedTheme: el tema guardado pasa a ser el activo', () => {
+  const lista = addSavedTheme('Mío', {}, 'dark');
+  assert.equal(getPreferences().custom.savedId, lista[0].id);
+});
+
+test('applySavedTheme: aplica el tema guardado', () => {
+  const lista = addSavedTheme('Mío', { text: '#123456' }, 'light');
+
+  const tema = applySavedTheme(lista[0].id);
+  assert.equal(tema.id, lista[0].id);
+
+  const prefs = getPreferences();
+  assert.equal(prefs.custom.savedId, lista[0].id);
+  assert.equal(prefs.custom.colors.text, '#123456');
+  assert.equal(prefs.custom.base, tema.base);
+});
+
+test('applySavedTheme: un id que no existe no hace nada', () => {
+  assert.equal(applySavedTheme('no-existe'), null);
+});
+
+test('deleteSavedTheme: borra el tema', () => {
+  const lista = addSavedTheme('Mío', {}, 'dark');
+
+  const siguiente = deleteSavedTheme(lista[0].id);
+  assert.equal(siguiente.length, 0);
+  assert.deepEqual(getSavedThemes(), []);
+});
+
+test('deleteSavedTheme: al borrar el tema activo se quita su referencia', () => {
+  const lista = addSavedTheme('Mío', {}, 'dark');
+  // El tema guardado pasa a ser el activo (como cuando el usuario lo
+  // elige en la lista de temas guardados).
+  setPreferences({
+    theme: 'custom',
+    custom: { ...getPreferences().custom, savedId: lista[0].id },
+  });
+  assert.equal(getPreferences().custom.savedId, lista[0].id, 'el tema guardado es el activo');
+
+  deleteSavedTheme(lista[0].id);
+
+  assert.deepEqual(getSavedThemes(), [], 'el tema ya no está en la lista');
+  assert.equal(getPreferences().custom.savedId, null,
+    'las preferencias ya no apuntan a un tema que no existe');
+  // Y el tema activo no cambia. OJO: preferences.js tiene un bloque que,
+  // al borrar el tema activo, devuelve la app a «Automático» (líneas
+  // 718-720), pero no se puede llegar a él: al leer las preferencias se
+  // descarta el identificador de un tema que ya no está en la lista
+  // (sanitizePreferences), así que la comparación `savedId === id` nunca
+  // es cierta. Devolver la app a «Automático» es un cambio de la app, no
+  // de sus pruebas: aquí se deja constancia de lo que hay hoy.
+  assert.equal(getPreferences().theme, 'custom',
+    'el tema activo sigue siendo el que había');
+});
+
+// ── Las opciones del modo automático ───────────────────────────────────
+
+test('autoTargetOptions: en claro salen los temas claros', () => {
+  const valores = autoTargetOptions('light').map(o => o.value);
+
+  assert.ok(valores.includes('light'));
+  assert.ok(valores.includes('contrast-light'));
+  assert.ok(!valores.includes('dark'), 'los oscuros no son para el sistema en claro');
+});
+
+test('autoTargetOptions: los temas guardados aparecen con su nombre', () => {
+  storage.setItem('savedCustomThemes', JSON.stringify([
+    { id: 'a1', name: 'Mío claro', base: 'light', scheme: 'light' },
+    { id: 'a2', name: 'Mío oscuro', base: 'dark', scheme: 'dark' },
+  ]));
+
+  const opciones = autoTargetOptions('light');
+  const guardado = opciones.find(o => o.value === SAVED_PREFIX + 'a1');
+
+  assert.ok(guardado, 'el tema guardado aparece en las opciones');
+  assert.match(guardado.label, /Mío claro/);
+  assert.ok(!opciones.some(o => o.value === SAVED_PREFIX + 'a2'), 'el oscuro no');
+});
+
+// ── El sistema cambia de tema ──────────────────────────────────────────
+
+test('cuando el sistema pasa a oscuro, se aplican las preferencias si el tema es automático', () => {
+  const alCambiar = mediaQuery.listeners.get('change');
+  assert.ok(alCambiar, 'preferences.js tiene que enterarse de los cambios del sistema');
+
+  storage.setItem('a11yPrefs', JSON.stringify({ theme: 'auto' }));
+  mediaQuery.matches = true;
+  alCambiar();
+
+  assert.equal(raiz.dataset.theme, 'dark');
+});
+
+test('si el tema no es automático, un cambio del sistema no toca nada', () => {
+  storage.setItem('a11yPrefs', JSON.stringify({ theme: 'light' }));
+
+  mediaQuery.matches = true;
+  mediaQuery.listeners.get('change')();
+
+  assert.equal(raiz.dataset.theme, undefined, 'no se ha aplicado ningún tema');
+});
+
+test('autoTargetOptions: en oscuro salen los temas oscuros', () => {
+  const valores = autoTargetOptions('dark').map(o => o.value);
+
+  assert.ok(valores.includes('dark'));
+  assert.ok(valores.includes('contrast-dark'));
+  assert.ok(!valores.includes('light'), 'los claros no son para el sistema en oscuro');
+});
+
+test('applyPreferences: un tema propio se aplica con su esquema y sus colores', () => {
+  applyPreferences(prefsDePrueba({
+    theme: 'custom',
+    custom: { base: 'light', colors: { text: '#123456' }, navIconSize: 72, scheme: null, savedId: null },
+  }));
+
+  assert.equal(raiz.dataset.theme, 'light', 'el esquema sale de la base del tema');
+  assert.equal(raiz.style.get('--text'), '#123456', 'los colores del usuario se aplican');
+  assert.equal(raiz.style.get('--nav-icon-size'), '72px');
+});
+
+test('applyPreferences: un tema propio con esquema elegido manda sobre el de su base', () => {
+  applyPreferences(prefsDePrueba({
+    theme: 'custom',
+    custom: { base: 'light', colors: {}, navIconSize: null, scheme: 'dark', savedId: null },
+  }));
+
+  assert.equal(raiz.dataset.theme, 'dark');
+});
+
+test('applyPreferences: un tema que no existe sigue al sistema', () => {
+  mediaQuery.matches = true;
+  applyPreferences(prefsDePrueba({ theme: 'fantasma' }));
+  assert.equal(raiz.dataset.theme, 'dark');
+});

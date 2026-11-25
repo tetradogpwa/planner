@@ -11,7 +11,7 @@
 // documentos: si cambias un texto y su fecha, se vuelve a pedir.
 // ────────────────────────────────────────────────────────────────────
 
-import { renderMarkdown } from '../legal/legal-card.js';
+import { renderMarkdown } from '../legal/legal-markdown.js';
 
 const STORAGE_KEY = 'termsAccepted';
 

@@ -1,6 +1,6 @@
 import { GetNWeeks, today } from '../../back/calendar.js';
 import { DAY_NAMES } from '../../back/dayNames.js';
-import { escapeHtml } from '../escape.js';
+import { escapeHtml } from '../html.js';
 import { slotLabel } from '../slotLabel.js';
 
 export class PrintCard {

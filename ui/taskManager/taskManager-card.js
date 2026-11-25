@@ -1,6 +1,6 @@
 import { AddTaskCard }  from './addTask/addTask-card.js';
 import { EditTaskCard } from './editTask/editTask-card.js';
-import { escapeHtml }   from '../escape.js';
+import { escapeHtml, escapeAttr } from '../html.js';
 import { taskSummary }  from '../../back/taskSummary.js';
 import { mostrarAviso } from '../avisos.js';
 import { emitChanged }  from '../../api.js';
@@ -102,8 +102,8 @@ export class TaskManagerCard {
       // el mismo que usa la API. Nunca se enseña el nombre de la clase.
       const resumen = taskSummary(t);
       row.innerHTML = `
-        <button class="btn-trash" title="Eliminar" aria-label="Eliminar la tarea «${escapeHtml(t.Name)}»">🗑️</button>
-        <button class="btn-edit"  title="Editar"    aria-label="Editar la tarea «${escapeHtml(t.Name)}»">✏️</button>
+        <button class="btn-trash" title="Eliminar" aria-label="Eliminar la tarea «${escapeAttr(t.Name)}»">🗑️</button>
+        <button class="btn-edit"  title="Editar"    aria-label="Editar la tarea «${escapeAttr(t.Name)}»">✏️</button>
         <span class="task-name">${escapeHtml(t.Name)}</span>
         ${resumen ? `<span class="task-type">${escapeHtml(resumen)}</span>` : ''}
       `;

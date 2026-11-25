@@ -13,6 +13,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { recargarApp } from './helpers/recargar-app.mjs';
+
 /** localStorage mínimo basado en Map: suficiente para context.js. */
 class MemoryStorage {
   constructor() { this.m = new Map(); }
@@ -54,13 +56,13 @@ test('las tareas migradas se guardan ya con su id', () => {
   assert.equal(guardado[1].id, Context.Tasks[1].Id);
 });
 
-test('el id es el mismo al volver a abrir la app', async () => {
-  // Se carga context.js otra vez (con otra URL: es otra instancia del
-  // módulo) leyendo el mismo localStorage, como si la app se cerrara
-  // y se volviera a abrir. Los ids tienen que ser los mismos: si en
+test('el id es el mismo al volver a abrir la app', () => {
+  // Se cierra la app y se vuelve a abrir (en un proceso nuevo): se lee
+  // el almacenamiento otra vez. Los ids tienen que ser los mismos: si en
   // cada arranque se asignara uno nuevo, nada podría referirse a una
   // tarea por su id.
-  const { Context: Otra } = await import(`../../context.js?v=${Date.now()}`);
-  assert.deepEqual(Otra.Tasks.map(t => t.Id), Context.Tasks.map(t => t.Id));
-  assert.deepEqual(Otra.Tasks.map(t => t.Name), ['Agua', 'Gimnasio']);
+  const recargado = recargarApp(storage, 'Context.Tasks.map(t => ({ id: t.Id, name: t.Name }))');
+
+  assert.deepEqual(recargado.map(t => t.id), Context.Tasks.map(t => t.Id));
+  assert.deepEqual(recargado.map(t => t.name), ['Agua', 'Gimnasio']);
 });
