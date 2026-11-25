@@ -24,6 +24,10 @@
 //   empezar  [T-001]           MiniMax toma la tarea (o la siguiente pendiente):
 //                              foto, estado en_curso e instrucciones completas
 //   terminar T-001             MiniMax la entrega: estado en_revision
+//   reto     T-001 --dificultad fácil|media|difícil --delicadeza baja|media|alta --motivo M
+//                              evaluación de MiniMax (tools/minimax/evaluar.sh)
+//   sin-reto [--todas]         tareas abiertas que MiniMax aún no ha evaluado
+//   estado-md                  reescribe STATUS.md (código 1 si no cambia nada)
 //
 // Estados: pendiente → en_curso → en_revision → hecha  (o cancelada)
 // ────────────────────────────────────────────────────────────────────
@@ -32,6 +36,7 @@ import { readFileSync, writeFileSync, mkdirSync, renameSync, existsSync, rmSync 
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { generarEstado, contenidoSinFecha, DIFICULTADES, DELICADEZAS } from './estado-md.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const STORE_DIR = join(ROOT, '.tasks');
@@ -123,7 +128,8 @@ function workingTree(tag) {
   }
 }
 
-const EXCLUDE = ['--', '.', ':(exclude).tasks'];
+// STATUS.md lo publica cola.sh aparte: no forma parte de ninguna tarea.
+const EXCLUDE = ['--', '.', ':(exclude).tasks', ':(exclude)STATUS.md'];
 
 // ── Formato ─────────────────────────────────────────────────────────
 
@@ -349,6 +355,45 @@ switch (cmd) {
     break;
   }
 
+  case 'reto': {
+    // La evaluación de MiniMax (tools/minimax/evaluar.sh): qué reto
+    // supone la tarea. Se muestra en STATUS.md.
+    const task = find(db, rest[0]);
+    const dificultad = String(opts.dificultad ?? '').toLowerCase();
+    const delicadeza = String(opts.delicadeza ?? '').toLowerCase();
+    if (!DIFICULTADES.includes(dificultad)) fail(`--dificultad no válida. Usa: ${DIFICULTADES.join(', ')}`);
+    if (!DELICADEZAS.includes(delicadeza)) fail(`--delicadeza no válida. Usa: ${DELICADEZAS.join(', ')}`);
+    const motivo = requireText(opts.motivo, '--motivo');
+    task.reto = { dificultad, delicadeza, motivo, at: now() };
+    log(task, 'reto evaluado', `${dificultad} · delicadeza ${delicadeza}`);
+    save(db);
+    console.log(`${task.id}: ${dificultad} · delicadeza ${delicadeza}`);
+    break;
+  }
+
+  case 'sin-reto': {
+    // Tareas abiertas que MiniMax aún no ha evaluado (--todas: todas las abiertas).
+    db.tasks
+      .filter(t => OPEN.includes(t.status) && (opts.todas || !t.reto))
+      .forEach(t => console.log(t.id));
+    break;
+  }
+
+  case 'estado-md': {
+    // Reescribe STATUS.md. Sale con 0 si ha cambiado algo (además de
+    // la fecha) y con 1 si no: así cola.sh solo publica lo nuevo.
+    const destino = join(ROOT, typeof opts.salida === 'string' ? opts.salida : 'STATUS.md');
+    const nuevo = generarEstado(db);
+    const antes = existsSync(destino) ? readFileSync(destino, 'utf8') : '';
+    if (contenidoSinFecha(antes) === contenidoSinFecha(nuevo)) {
+      console.log('STATUS.md sin cambios.');
+      process.exit(1);
+    }
+    writeFileSync(destino, nuevo);
+    console.log('STATUS.md actualizado.');
+    break;
+  }
+
   case 'terminar': {
     const task = find(db, rest[0]);
     if (task.status !== 'en_curso') fail(`${task.id} no está en curso (está ${STATE_LABEL[task.status].toLowerCase()}).`);
@@ -360,6 +405,6 @@ switch (cmd) {
   }
 
   default:
-    console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 28).join('\n').replace(/^\/\/ ?/gm, ''));
+    console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split("\n").slice(1, 32).join('\n').replace(/^\/\/ ?/gm, ''));
     process.exit(cmd ? 2 : 0);
 }

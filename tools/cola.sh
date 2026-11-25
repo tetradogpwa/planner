@@ -27,7 +27,13 @@
 #   bash tools/cola.sh --dry-run          → mostrar qué haría
 #   bash tools/cola.sh --ayuda
 #
-# Nunca hace `git push`: los commits se quedan en la máquina.
+# STATUS.md: antes de cada tarea, MiniMax evalúa las tareas abiertas que
+# aún no tienen evaluación (tools/minimax/evaluar.sh) y el script
+# reescribe STATUS.md (`tasks.mjs estado-md`). Si ha cambiado, lo
+# commitea aparte ("STATUS: …") y hace `git push` de main: el usuario
+# lo pidió así (25-nov-2026) y acepta que con él se suban también los
+# commits de las tareas. Sin red, el push falla con un aviso y la cola
+# sigue. PLANNER_SIN_PUSH=1 lo desactiva.
 # ────────────────────────────────────────────────────────────────────
 set -uo pipefail
 
@@ -110,7 +116,7 @@ arbol_actual() {
 
 # Diff de un árbol a otro, sin .tasks/.
 diff_entre() {
-  git diff "$1" "$2" -- . ':(exclude).tasks'
+  git diff "$1" "$2" -- . ':(exclude).tasks' ':(exclude)STATUS.md'
 }
 
 # ── Comprobación de la configuración ────────────────────────────────
@@ -329,7 +335,7 @@ aprobar_y_commitear() {  # aprobar_y_commitear <id>
   [[ -z "$base" ]] && base="$(campo "$id" baseTree)"
   [[ -z "$base" ]] && { say "   ✗ La tarea no tiene foto del árbol: no se puede commitear"; return 1; }
   actual="$(arbol_actual)"
-  mapfile -t ficheros < <(git diff --name-only "$base" "$actual" -- . ':(exclude).tasks')
+  mapfile -t ficheros < <(git diff --name-only "$base" "$actual" -- . ':(exclude).tasks' ':(exclude)STATUS.md')
   if [[ "${#ficheros[@]}" -eq 0 ]]; then
     say "   ✗ La tarea no ha cambiado ningún fichero: no hay nada que commitear"
     return 1
@@ -347,6 +353,36 @@ aprobar_y_commitear() {  # aprobar_y_commitear <id>
   return 0
 }
 
+# ── STATUS.md ───────────────────────────────────────────────────────
+# MiniMax evalúa las tareas nuevas y STATUS.md se publica en GitHub.
+# Nada de esto puede parar la cola: si falla, se avisa y se sigue.
+
+evaluar_nuevas() {
+  [[ -z "$($TASKS sin-reto)" ]] && return 0
+  antes_de_gastar "evaluación de tareas"
+  local salida rc
+  salida="$(bash tools/minimax/evaluar.sh 2>&1)"; rc=$?
+  echo "$salida" | sed 's/^/   /' | tee -a "$LOG"
+  [[ $rc -eq 0 ]] && saldo_ok
+  return 0
+}
+
+publicar_estado() {  # publicar_estado <motivo>
+  $TASKS estado-md >> "$LOG" 2>&1 || return 0     # 1 = sin cambios
+  git add -- STATUS.md >> "$LOG" 2>&1
+  if ! git commit -q -m "STATUS: $1" -- STATUS.md >> "$LOG" 2>&1; then
+    say "   ⚠ No se pudo commitear STATUS.md (ver $LOG)"
+    return 0
+  fi
+  [[ "${PLANNER_SIN_PUSH:-0}" == "1" ]] && return 0
+  if timeout 120 git push -q origin HEAD:main >> "$LOG" 2>&1; then
+    say "   ↑ STATUS.md publicado en GitHub ($1)"
+  else
+    say "   ⚠ No se pudo subir a GitHub (ver $LOG); se reintentará en la próxima actualización"
+  fi
+  return 0
+}
+
 recuperar
 
 while :; do
@@ -359,6 +395,9 @@ while :; do
   id="$(elegir en_revision)" || id=""
   [[ -z "$id" ]] && { id="$(elegir pendiente)" || id=""; }
   [[ -z "$id" ]] && break
+
+  evaluar_nuevas
+  publicar_estado "$id: $(estado "$id" | tr '_' ' ')"
 
   est="$(estado "$id")"
   if [[ "$est" == "pendiente" ]]; then
@@ -403,6 +442,7 @@ while :; do
         $TASKS status "$id" hecha --note "Aprobada por la revisión automática; pruebas en verde y commit hecho." >> "$LOG" 2>&1
         say "✓ [$id] HECHA"
         CERRADAS=$((CERRADAS+1))
+        publicar_estado "$id hecha"
         ;;
       2)
         $TASKS feedback "$id" --note "La revisión automática aprobó el trabajo, pero el commit falló (mira .tasks/logs/cola-*.log). Vuelve a hacer el cambio: el commit lo hace el script." >> "$LOG" 2>&1
@@ -445,6 +485,7 @@ while :; do
   fi
 done
 
+publicar_estado "cola terminada"
 say ""
 say "════ Cola autónoma terminada"
 say "  Tareas cerradas: $CERRADAS"

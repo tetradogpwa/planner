@@ -51,7 +51,7 @@ En corto:
   tarea es motivo de rechazo.
 - No ejecutes `git commit`, `git reset`, `git checkout`, `git stash` ni
   nada que cambie el historial o deshaga trabajo.
-- No toques `.tasks/`, `.env`, `.claude/` ni `CLAUDE.md`. La cola de
+- No toques `.tasks/`, `.env`, `.claude/`, `CLAUDE.md` ni `STATUS.md` (lo genera la cola). La cola de
   tareas la gestiona el supervisor.
 - No inventes claves, IDs de anuncios ni datos legales.
 - Si la tarea es ambigua, elige la interpretación más conservadora y

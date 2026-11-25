@@ -30,6 +30,15 @@ los comentarios y la documentación van en **español**.
   (`tools/minimax/sin-saldo.sh`, código 75), se repite tras esa espera
   (o tras 5, 10, 20 y luego 30 min si no se puede consultar la cuota).
   Mientras espera, `.tasks/logs/espera-saldo` dice hasta cuándo.
+- **`STATUS.md` (en la raíz y en GitHub) dice qué reto supone cada tarea.**
+  Antes de cada tarea, `cola.sh` pide a MiniMax M3 que evalúe las
+  tareas abiertas sin evaluar (`tools/minimax/evaluar.sh`: dificultad
+  fácil/media/difícil, delicadeza baja/media/alta y el motivo, guardados
+  con `tasks.mjs reto`), regenera `STATUS.md` (`tasks.mjs estado-md`) y,
+  si cambia, lo commitea aparte (`STATUS: …`) y hace `git push` de main
+  (lo pidió el usuario; `PLANNER_SIN_PUSH=1` lo desactiva). `STATUS.md`
+  nunca entra en el commit de una tarea. Para reevaluarlas todas:
+  `bash tools/minimax/evaluar.sh --todas`.
 - **Claude (supervisor) no desarrolla ni revisa tarea a tarea.** Su papel:
   1. registrar las peticiones del usuario como tareas (skill
      `registrar-tarea`), bien especificadas y con criterios comprobables;
@@ -55,7 +64,7 @@ los comentarios y la documentación van en **español**.
   commits a mano. Si Claude cambia herramientas o documentación mientras
   la cola corre, lo commitea aparte y enseguida (`cola.sh` usa `HEAD`
   como foto: lo que quede sin commitear se colaría en el commit de la
-  tarea en curso). Nadie hace `git push` sin que lo pida el usuario.
+  tarea en curso). Nadie hace `git push` sin que lo pida el usuario, salvo el de `STATUS.md` que hace `cola.sh` (sube main entero).
 
 ## Estructura
 
