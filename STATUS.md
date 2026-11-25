@@ -5,22 +5,21 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 16:23 UTC
+Actualizado: 2026-11-25 16:47 UTC
 
 ## Ahora
 
-**T-063 · Aislar el CSS de cada tarjeta**
+**T-069 · 08-mcp: «el puerto se cierra» exige que la app diga que paró**
 
-- Estado: Siguiente en la cola · intentos: 4 · devoluciones del revisor: 4
-- Dificultad: 🔴 difícil · Delicadeza: 🟡 media
-- Reto: Aislar los estilos de cada tarjeta en varios ficheros CSS, con tres devoluciones del revisor por comentarios de cabecera erróneos. Si algo se cuela, el interruptor Gestionar cambia de aspecto, pero la app sigue funcionando.
-- ⚠ Va por su intento 4 de 4: si no sale, se quedará para que la mire el supervisor.
+- Estado: Siguiente en la cola · intentos: 0 · devoluciones del revisor: 0
+- Dificultad: 🟡 media · Delicadeza: 🟢 baja
+- Reto: Solo endurece una prueba de la app para que exija respuesta del servidor de asistentes antes y después de parar. Si la prueba está mal, no cambia la app.
 
 ## Resumen
 
-- Abiertas: 34 (0 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 25 media · 🔴 2 difícil
-- Delicadeza: 🟢 6 baja · 🟡 21 media · 🔴 7 alta
+- Abiertas: 34 (1 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 25 media · 🔴 1 difícil
+- Delicadeza: 🟢 6 baja · 🟡 20 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -30,7 +29,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-063 | Pendiente | 🔴 difícil | 🟡 media | 4 | Aislar el CSS de cada tarjeta |
 | T-069 | Pendiente | 🟡 media | 🟢 baja | 0 | 08-mcp: «el puerto se cierra» exige que la app diga que paró |
 | T-070 | Pendiente | 🟡 media | 🟢 baja | 0 | 11-edicion-gratuita: un fetch fallido no prueba que un documento no se distribuye |
 | T-071 | Pendiente | 🟡 media | 🟡 media | 0 | 12-legal: el aviso del navegador se comprueba con contraste WCAG real |
@@ -64,14 +62,9 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-102 | Pendiente | 🔴 difícil | 🔴 alta | 0 | MCP en Rust: arrancar y parar el servidor por turnos |
 | T-103 | Pendiente | 🟢 fácil | 🟡 media | 0 | Una sola función para bloquear la app detrás de una pantalla |
 | T-104 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de términos atrapa el foco y bloquea la app de detrás |
+| T-105 | Pendiente | — sin evaluar | — | 0 | El CI encuentra el hash del frontend en el binario |
 
 ## El reto de cada tarea
-
-### T-063 · Aislar el CSS de cada tarjeta
-
-🔴 difícil · delicadeza 🟡 media
-
-Aislar los estilos de cada tarjeta en varios ficheros CSS, con tres devoluciones del revisor por comentarios de cabecera erróneos. Si algo se cuela, el interruptor Gestionar cambia de aspecto, pero la app sigue funcionando.
 
 ### T-069 · 08-mcp: «el puerto se cierra» exige que la app diga que paró
 
@@ -271,10 +264,16 @@ La lógica que deja la app de detrás sin poder recibir el ratón ni el teclado 
 
 La pantalla de términos atrapa el teclado y bloquea la app de detrás. Es un añadido pequeño, pero si sale mal el foco se pierde y la app queda inservible con el teclado.
 
+### T-105 · El CI encuentra el hash del frontend en el binario
+
+— sin evaluar · delicadeza — · sigue a T-040
+
+Aún no la ha evaluado MiniMax.
+
 ## Últimas terminadas
 
+- T-063 · Aislar el CSS de cada tarjeta (2026-11-25, 5 intentos)
 - T-060 · Pruebas de context.js, ui/a11y.js y preferences.js (2026-11-25, 4 intentos)
 - T-062 · Una base común para las tarjetas: errores visibles y plantillas en caché (2026-11-25, 4 intentos)
 - T-061 · Un solo escapado de HTML y el Markdown legal con pruebas (2026-11-25, 1 intento)
 - T-059 · Toda navegación de las E2E espera al pintado y sin esperas fijas (2026-11-25, 4 intentos)
-- T-057 · Textos y nombres coherentes en la interfaz (2026-11-25, 3 intentos)
