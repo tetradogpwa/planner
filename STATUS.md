@@ -5,16 +5,16 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 16:09 UTC
+Actualizado: 2026-11-25 16:23 UTC
 
 ## Ahora
 
 **T-063 · Aislar el CSS de cada tarjeta**
 
-- Estado: Siguiente en la cola · intentos: 3 · devoluciones del revisor: 3
+- Estado: Siguiente en la cola · intentos: 4 · devoluciones del revisor: 4
 - Dificultad: 🔴 difícil · Delicadeza: 🟡 media
 - Reto: Aislar los estilos de cada tarjeta en varios ficheros CSS, con tres devoluciones del revisor por comentarios de cabecera erróneos. Si algo se cuela, el interruptor Gestionar cambia de aspecto, pero la app sigue funcionando.
-- ⚠ Va por su intento 3 de 4: si no sale, se quedará para que la mire el supervisor.
+- ⚠ Va por su intento 4 de 4: si no sale, se quedará para que la mire el supervisor.
 
 ## Resumen
 
@@ -30,7 +30,7 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-063 | Pendiente | 🔴 difícil | 🟡 media | 3 | Aislar el CSS de cada tarjeta |
+| T-063 | Pendiente | 🔴 difícil | 🟡 media | 4 | Aislar el CSS de cada tarjeta |
 | T-069 | Pendiente | 🟡 media | 🟢 baja | 0 | 08-mcp: «el puerto se cierra» exige que la app diga que paró |
 | T-070 | Pendiente | 🟡 media | 🟢 baja | 0 | 11-edicion-gratuita: un fetch fallido no prueba que un documento no se distribuye |
 | T-071 | Pendiente | 🟡 media | 🟡 media | 0 | 12-legal: el aviso del navegador se comprueba con contraste WCAG real |
