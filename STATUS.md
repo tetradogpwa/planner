@@ -5,21 +5,21 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 17:43 UTC
+Actualizado: 2026-11-25 17:54 UTC
 
 ## Ahora
 
-**T-072 · theme-boot.js: en tema automático seguir al sistema, no al esquema guardado**
+**T-073 · Sacar la matemática de color de preferences.js a back/color.js**
 
 - Estado: Siguiente en la cola · intentos: 0 · devoluciones del revisor: 0
 - Dificultad: 🟡 media · Delicadeza: 🟡 media
-- Reto: Cambia cómo se decide el tema al arrancar y añade cinco pruebas unitarias. Si se cuela, la app puede arrancar en el color equivocado y parpadear.
+- Reto: Saca la matemática de color a un módulo aparte sin cambiar el resultado, con pruebas nuevas. Un fallo en el traslado cambiaría los contrastes que ve el usuario.
 
 ## Resumen
 
-- Abiertas: 31 (0 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 23 media · 🔴 1 difícil
-- Delicadeza: 🟢 4 baja · 🟡 20 media · 🔴 7 alta
+- Abiertas: 30 (0 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 22 media · 🔴 1 difícil
+- Delicadeza: 🟢 4 baja · 🟡 19 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -29,7 +29,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-072 | Pendiente | 🟡 media | 🟡 media | 0 | theme-boot.js: en tema automático seguir al sistema, no al esquema guardado |
 | T-073 | Pendiente | 🟡 media | 🟡 media | 0 | Sacar la matemática de color de preferences.js a back/color.js |
 | T-074 | Pendiente | 🟡 media | 🟡 media | 0 | Sacar los temas guardados de preferences.js a ui/settings/savedThemes.js |
 | T-075 | Pendiente | 🟡 media | 🟡 media | 0 | Sacar el panel de contraste y la lista de temas guardados de settings-card.js |
@@ -62,12 +61,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-105 | Pendiente | 🟡 media | 🟡 media | 0 | El CI encuentra el hash del frontend en el binario |
 
 ## El reto de cada tarea
-
-### T-072 · theme-boot.js: en tema automático seguir al sistema, no al esquema guardado
-
-🟡 media · delicadeza 🟡 media
-
-Cambia cómo se decide el tema al arrancar y añade cinco pruebas unitarias. Si se cuela, la app puede arrancar en el color equivocado y parpadear.
 
 ### T-073 · Sacar la matemática de color de preferences.js a back/color.js
 
@@ -251,8 +244,8 @@ Las pruebas automáticas de GitHub dejan de fallar al buscar la marca del fronte
 
 ## Últimas terminadas
 
+- T-072 · theme-boot.js: en tema automático seguir al sistema, no al esquema guardado (2026-11-25, 1 intento)
 - T-071 · 12-legal: el aviso del navegador se comprueba con contraste WCAG real (2026-11-25, 1 intento)
 - T-070 · 11-edicion-gratuita: un fetch fallido no prueba que un documento no se distribuye (2026-11-25, 1 intento)
 - T-069 · 08-mcp: «el puerto se cierra» exige que la app diga que paró (2026-11-25, 1 intento)
 - T-063 · Aislar el CSS de cada tarjeta (2026-11-25, 5 intentos)
-- T-060 · Pruebas de context.js, ui/a11y.js y preferences.js (2026-11-25, 4 intentos)
