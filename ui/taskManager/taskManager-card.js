@@ -1,6 +1,7 @@
 import { AddTaskCard }  from './addTask/addTask-card.js';
 import { EditTaskCard } from './editTask/editTask-card.js';
 import { escapeHtml }   from '../escape.js';
+import { taskSummary }  from '../../back/taskSummary.js';
 
 // Estado del interruptor "Gestionar" (T-026). `index.js` recrea la
 // TaskManagerCard en cada navegación a la vista 'tasks', así que sin
@@ -82,11 +83,15 @@ export class TaskManagerCard {
       // ── Fila de tarea ──
       const row = document.createElement('div');
       row.className = 'task-row';
+      // El resumen dice cuándo se repite la tarea ("Lun, Mié, Vie",
+      // "Cada 3 días desde el 25/11"…): lo calcula back/taskSummary.js,
+      // el mismo que usa la API. Nunca se enseña el nombre de la clase.
+      const resumen = taskSummary(t);
       row.innerHTML = `
         <button class="btn-trash" title="Eliminar" aria-label="Eliminar la tarea «${escapeHtml(t.Name)}»">🗑️</button>
         <button class="btn-edit"  title="Editar"    aria-label="Editar la tarea «${escapeHtml(t.Name)}»">✏️</button>
         <span class="task-name">${escapeHtml(t.Name)}</span>
-        <span class="task-type">${escapeHtml(this.#typeLabel(t))}</span>
+        ${resumen ? `<span class="task-type">${escapeHtml(resumen)}</span>` : ''}
       `;
 
       // ── Panel de edición (colapsado por defecto) ──
@@ -204,19 +209,5 @@ export class TaskManagerCard {
       p.classList.remove('open');
       p.innerHTML = '';
     });
-  }
-
-  // ── Utilidades ───────────────────────────────────────────────────────────
-
-  #typeLabel(t) {
-    switch (t.constructor?.name) {
-      case 'DailyTask':          return 'Diaria';
-      case 'WeeklyTask':         return 'Semanal';
-      case 'NDaysTask':          return `Cada ${t.NDays}d`;
-      case 'DaysOfWeekTask':     return 'Días esp.';
-      case 'OneTimeTask':        return 'Una vez';
-      case 'CiclesDaysOfWeekTask': return 'Ciclo';
-      default:                   return t.constructor?.name ?? '—';
-    }
   }
 }

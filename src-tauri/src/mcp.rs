@@ -212,7 +212,7 @@ impl PlannerServer {
 impl PlannerServer {
     /// `listar_tareas` — devuelve la lista de tareas como JSON.
     #[tool(
-        description = "Lista todas las tareas del planificador con su id (identificador único y estable), su tipo, nombre, total y, si aplica, los días o el ciclo. Equivalente a PlannerApi.listTasks().",
+        description = "Lista todas las tareas del planificador con su id (identificador único y estable), su tipo, nombre, total y, si aplica, los días o el ciclo. Cada tarea incluye su `summary`: el resumen legible de cuándo se repite (\"Diaria · 3 veces\", \"Lun, Mié, Vie\", \"Cada 3 días desde el 25/11\", \"Ciclo de 2 semanas\", \"Una vez · 25/11\"). Equivalente a PlannerApi.listTasks().",
         annotations(read_only_hint = true)
     )]
     async fn listar_tareas(&self) -> Result<CallToolResult, McpError> {

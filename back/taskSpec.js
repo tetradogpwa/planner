@@ -35,6 +35,8 @@ import {
   todayISO,
 } from './calendar.js';
 
+import { taskSummary } from './taskSummary.js';
+
 // ── Validación ───────────────────────────────────────────────────────────
 
 /** Normaliza un día a entero en [0,6]. Devuelve null si no es válido. */
@@ -170,6 +172,10 @@ export function buildTaskFromSpec(spec, opts = {}) {
  * `startDate` es el dato que manda: el día en el que la tarea empieza
  * a aplicar.
  *
+ * `summary` es el resumen legible de cuándo se repite la tarea
+ * ("Diaria · 3 veces", "Lun, Mié, Vie", "Cada 3 días desde el
+ * 25/11"…): lo calcula `back/taskSummary.js`.
+ *
  * `origin` es la fecha de inicio del planificador. Si se pasa, la copia
  * incluye además `daysFrom`: los días entre el origen y la fecha de
  * inicio de la tarea. OJO: ese `daysFrom` es un valor DERIVADO del
@@ -187,6 +193,11 @@ export function taskToJson(task, origin = null) {
     total:   task.Total,
     startDate: startDate,
     repeat:  null,
+    // Resumen legible de cuándo se repite la tarea ("Diaria · 3 veces",
+    // "Lun, Mié, Vie", "Cada 3 días desde el 25/11"…). Lo calcula
+    // `back/taskSummary.js`: así la API y la lista de tareas dicen lo
+    // mismo y ninguna de las dos enseña el nombre de la clase.
+    summary: taskSummary(task),
   };
   if (origin) {
     base.daysFrom = diffDays(parseLocalDate(origin), parseLocalDate(startDate));

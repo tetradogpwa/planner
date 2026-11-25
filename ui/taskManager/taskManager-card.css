@@ -109,6 +109,18 @@
   background: var(--surface-alt);
   padding: 2px 9px;
   border-radius: 999px;
+  /* El resumen puede ser largo ("Lun, Mar, Mié, Jue, Vie, Sáb, Dom",
+     "Cada 3 días desde el 25/11"): con letra al 200 % en un móvil de
+     390 px la insignia tiene que quedarse dentro de la fila y
+     partirse en varias líneas.
+       - `flex: 0 0 auto` + `max-width: 100%`: la insignia toma el
+         ancho de su texto, pero nunca más ancho que su fila (si no, se
+         sale de la pantalla).
+       - `overflow-wrap: anywhere`: su texto puede partirse donde haga
+         falta, no solo en los espacios. */
+  flex: 0 0 auto;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 /* ── Botón papelera ── */

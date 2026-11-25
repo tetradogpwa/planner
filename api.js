@@ -103,7 +103,12 @@ export const PlannerApi = {
    *  acompaña es un valor DERIVADO de la fecha de inicio actual del
    *  planificador (días entre esa fecha y la de la tarea), no un dato
    *  guardado: si la fecha de inicio del planificador se mueve, el
-   *  `daysFrom` de la misma tarea cambia (y puede ser negativo). */
+   *  `daysFrom` de la misma tarea cambia (y puede ser negativo).
+   *
+   *  Y su `summary`: el resumen legible de cuándo se repite la tarea
+   *  ("Diaria", "Diaria · 3 veces", "Lun, Mié, Vie", "Cada 3 días
+   *  desde el 25/11", "Ciclo de 2 semanas", "Una vez · 25/11"). Es el
+   *  mismo texto que muestra la lista de tareas de la vista Tareas. */
   listTasks() {
     return Context.Tasks.map((t, i) => ({ ...taskToJson(t, Context.StartDate), index: i }));
   },
@@ -113,7 +118,10 @@ export const PlannerApi = {
    *
    *  `ref` es el `id` de la tarea. Por compatibilidad con las
    *  integraciones antiguas también acepta su `index`, que está
-   *  obsoleto. */
+   *  obsoleto.
+   *
+   *  Los campos son los mismos que devuelve `listTasks`, incluido el
+   *  `summary` con el resumen legible de cuándo se repite la tarea. */
   getTask(ref) {
     const i = indiceDeTarea(ref);
     if (i === -1) return null;

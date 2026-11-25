@@ -166,11 +166,20 @@ export function celdasDesde(inicio) {
   });
 }
 
-/** Etiquetas de tipo de cada tarea de la lista de la vista Tareas
- *  ('Una vez', 'Diaria', 'Cada 3d', 'Días esp.', 'Ciclo'…). */
+/** Resumen de repetición de cada tarea de la lista de la vista Tareas.
+ *  Desde T-052 no son etiquetas cortas sino el resumen legible de
+ *  cuándo se repite cada tarea: 'Una vez · 25/11', 'Diaria',
+ *  'Diaria · 3 veces', 'Cada 3 días desde el 25/11', 'Lun, Mié, Vie',
+ *  'Ciclo de 2 semanas'… (lo calcula back/taskSummary.js). */
 export async function tiposDeTareas() {
   return $$('#taskListMount .task-row .task-type')
     .map(async el => (await el.getProperty('textContent')).trim());
+}
+
+/** La fecha en el formato corto que usa el resumen de las tareas
+ *  ('DD/MM'). Por defecto, hoy: el mismo reloj que usa la app. */
+export function fechaCorta(d = new Date()) {
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 /** Navega a la vista Semana usando el menú lateral. Espera a que

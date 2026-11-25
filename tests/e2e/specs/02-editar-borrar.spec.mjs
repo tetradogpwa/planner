@@ -128,7 +128,7 @@ describe('Vista Tareas: editar y borrar (interruptor Gestionar)', () => {
     // El panel se cierra y la lista refleja el cambio de nombre y tipo.
     await expect($('#taskName')).toBeDisplayed(); // el form de creación vuelve a estar listo
     expect(await nombresDeTareas()).toEqual(['Tarea A editada', 'Tarea B', 'Tarea C']);
-    expect(await tiposDeTareas()).toEqual(['Días esp.', 'Diaria', 'Diaria']);
+    expect(await tiposDeTareas()).toEqual(['Lun, Jue', 'Diaria', 'Diaria']);
   });
 
   it('en la vista Semana, la tarea editada aparece solo en lunes y jueves', async () => {
@@ -142,7 +142,7 @@ describe('Vista Tareas: editar y borrar (interruptor Gestionar)', () => {
   it('el cambio sigue guardado tras recargar la app', async () => {
     expect(await recargar()).toBe('app');
     expect(await nombresDeTareas()).toEqual(['Tarea A editada', 'Tarea B', 'Tarea C']);
-    expect(await tiposDeTareas()).toEqual(['Días esp.', 'Diaria', 'Diaria']);
+    expect(await tiposDeTareas()).toEqual(['Lun, Jue', 'Diaria', 'Diaria']);
 
     // En Semana, la insignia editada sigue respetando los días elegidos.
     await irASemana();
@@ -179,7 +179,7 @@ describe('Vista Tareas: editar y borrar (interruptor Gestionar)', () => {
 
     // El panel se cierra y los datos no han cambiado.
     expect(await nombresDeTareas()).toEqual(['Tarea A editada', 'Tarea B', 'Tarea C']);
-    expect(await tiposDeTareas()).toEqual(['Días esp.', 'Diaria', 'Diaria']);
+    expect(await tiposDeTareas()).toEqual(['Lun, Jue', 'Diaria', 'Diaria']);
 
     // El foco vuelve al botón Editar de la fila 2 (índice 1).
     const filaFoco = await filaDelFoco();

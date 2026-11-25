@@ -1,9 +1,9 @@
 // Recorrido del formulario de creación para los cinco tipos de repetición:
 // "Sin repetición", "Diario", "Cada N días", "Días específicos" y "Ciclo".
-// Para cada uno crea la tarea desde la UI, comprueba la etiqueta de tipo
-// en la lista y verifica en qué celdas (lunes a domingo) aparece su
-// insignia en la vista Semana. Termina con las validaciones del
-// formulario (el error se muestra junto al campo, sin ventanas de
+// Para cada uno crea la tarea desde la UI, comprueba el resumen de
+// repetición en la lista y verifica en qué celdas (lunes a domingo)
+// aparece su insignia en la vista Semana. Termina con las validaciones
+// del formulario (el error se muestra junto al campo, sin ventanas de
 // diálogo: T-048) y el caso de Veces/día > 1.
 
 import {
@@ -13,6 +13,7 @@ import {
   crearTareaDias,
   nombresDeTareas,
   tiposDeTareas,
+  fechaCorta,
   irASemana,
   celdasCon,
   hoy,
@@ -79,7 +80,7 @@ describe('Formulario de tareas: tipos de repetición', () => {
     expect(await nombresDeTareas()).toEqual([]);
   });
 
-  it('crea las 5 tareas básicas y cada una muestra su etiqueta de tipo', async () => {
+  it('crea las 5 tareas básicas y cada una muestra su resumen de repetición', async () => {
     await crearTarea('Una sola vez',  'no-repeat');
     await crearTarea('Tarea diaria',  'daily');
     await crearTareaNDias('Cada 3 días', 3);
@@ -130,8 +131,13 @@ describe('Formulario de tareas: tipos de repetición', () => {
     expect(await nombresDeTareas()).toEqual([
       'Una sola vez', 'Tarea diaria', 'Cada 3 días', 'Días puntuales', 'Ciclo quincenal',
     ]);
+    // El resumen de cada una dice cuándo se repite (T-052). Las tareas
+    // se acaban de crear, así que su fecha de inicio es la de hoy: el
+    // resumen se calcula, no se escribe a mano.
+    const hoy = fechaCorta();
     expect(await tiposDeTareas()).toEqual([
-      'Una vez', 'Diaria', 'Cada 3d', 'Días esp.', 'Ciclo',
+      `Una vez · ${hoy}`, 'Diaria', `Cada 3 días desde el ${hoy}`,
+      'Lun, Jue', 'Ciclo de 2 semanas',
     ]);
   });
 
@@ -150,17 +156,17 @@ describe('Formulario de tareas: tipos de repetición', () => {
     expect(unaVez).toEqual(celdasDeUnaVez(hoy()));
   });
 
-  it('"Cada 3d" aparece cada 3 días reales desde el día en que se creó', async () => {
+  it('"Cada 3 días" aparece cada 3 días reales desde el día en que se creó', async () => {
     // No es "los días 0, 3 y 6 de la semana": es cada 3 días desde la
     // fecha de creación de la tarea.
     expect(await celdasCon('Cada 3 días')).toEqual(celdasCadaNDias(3, hoy()));
   });
 
-  it('"Días esp." aparece solo en los días marcados (lunes y jueves)', async () => {
+  it('"Días puntuales" aparece solo en los días marcados (lunes y jueves)', async () => {
     expect(await celdasCon('Días puntuales')).toEqual(celdasDeDiasSemana([0, 3], hoy()));
   });
 
-  it('"Ciclo" pinta los días de la primera semana del ciclo (lunes y miércoles)', async () => {
+  it('"Ciclo quincenal" pinta los días de la primera semana del ciclo (lunes y miércoles)', async () => {
     expect(await celdasCon('Ciclo quincenal')).toEqual(celdasDeDiasSemana([0, 2], hoy()));
   });
 

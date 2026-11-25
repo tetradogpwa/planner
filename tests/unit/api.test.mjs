@@ -44,6 +44,10 @@ storage.setItem('Context_START_DATE', String(new Date(2026, 9, 19).getTime()));
 
 // Importamos api.js (carga context.js como efecto secundario).
 const { PlannerApi } = await import('../../api.js');
+// El estado y el resumen: se importan después de preparar el
+// localStorage, porque context.js lo lee al cargarse.
+const { Context }      = await import('../../context.js');
+const { taskSummary }  = await import('../../back/taskSummary.js');
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -124,6 +128,42 @@ test('listTasks y getTask devuelven solo datos planos', () => {
   assert.deepEqual(PlannerApi.getTask(1), list[1]);
   assert.equal(PlannerApi.getTask(99), null);
   assert.equal(PlannerApi.getTask(-1), null);
+});
+
+// El resumen legible de cuándo se repite cada tarea (T-052): la API
+// lo devuelve en el campo `summary`, que es lo mismo que muestra la
+// lista de tareas de la vista Tareas.
+test('cada tarea lleva su resumen de repetición (summary)', () => {
+  const specs = [
+    { name: 'Agua',     repeat: 'daily' },
+    { name: 'Regar',    repeat: 'nDays', nDays: 5 },
+    { name: 'Gym',      repeat: 'daysOfWeek', days: [0, 2] },
+    { name: 'Turnos',   repeat: 'cycle', cycle: [[0], [2]] },
+    { name: 'Dentista', repeat: 'none' },
+  ];
+  specs.forEach(spec => PlannerApi.addTask(spec));
+
+  const list = PlannerApi.listTasks();
+  assert.equal(list.length, specs.length);
+
+  list.forEach((t, i) => {
+    assert.equal(typeof t.summary, 'string', `la tarea ${i} no trae summary`);
+    assert.ok(t.summary.length > 0, `la tarea ${i} se queda sin resumen`);
+    // Y es EXACTAMENTE el resumen que produce back/taskSummary.js
+    // para esa misma tarea (no una copia de su lógica).
+    assert.equal(t.summary, taskSummary(Context.Tasks[i]));
+    // Nunca el nombre de la clase de la tarea.
+    assert.ok(!t.summary.includes('Task'), `sale el nombre de la clase: "${t.summary}"`);
+    // getTask devuelve lo mismo.
+    assert.equal(PlannerApi.getTask(t.id).summary, t.summary);
+  });
+
+  // Y el resumen dice cuándo se repite cada una.
+  assert.equal(list[0].summary, 'Diaria');
+  assert.match(list[1].summary, /^Cada 5 días desde el \d{2}\/\d{2}$/);
+  assert.equal(list[2].summary, 'Lun, Mié');
+  assert.equal(list[3].summary, 'Ciclo de 2 semanas');
+  assert.match(list[4].summary, /^Una vez · \d{2}\/\d{2}$/);
 });
 
 test('addTask acepta la fecha de inicio de la tarea (startDate)', () => {

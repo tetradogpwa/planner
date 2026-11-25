@@ -33,6 +33,9 @@
 import {
   abrirAppNueva,
   crearTarea,
+  crearTareaDias,
+  crearTareaNDias,
+  tiposDeTareas,
   recargar,
   ventanaMovil,
   navegarVistaAlt,
@@ -444,6 +447,128 @@ describe('Pestaña Apariencia: tema, escala de letra y desbordamiento móvil al 
       if (medidas.content) {
         expect(medidas.content.scrollWidth).toBeLessThanOrEqual(medidas.content.clientWidth + 1);
       }
+    });
+
+    // El resumen de repetición de una tarea puede ser largo: "Lun, Mar,
+    // Mié, Jue, Vie, Sáb, Dom" (33 caracteres) o "Cada 3 días desde el
+    // 25/11". Con letra al 200 % en 390 px la lista de tareas tiene que
+    // seguir entrando en la pantalla: si la insignia del resumen puede
+    // ser más ancha que la fila, se sale por la derecha y la vista se
+    // desplaza en horizontal.
+    it('la lista de tareas no desborda con el resumen más largo', async () => {
+      await navegarVistaAlt(1);            // vista Tareas
+      await $('#taskName').waitForDisplayed();
+
+      // Dos tareas con el resumen más largo: los siete días de la
+      // semana y una de "cada N días".
+      await crearTareaDias('Todos los días', [0, 1, 2, 3, 4, 5, 6]);
+      await crearTareaNDias('Cada 3 días', 3);
+
+      // Los resúmenes son los largos: si no, la prueba no mide nada.
+      const tipos = await tiposDeTareas();
+      expect(tipos).toContain('Lun, Mar, Mié, Jue, Vie, Sáb, Dom');
+      expect(tipos.filter(t => /^Cada 3 días desde el \d{2}\/\d{2}$/.test(t))).toHaveLength(1);
+
+      // La insignia del resumen no se sale de su fila, y su texto no se
+      // sale de la insignia.
+      const insignias = await browser.execute(() => {
+        return Array.from(document.querySelectorAll('#taskListMount .task-row'))
+          .map(row => {
+            const badge = row.querySelector('.task-type');
+            if (!badge) return null;
+            const r      = badge.getBoundingClientRect();
+            const fila   = row.getBoundingClientRect();
+            return {
+              texto:        badge.textContent.trim(),
+              desbordeFila: Math.round((r.right - fila.right) * 10) / 10,
+              desbordeTexto: badge.scrollWidth - badge.clientWidth,
+            };
+          })
+          .filter(Boolean);
+      });
+      expect(insignias.length).toBeGreaterThan(0);
+
+      // Y la página no se desplaza en horizontal: ni documentElement ni
+      // .content (que es quien de verdad desplaza: el body oculta el
+      // desbordamiento horizontal en index.css:168).
+      const medidas = await browser.execute(() => {
+        const doc = document.documentElement;
+        const content = document.querySelector('.content');
+        const docW = doc.clientWidth;
+        const contentW = content ? content.clientWidth : null;
+        return {
+          doc: {
+            scrollWidth: doc.scrollWidth,
+            clientWidth: docW,
+            overflow: doc.scrollWidth - docW,
+          },
+          content: content ? {
+            scrollWidth: content.scrollWidth,
+            clientWidth: contentW,
+            overflow: content.scrollWidth - contentW,
+          } : null,
+          viewport: window.innerWidth,
+        };
+      });
+
+      const desbordamientos = [];
+      if (medidas.doc.overflow > 1) {
+        desbordamientos.push({ donde: 'documentElement', ...medidas.doc });
+      }
+      if (medidas.content && medidas.content.overflow > 1) {
+        desbordamientos.push({ donde: '.content', ...medidas.content });
+      }
+      if (desbordamientos.length > 0) {
+        // El elemento que más se sale por la derecha: eso es lo que ve
+        // el usuario como desbordamiento.
+        const culpable = await browser.execute((vp) => {
+          const root = document.querySelector('.content') ?? document.body;
+          const todos = Array.from(root.querySelectorAll('*'));
+          let best = null;
+          for (const el of todos) {
+            const r = el.getBoundingClientRect();
+            if (r.width === 0) continue;
+            const overflow = r.right - vp;
+            if (overflow > 1 && overflow > (best?.overflow ?? 0)) {
+              best = {
+                overflow, right: r.right, width: r.width,
+                tag: el.tagName, id: el.id || null,
+                cls: typeof el.className === 'string' ? el.className.slice(0, 80) : null,
+                text: (el.textContent ?? '').trim().slice(0, 60) || null,
+              };
+            }
+          }
+          return best;
+        }, medidas.viewport);
+        throw new Error(
+          `Lista de tareas: desbordamiento horizontal detectado ` +
+          `(${JSON.stringify(desbordamientos)}). ` +
+          `Viewport=${medidas.viewport}. ` +
+          `Elemento que más se sale por la derecha: ${JSON.stringify(culpable)}`
+        );
+      }
+      expect(medidas.doc.scrollWidth).toBeLessThanOrEqual(medidas.doc.clientWidth + 1);
+      if (medidas.content) {
+        expect(medidas.content.scrollWidth).toBeLessThanOrEqual(medidas.content.clientWidth + 1);
+      }
+
+      // Las insignias que se salen de su fila (o cuyo texto se sale de
+      // la insignia) son un fallo: la lista se vería cortada.
+      const problemas = insignias.filter(b => b.desbordeFila > 1 || b.desbordeTexto > 1);
+      expect(problemas).toEqual([]);
+
+      // Las dos reglas del CSS que impiden que el resumen se salga de la
+      // pantalla (ui/taskManager/taskManager-card.css): la insignia no
+      // puede ser más ancha que su fila, y su texto puede partirse
+      // donde haga falta (no solo en los espacios). Si alguien las
+      // quita, la insignia se sale por la derecha.
+      const estilos = await browser.execute(() => {
+        const badge = document.querySelector('#taskListMount .task-row .task-type');
+        const cs = getComputedStyle(badge);
+        return { overflowWrap: cs.overflowWrap, maxWidth: cs.maxWidth };
+      });
+      expect(estilos.overflowWrap).toBe('anywhere');
+      expect(estilos.maxWidth).not.toBe('none');
     });
   });
 

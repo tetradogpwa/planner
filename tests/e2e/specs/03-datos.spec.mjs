@@ -126,8 +126,14 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     expect(await nombresDeTareas()).toEqual([
       'Beber agua', 'Gimnasio', 'Regar plantas',
     ]);
+    // El resumen de repetición de cada una (T-052). Las tareas
+    // importadas empiezan en la fecha de inicio del planificador (el
+    // fixture usa daysFrom: 0), así que esa fecha se lee de la app en
+    // vez de suponerla: cambia de un día a otro.
+    const inicio = await browser.execute(() => window.PlannerApi.getStartDate());
+    const [, mes, dia] = inicio.split('-');
     expect(await tiposDeTareas()).toEqual([
-      'Diaria', 'Días esp.', 'Cada 3d',
+      'Diaria', 'Lun, Mié, Vie', `Cada 3 días desde el ${dia}/${mes}`,
     ]);
   });
 
