@@ -48,6 +48,7 @@ const IGNORADOS = [
   'logs/**',
   'src-tauri/**',
   'tests/e2e/node_modules/**',
+  '.tmp-out/**',      // pruebas sueltas de MiniMax (ignorada por git)
 ];
 
 // El frontend de la app (lo que se empaqueta en Tauri).

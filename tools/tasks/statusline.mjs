@@ -32,7 +32,7 @@ const probando = sh('pgrep', ['-f', 'tools/test.sh']) !== '';
 
 // cola.sh deja aquí hasta cuándo espera si MiniMax se ha quedado sin cuota.
 let esperaHasta = '';
-try { esperaHasta = readFileSync(join(ROOT, '.tasks', 'logs', 'espera-saldo'), 'utf8').trim(); } catch {}
+try { esperaHasta = readFileSync(join(ROOT, '.tasks', 'logs', 'espera-saldo'), 'utf8').trim(); } catch { /* no hay espera: el fichero no existe */ }
 
 let line;
 if (colaViva && esperaHasta && !trabajando && !revisando) {
