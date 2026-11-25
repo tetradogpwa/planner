@@ -5,21 +5,21 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 19:38 UTC
+Actualizado: 2026-11-25 19:53 UTC
 
 ## Ahora
 
-**T-076 · Borrar las funciones y la carpeta que nadie usa**
+**T-077 · Borrar el service worker desactivado (sw.js)**
 
 - Estado: Siguiente en la cola · intentos: 0 · devoluciones del revisor: 0
 - Dificultad: 🟡 media · Delicadeza: 🟡 media
-- Reto: Borra código y una carpeta que nadie usa, comprobando antes con búsquedas. Si se equivoca y borra algo vivo, el usuario pierde funciones de la lista de tareas.
+- Reto: Borra el fichero de trabajo sin conexión y sus referencias en el empaquetado. Si se queda alguna referencia, la app puede no arrancar o fallar al construirse.
 
 ## Resumen
 
-- Abiertas: 27 (0 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 19 media · 🔴 1 difícil
-- Delicadeza: 🟢 4 baja · 🟡 16 media · 🔴 7 alta
+- Abiertas: 26 (0 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 18 media · 🔴 1 difícil
+- Delicadeza: 🟢 4 baja · 🟡 15 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -29,7 +29,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-076 | Pendiente | 🟡 media | 🟡 media | 0 | Borrar las funciones y la carpeta que nadie usa |
 | T-077 | Pendiente | 🟡 media | 🟡 media | 0 | Borrar el service worker desactivado (sw.js) |
 | T-078 | Pendiente | 🟢 fácil | 🟡 media | 0 | Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 |
 | T-079 | Pendiente | 🟡 media | 🔴 alta | 0 | MCP en Rust: ningún .lock().unwrap() (mutex envenenado) |
@@ -58,12 +57,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-105 | Pendiente | 🟡 media | 🟡 media | 0 | El CI encuentra el hash del frontend en el binario |
 
 ## El reto de cada tarea
-
-### T-076 · Borrar las funciones y la carpeta que nadie usa
-
-🟡 media · delicadeza 🟡 media
-
-Borra código y una carpeta que nadie usa, comprobando antes con búsquedas. Si se equivoca y borra algo vivo, el usuario pierde funciones de la lista de tareas.
 
 ### T-077 · Borrar el service worker desactivado (sw.js)
 
@@ -223,8 +216,8 @@ Las pruebas automáticas de GitHub dejan de fallar al buscar la marca del fronte
 
 ## Últimas terminadas
 
+- T-076 · Borrar las funciones y la carpeta que nadie usa (2026-11-25, 1 intento)
 - T-075 · Sacar el panel de contraste y la lista de temas guardados de settings-card.js (2026-11-25, 2 intentos)
 - T-074 · Sacar los temas guardados de preferences.js a ui/settings/savedThemes.js (2026-11-25, 1 intento)
 - T-073 · Sacar la matemática de color de preferences.js a back/color.js (2026-11-25, 1 intento)
 - T-072 · theme-boot.js: en tema automático seguir al sistema, no al esquema guardado (2026-11-25, 1 intento)
-- T-071 · 12-legal: el aviso del navegador se comprueba con contraste WCAG real (2026-11-25, 1 intento)
