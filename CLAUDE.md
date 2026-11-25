@@ -34,7 +34,8 @@ los comentarios y la documentación van en **español**.
   Antes de cada tarea, `cola.sh` pide a MiniMax M3 que evalúe las
   tareas abiertas sin evaluar (`tools/minimax/evaluar.sh`: dificultad
   fácil/media/difícil, delicadeza baja/media/alta y el motivo, guardados
-  con `tasks.mjs reto`), regenera `STATUS.md` (`tasks.mjs estado-md`) y,
+  con `tasks.mjs reto`; las reglas son la skill `evaluar-reto`, que el
+  script mete entera en el mensaje), regenera `STATUS.md` (`tasks.mjs estado-md`) y,
   si cambia, lo commitea aparte (`STATUS: …`) y hace `git push` de main
   (lo pidió el usuario; `PLANNER_SIN_PUSH=1` lo desactiva). `STATUS.md`
   nunca entra en el commit de una tarea. Para reevaluarlas todas:

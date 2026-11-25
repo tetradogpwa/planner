@@ -364,6 +364,13 @@ switch (cmd) {
     if (!DIFICULTADES.includes(dificultad)) fail(`--dificultad no válida. Usa: ${DIFICULTADES.join(', ')}`);
     if (!DELICADEZAS.includes(delicadeza)) fail(`--delicadeza no válida. Usa: ${DELICADEZAS.join(', ')}`);
     const motivo = requireText(opts.motivo, '--motivo');
+    // Va a STATUS.md para el usuario: español claro (skill evaluar-reto).
+    // MiniMax a veces mezcla otros alfabetos («算法»): se rechaza y
+    // evaluar.sh la vuelve a pedir.
+    if (/[^\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}]/u.test(motivo)) {
+      fail('--motivo tiene caracteres de otro alfabeto: escríbelo en español');
+    }
+    if (motivo.length > 260) fail(`--motivo demasiado largo (${motivo.length} caracteres; máximo 220)`);
     task.reto = { dificultad, delicadeza, motivo, at: now() };
     log(task, 'reto evaluado', `${dificultad} · delicadeza ${delicadeza}`);
     save(db);

@@ -49,6 +49,7 @@ else
 fi
 [[ "${#IDS[@]}" -eq 0 ]] && { echo "No hay tareas que evaluar."; exit 0; }
 
+INICIO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"   # para saber qué se ha evaluado ahora
 mkdir -p .tasks/logs
 LOG=".tasks/logs/evaluacion-$(date +%Y%m%d-%H%M%S).log"
 
@@ -62,7 +63,10 @@ $($TASKS show "$id" | sed '/^Historial:/,$d' | head -c 4000)
 "
 done
 
-PROMPT="$(cat "$ROOT/tools/minimax/evaluador-prompt.md")
+# Las reglas son la skill evaluar-reto (sin su cabecera): los agentes de
+# OpenCode no cargan skills, así que va entera en el mensaje.
+REGLAS="$(awk 'BEGIN{n=0} /^---$/ && n<2 {n++; next} n>=2' "$ROOT/.claude/skills/evaluar-reto/SKILL.md")"
+PROMPT="$REGLAS
 
 ---
 
@@ -100,4 +104,20 @@ if [[ "$GUARDADAS" -eq 0 ]]; then
 fi
 
 echo "✓ Evaluadas $GUARDADAS de ${#IDS[@]} tarea(s)."
+
+# Las que faltan (línea mal formada, otro alfabeto, motivo largo: ver
+# el registro) se piden una vez más, solas.
+if [[ "$GUARDADAS" -lt "${#IDS[@]}" && -z "${EVAL_REINTENTO:-}" ]]; then
+  FALTAN=()
+  for id in "${IDS[@]}"; do
+    grep -q "^$id\$" <(node -e '
+      const d = JSON.parse(require("fs").readFileSync(".tasks/tasks.json"));
+      const t = d.tasks.find(x => x.id === process.argv[1]);
+      if (t?.reto && Date.parse(t.reto.at) >= Date.parse(process.argv[2])) console.log(t.id);' "$id" "$INICIO") || FALTAN+=("$id")
+  done
+  if [[ "${#FALTAN[@]}" -gt 0 ]]; then
+    echo "↻ Se vuelven a pedir: ${FALTAN[*]}"
+    EVAL_REINTENTO=1 exec bash "$0" "${FALTAN[@]}"
+  fi
+fi
 exit 0
