@@ -1,4 +1,5 @@
 import { TaskForm } from '../taskForm/taskForm-card.js';
+import { montarTarjeta } from '../../base-card.js';
 
 /** Convierte un objeto tarea a estado del formulario. */
 function taskToFormState(task) {
@@ -34,12 +35,15 @@ export class EditTaskCard {
     this.state = taskToFormState(task);
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/taskManager/editTask/editTask-card.html').then(r => r.text()),
-      fetch('./ui/taskManager/editTask/editTask-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/taskManager/editTask/editTask-card.html',
+      './ui/taskManager/editTask/editTask-card.css',
+    );
+    if (!html) return false;
     this.cache();
     // El formulario es el mismo módulo que usa el alta (T-047):
     // aquí, con prefijo de id ("edit"): editTaskName, editTimesPerDay…
@@ -48,9 +52,10 @@ export class EditTaskCard {
       prefix: 'edit',
       onSave: (task) => this.guardarTarea(task),
     });
-    await this.form.init();
+    if (!await this.form.init()) return false;
     this.prefill();
     this.bind();
+    return true;
   }
 
   cache() {

@@ -1,3 +1,5 @@
+import { montarTarjeta } from '../../base-card.js';
+
 export class TaskItemCard {
   constructor(root, tasks, dayIndex) {
     this.root     = root;
@@ -5,14 +7,18 @@ export class TaskItemCard {
     this.dayIndex = dayIndex;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/week/taskItem/taskItem-card.html').then(r => r.text()),
-      fetch('./ui/week/taskItem/taskItem-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/week/taskItem/taskItem-card.html',
+      './ui/week/taskItem/taskItem-card.css',
+    );
+    if (!html) return false;
     this.cache();
     this.render();
+    return true;
   }
 
   cache() {

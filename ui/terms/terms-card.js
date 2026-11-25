@@ -12,6 +12,7 @@
 // ────────────────────────────────────────────────────────────────────
 
 import { renderMarkdown } from '../legal/legal-markdown.js';
+import { cargarFragmento, montarTarjeta } from '../base-card.js';
 
 const STORAGE_KEY = 'termsAccepted';
 
@@ -23,15 +24,25 @@ const DOCS = {
 // Documentos que se aceptan (la privacidad solo se informa).
 const ACCEPTED_DOCS = ['TERMS', 'EULA'];
 
-const fetchText = (url) => fetch(url).then(r => r.text());
+// Los documentos y las plantillas se descargan con la base común: se
+// comprueba que la descarga sea OK y el texto se guarda en caché (cada
+// fichero, una sola vez).
 
 function lastUpdated(markdown) {
   return markdown.match(/\*\*Última actualización:\*\*\s*(.+)/)?.[1].trim() ?? '';
 }
 
 async function currentVersion() {
-  const texts = await Promise.all(ACCEPTED_DOCS.map(key => fetchText(DOCS[key])));
-  return ACCEPTED_DOCS.map((key, i) => `${key}:${lastUpdated(texts[i])}`).join('|');
+  try {
+    const texts = await Promise.all(ACCEPTED_DOCS.map(key => cargarFragmento(DOCS[key])));
+    return ACCEPTED_DOCS.map((key, i) => `${key}:${lastUpdated(texts[i])}`).join('|');
+  } catch (err) {
+    // Sin los documentos no se puede saber qué versión se aceptó: se
+    // devuelve una versión vacía. Así la app no se queda bloqueada
+    // pidiendo unos términos que no se pueden leer.
+    console.warn('[términos] no se ha podido leer la versión de los documentos:', err);
+    return '';
+  }
 }
 
 function readAccepted() {
@@ -62,13 +73,26 @@ export class TermsCard {
     this.done = new Promise(resolve => { this.resolveDone = resolve; });
   }
 
-  /** Resuelve cuando el usuario acepta. Si rechaza, la app se cierra. */
+  /** Resuelve cuando el usuario acepta. Si rechaza, la app se cierra.
+   *
+   *  Si la pantalla no se puede cargar, se resuelve igualmente: la app
+   *  no puede quedarse colgada. index.js espera a esta promesa antes de
+   *  quitar "booting" del body (index.css): si no se resolviera, la
+   *  app entera seguiría invisible. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetchText('./ui/terms/terms-card.html'),
-      fetchText('./ui/terms/terms-card.css'),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/terms/terms-card.html',
+      './ui/terms/terms-card.css',
+    );
+    // Sin la pantalla de términos no se puede aceptar ni rechazar,
+    // pero la app tiene que arrancar igualmente: la vista ya avisa de
+    // que no se pudo cargar y la promesa se resuelve para que el
+    // arranque continúe.
+    if (!html) {
+      this.resolveDone();
+      return this.done;
+    }
     this.mount();
     return this.done;
   }
@@ -121,7 +145,7 @@ export class TermsCard {
     const activeTab = this.tabs.find(t => t.dataset.doc === key);
     if (activeTab) this.docEl.setAttribute('aria-labelledby', activeTab.id);
     try {
-      this.cache[key] ??= renderMarkdown(await fetchText(DOCS[key]));
+      this.cache[key] ??= renderMarkdown(await cargarFragmento(DOCS[key]));
       this.docEl.innerHTML = this.cache[key];
     } catch (err) {
       this.docEl.textContent = `No se ha podido cargar el documento (${err.message}).`;

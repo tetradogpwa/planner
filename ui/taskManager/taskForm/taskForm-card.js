@@ -1,7 +1,14 @@
 import { buildTaskFromSpec } from '../../../back/taskSpec.js';
 import { todayISO }         from '../../../back/calendar.js';
 import { DAY_NAMES }        from '../../../back/dayNames.js';
+import { cargarFragmentos, inyectarHtml } from '../../base-card.js';
 import { escapeAttr }      from '../../html.js';
+
+// Las plantillas de la tarjeta. El CSS necesita su ruta aparte (para
+// inyectarlo junto al HTML): el HTML lleva marcadores {{id}} que se
+// sustituyen al pintarlo.
+const RUTA_HTML = './ui/taskManager/taskForm/taskForm-card.html';
+const RUTA_CSS  = './ui/taskManager/taskForm/taskForm-card.css';
 
 // ────────────────────────────────────────────────────────────────────
 // taskForm-card.js — El FORMULARIO DE TAREA, compartido por el alta y
@@ -69,17 +76,23 @@ export class TaskForm {
     this.cycleWeeks = [0];
   }
 
+  /** Monta el formulario. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/taskManager/taskForm/taskForm-card.html').then(r => r.text()),
-      fetch('./ui/taskManager/taskForm/taskForm-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${this.#render(html)}`;
+    const partes = await cargarFragmentos([RUTA_HTML, RUTA_CSS], this.root);
+    if (!partes) return false;
+    const [html, css] = partes;
+    // El formulario está a la vez en el alta y en la edición: cada
+    // instancia lleva su propio <style> (propia). Si compartieran el
+    // CSS, el que se quitara (al vaciar un panel) dejaría al otro sin
+    // estilo.
+    inyectarHtml(this.root, this.#render(html), [RUTA_CSS], [css], { propia: true });
     this.cache();
     // Valores por defecto: la tarea empieza hoy.
     this.setValues();
     this.bind();
     this.setState();
+    return true;
   }
 
   /** Sustituye los `{{id}}` de la plantilla por los ids de esta

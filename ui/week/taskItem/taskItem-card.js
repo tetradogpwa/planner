@@ -1,6 +1,7 @@
 import { Context }         from '../../../context.js';
 import { PlannerApi }      from '../../../api.js';
 import { formatLocalDate } from '../../../back/calendar.js';
+import { montarTarjeta }   from '../../base-card.js';
 import { slotLabel }       from '../../slotLabel.js';
 import { enRejilla }       from '../weekLayout.js';
 
@@ -35,18 +36,22 @@ export class TaskItemCard {
     this.total    = 0;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/week/taskItem/taskItem-card.html').then(r => r.text()),
-      fetch('./ui/week/taskItem/taskItem-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/week/taskItem/taskItem-card.html',
+      './ui/week/taskItem/taskItem-card.css',
+    );
+    if (!html) return false;
     this.cache();
     this.render();
     this.bindToggle();
     this.bindRovingKeyboard();
     this.bindMarks();
     this.bindMarksChanged();
+    return true;
   }
 
   cache() {

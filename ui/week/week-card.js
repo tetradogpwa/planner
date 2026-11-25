@@ -1,4 +1,5 @@
 import { TaskItemCard } from './taskItem/taskItem-card.js';
+import { montarTarjeta } from '../base-card.js';
 import { DAY_NAMES_LONG } from '../../back/dayNames.js';
 import { today } from '../../back/calendar.js';
 import { consultaRejilla, enRejilla } from './weekLayout.js';
@@ -42,17 +43,21 @@ export class WeekCard {
     if (!this.root.id) this.root.id = `week-${this.index}`;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/week/week-card.html').then(r => r.text()),
-      fetch('./ui/week/week-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/week/week-card.html',
+      './ui/week/week-card.css',
+    );
+    if (!html) return false;
     this.cache();
     this.buildNav();
     this.bindEmpty();
     this.bindModo();
     if (this.week) this.render();
+    return true;
   }
 
   cache() {

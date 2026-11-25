@@ -15,6 +15,7 @@
 
 import { shortcuts } from '../shortcuts/shortcuts-card.js';
 import { AccessibilityFontSizesCard } from './fontSizes-card.js';
+import { cargarFragmentos, inyectarHtml } from '../base-card.js';
 
 export class AccessibilityCard {
   constructor(root, { withFontSizes = false } = {}) {
@@ -22,17 +23,26 @@ export class AccessibilityCard {
     this.withFontSizes = withFontSizes;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar, o si no se montó el bloque de tamaños de letra:
+   *  en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css, listHtml, listCss] = await Promise.all([
-      fetch('./ui/accessibility/accessibility-card.html').then(r => r.text()),
-      fetch('./ui/accessibility/accessibility-card.css').then(r => r.text()),
-      fetch('./ui/shortcuts/shortcuts-list.html').then(r => r.text()),
-      fetch('./ui/shortcuts/shortcuts-list.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}${listCss}</style>${html}`;
-    await this.mount(listHtml);
+    const partes = await cargarFragmentos([
+      './ui/accessibility/accessibility-card.html',
+      './ui/accessibility/accessibility-card.css',
+      './ui/shortcuts/shortcuts-list.html',
+      './ui/shortcuts/shortcuts-list.css',
+    ], this.root);
+    if (!partes) return false;
+    const [html, css, listHtml, listCss] = partes;
+    inyectarHtml(this.root, html, [
+      './ui/accessibility/accessibility-card.css',
+      './ui/shortcuts/shortcuts-list.css',
+    ], [css, listCss]);
+    return await this.mount(listHtml);
   }
 
+  /** Devuelve false si alguna parte de la tarjeta no se montó. */
   async mount(listHtml) {
     this.root.querySelector('#accessibility-shortcuts').innerHTML = listHtml;
 
@@ -51,8 +61,13 @@ export class AccessibilityCard {
     if (this.withFontSizes) {
       const mount = this.root.querySelector('#accessibility-fontsizes-mount');
       if (mount) {
-        await new AccessibilityFontSizesCard(mount).init();
+        // Si el bloque no se monta, el fallo se propaga: Ajustes no
+        // cachea la tarjeta y la vuelve a montar al cambiar de
+        // pestaña (si no, se quedaría rota para siempre, con el
+        // aviso a medias).
+        return await new AccessibilityFontSizesCard(mount).init();
       }
     }
+    return true;
   }
 }

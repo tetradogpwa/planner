@@ -1,6 +1,7 @@
 import { AddTaskCard }  from './addTask/addTask-card.js';
 import { EditTaskCard } from './editTask/editTask-card.js';
 import { escapeHtml, escapeAttr } from '../html.js';
+import { montarTarjeta } from '../base-card.js';
 import { taskSummary }  from '../../back/taskSummary.js';
 import { mostrarAviso } from '../avisos.js';
 import { emitChanged }  from '../../api.js';
@@ -18,16 +19,20 @@ export class TaskManagerCard {
     this.context = context;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/taskManager/taskManager-card.html').then(r => r.text()),
-      fetch('./ui/taskManager/taskManager-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/taskManager/taskManager-card.html',
+      './ui/taskManager/taskManager-card.css',
+    );
+    if (!html) return false;
     // `mount()` es async (espera a AddTaskCard para garantizar que
     // #taskName ya esté inyectado cuando el atajo Alt+N lo busca,
     // T-024): hay que esperar a su promesa aquí.
     await this.mount();
+    return true;
   }
 
   async mount() {

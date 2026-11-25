@@ -10,6 +10,7 @@
 // en ui/settings/preferences.js.
 // ────────────────────────────────────────────────────────────────────
 
+import { montarTarjeta } from '../base-card.js';
 import {
   getPreferences,
   setPreferences,
@@ -36,14 +37,18 @@ export class AccessibilityFontSizesCard {
     this.root = root;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css, sharedCss] = await Promise.all([
-      fetch('./ui/accessibility/fontSizes-card.html').then(r => r.text()),
-      fetch('./ui/accessibility/fontSizes-card.css').then(r => r.text()),
-      fetch('./ui/settings/settings-shared.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${sharedCss}${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/accessibility/fontSizes-card.html',
+      './ui/settings/settings-shared.css',
+      './ui/accessibility/fontSizes-card.css',
+    );
+    if (!html) return false;
     this.mount();
+    return true;
   }
 
   $(selector) { return this.root.querySelector(selector); }

@@ -1,16 +1,20 @@
 import { TaskForm } from '../taskForm/taskForm-card.js';
+import { montarTarjeta } from '../../base-card.js';
 
 export class AddTaskCard {
   constructor(root) {
     this.root = root;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/taskManager/addTask/addTask-card.html').then(r => r.text()),
-      fetch('./ui/taskManager/addTask/addTask-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/taskManager/addTask/addTask-card.html',
+      './ui/taskManager/addTask/addTask-card.css',
+    );
+    if (!html) return false;
     this.cache();
     // El formulario es el mismo módulo que usa la edición (T-047):
     // aquí, sin prefijo de id (taskName, timesPerDay, extraOptions…).
@@ -18,8 +22,9 @@ export class AddTaskCard {
     this.form = new TaskForm(this.root.querySelector('#addTaskFormMount'), {
       onSave: (task) => this.creaTarea(task),
     });
-    await this.form.init();
+    if (!await this.form.init()) return false;
     this.bind();
+    return true;
   }
 
   cache() {

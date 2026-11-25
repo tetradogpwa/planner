@@ -21,6 +21,7 @@ import {
   getCurrentState,
   openPaidVersion,
 } from '../../monetization.js';
+import { montarTarjeta } from '../base-card.js';
 
 const BLOCKED_SELECTORS = ['.topbar', '.sidebar-overlay', '.layout'];
 
@@ -31,12 +32,15 @@ export class ConsentCard {
     this.done = new Promise(resolve => { this.resolveDone = resolve; });
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/consent/consent-card.html').then(r => r.text()),
-      fetch('./ui/consent/consent-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/consent/consent-card.html',
+      './ui/consent/consent-card.css',
+    );
+    if (!html) return false;
     this.mount();
     return this.done;
   }

@@ -21,20 +21,25 @@
 // ────────────────────────────────────────────────────────────────────
 
 import { guardarEstadoMcp, leerEstadoMcp } from './mcp-state.js';
+import { montarTarjeta } from '../base-card.js';
 
 export class McpCard {
   constructor(root) {
     this.root = root;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css, sharedCss] = await Promise.all([
-      fetch('./ui/mcp/mcp-card.html').then(r => r.text()),
-      fetch('./ui/mcp/mcp-card.css').then(r => r.text()),
-      fetch('./ui/settings/settings-shared.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${sharedCss}${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/mcp/mcp-card.html',
+      './ui/settings/settings-shared.css',
+      './ui/mcp/mcp-card.css',
+    );
+    if (!html) return false;
     await this.mount();
+    return true;
   }
 
   $(sel) { return this.root.querySelector(sel); }

@@ -239,7 +239,7 @@ async function render(view, { tab = null } = {}) {
       if (!currentWeekCard) {
         views.week.innerHTML = '<div id="view-week-body"></div>';
         const body = views.week.querySelector('#view-week-body');
-        currentWeekCard = new WeekCard(body, semana, 0, {
+        const card = new WeekCard(body, semana, 0, {
           nav: true,
           onNav: (delta) => moverSemana(delta),
           // Sin tareas la semana se pinta como estado vacío, con el
@@ -253,7 +253,10 @@ async function render(view, { tab = null } = {}) {
             if (nameInput) nameInput.focus();
           },
         });
-        await currentWeekCard.init();
+        // Si la tarjeta no se pudo montar (su HTML o su CSS faltaban),
+        // la vista avisa y la tarjeta NO se guarda: en el siguiente
+        // pintado se vuelve a montar (no se guarda una rota).
+        if (await card.init()) currentWeekCard = card;
       } else {
         currentWeekCard.setWeek(semana, currentWeekCard.index, Context.Tasks.length);
       }
@@ -284,8 +287,11 @@ async function render(view, { tab = null } = {}) {
       // reseteamos a la pestaña por defecto (Apariencia) para que
       // abrir Ajustes siempre muestre la misma entrada.
       if (!currentAjustesCard) {
-        currentAjustesCard = new AjustesCard(views.ajustes, { tab });
-        await currentAjustesCard.init();
+        const card = new AjustesCard(views.ajustes, { tab });
+        // Si la tarjeta no se pudo montar (su HTML o su CSS faltaban),
+        // la vista avisa y la tarjeta NO se guarda: en el siguiente
+        // pintado se vuelve a montar (no se guarda una rota).
+        if (await card.init()) currentAjustesCard = card;
       } else if (tab) {
         await currentAjustesCard.showTab(tab);
       } else {
@@ -336,7 +342,17 @@ window.addEventListener('planner:changed', (e) => {
   // pulsar y perdería el foco del teclado.
   if (action !== 'mark' && action !== 'unmark') {
     if (view === 'tasks' || view === 'week' || view === 'allWeeks') {
-      const pintada = render(view);
+      // El repintado se aplaza un turno. La API puede cambiar algo
+      // justo cuando la persona está usando la vista (un clic, un
+      // formulario abierto): si el repintado fuera inmediato, le
+      // quitaría de delante lo que tiene entre manos (el panel de
+      // edición con lo que está escribiendo, el botón que iba a
+      // pulsar). Antes tardaba en llegar (las plantillas se
+      // descargaban por la red); con la base común (T-062) llegan al
+      // instante, así que el turno de espera se pone aquí.
+      const pintada = new Promise((resolve) => {
+        setTimeout(() => resolve(render(view)), 0);
+      });
       // Un «Deshacer» (T-053) repinta la vista entera: el foco se
       // lleva al encabezado, que es el anclaje más estable (las filas
       // se recrean y el botón del aviso que lo tenía ya no existe).

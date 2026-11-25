@@ -1,6 +1,7 @@
 import { GetNWeeks, today } from '../../back/calendar.js';
 import { DAY_NAMES } from '../../back/dayNames.js';
 import { escapeHtml } from '../html.js';
+import { montarTarjeta } from '../base-card.js';
 import { slotLabel } from '../slotLabel.js';
 
 export class PrintCard {
@@ -9,13 +10,17 @@ export class PrintCard {
     this.context = context;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/print/print-card.html').then(r => r.text()),
-      fetch('./ui/print/print-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/print/print-card.html',
+      './ui/print/print-card.css',
+    );
+    if (!html) return false;
     this.mount();
+    return true;
   }
 
   mount() {

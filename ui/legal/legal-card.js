@@ -18,6 +18,7 @@
 // ────────────────────────────────────────────────────────────────────
 
 import { trapFocus } from '../a11y.js';
+import { cargarFragmento, montarTarjeta } from '../base-card.js';
 import { publicUrlFor, isHttpsUrl } from './legal-urls.js';
 import { renderMarkdown } from './legal-markdown.js';
 
@@ -36,16 +37,19 @@ const DOCS = {
 export class LegalCard {
   constructor(root) {
     this.root = root;
-    this.cache = {};
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/legal/legal-card.html').then(r => r.text()),
-      fetch('./ui/legal/legal-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/legal/legal-card.html',
+      './ui/legal/legal-card.css',
+    );
+    if (!html) return false;
     this.mount();
+    return true;
   }
 
   async mount() {
@@ -147,8 +151,10 @@ export class LegalCard {
     this.modalTitle.focus({ preventScroll: true });
 
     try {
-      const text = this.cache[key] ?? await (await fetch(doc.file)).text();
-      this.cache[key] = text;
+      // El texto se descarga con la base común (comprueba que la
+      // descarga sea OK y lo guarda en caché: cada documento, una sola
+      // vez por sesión).
+      const text = await cargarFragmento(doc.file);
       const aviso = copiaLocal
         ? '<p class="legal-modal-note">Esta es la copia del documento incluida en la app.</p>'
         : '';

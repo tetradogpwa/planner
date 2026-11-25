@@ -22,6 +22,7 @@
 // ────────────────────────────────────────────────────────────────────
 
 import { Context }                          from '../../context.js';
+import { montarTarjeta }                    from '../base-card.js';
 import { DataManagerCard }                  from '../dataManager/dataManager-card.js';
 import { PrintCard }                        from '../print/print-card.js';
 import { LegalCard }                        from '../legal/legal-card.js';
@@ -46,13 +47,17 @@ export class AjustesCard {
     this.cards = {};
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/ajustes/ajustes-card.html').then(r => r.text()),
-      fetch('./ui/ajustes/ajustes-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/ajustes/ajustes-card.html',
+      './ui/ajustes/ajustes-card.css',
+    );
+    if (!html) return false;
     await this.mount();
+    return true;
   }
 
   async mount() {
@@ -160,8 +165,12 @@ export class AjustesCard {
       default:
         return;
     }
+    // La tarjeta se cachea SOLO si se ha montado bien. Si su HTML no se
+    // pudo cargar, avisó en el panel y se vuelve a montar al cambiar de
+    // pestaña: cacheándola antes de esperar, se quedaría rota para
+    // siempre (sin contenido y sin poder reintentarse).
+    if (!await card.init()) return;
     this.cards[name] = card;
-    await card.init();
     panel.dataset.mounted = '1';
   }
 

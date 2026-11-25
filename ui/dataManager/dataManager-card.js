@@ -1,6 +1,7 @@
 import { backupFileName, backupToJson, parseBackup } from '../../back/backup.js';
 import { emitChanged }                                    from '../../api.js';
 import { formatLocalDate, parseLocalDate }                from '../../back/calendar.js';
+import { montarTarjeta }                                  from '../base-card.js';
 import { abrirDialogo, mostrarAviso }                      from '../avisos.js';
 import { getPreferences, sanitizePreferences, setPreferences } from '../settings/preferences.js';
 
@@ -10,13 +11,17 @@ export class DataManagerCard {
     this.context = context;
   }
 
+  /** Monta la tarjeta. Devuelve false si su HTML o su CSS no se
+   *  pudieron cargar: en ese caso la vista ya muestra el aviso. */
   async init() {
-    const [html, css] = await Promise.all([
-      fetch('./ui/dataManager/dataManager-card.html').then(r => r.text()),
-      fetch('./ui/dataManager/dataManager-card.css').then(r => r.text()),
-    ]);
-    this.root.innerHTML = `<style>${css}</style>${html}`;
+    const html = await montarTarjeta(
+      this.root,
+      './ui/dataManager/dataManager-card.html',
+      './ui/dataManager/dataManager-card.css',
+    );
+    if (!html) return false;
     this.mount();
+    return true;
   }
 
   mount() {

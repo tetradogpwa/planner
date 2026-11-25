@@ -13,6 +13,7 @@ import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { LegalCard } from '../../ui/legal/legal-card.js';
+import { limpiarCache } from '../../ui/base-card.js';
 
 // ── Dobles mínimos del navegador ─────────────────────────────────────
 
@@ -127,6 +128,10 @@ let abiertas = [];
 let infoApp = null;
 
 beforeEach(() => {
+  // La base común cachea los fragmentos por sesión: aquí cada prueba
+  // parte de cero (si no, el documento ya descargado en otra prueba
+  // taparía el fallo de red que esta prueba quiere ver).
+  limpiarCache();
   documento = crearDocumento();
   globalThis.document = documento;
   globalThis.window = {

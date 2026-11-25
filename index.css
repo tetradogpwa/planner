@@ -729,6 +729,20 @@ label { color: var(--text); }
 }
 
 /* ============================================================
+   AVISO DE CARGA
+   ============================================================
+   Lo que se ve cuando una sección no se ha podido cargar (T-062):
+   ui/base-card.js lo pone en la vista en vez de dejarla en blanco.
+   Los colores salen de los tokens del tema. */
+.aviso-carga {
+  margin: 0;
+  padding: clamp(12px, 3vw, 1.5rem);
+  color: var(--danger);
+  font-size: calc(0.9375rem * var(--fs-body));
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes fadeIn {
