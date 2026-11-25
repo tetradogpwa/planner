@@ -229,6 +229,16 @@ describe('Marcar las tareas como hechas en la vista Semana (T-050)', () => {
     );
     await $('#taskListMount .btn-trash').click();
 
+    // La vista Semana solo pinta los siete días si hay tareas: sin
+    // ninguna muestra el estado vacío (T-056). Creamos una tarea que
+    // cae en otro día (una sola vez, en el futuro) para que la semana
+    // siga pintando los días y se pueda comprobar que el de hoy queda
+    // vacío.
+    await $('#taskName').setValue('Más tarde');
+    await $('input[name="repeat"][value="no-repeat"]').click();
+    await $('#taskDate').setValue('2099-01-01');
+    await $('#addTaskBtn').click();
+
     // El día ya no tiene esa tarea...
     await irASemana();
     celda = await celdaDeHoy();

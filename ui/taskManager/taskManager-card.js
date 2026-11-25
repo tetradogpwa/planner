@@ -35,6 +35,7 @@ export class TaskManagerCard {
     this.listRoot = this.root.querySelector('#taskListMount');
     this.countEl  = this.root.querySelector('#taskCount');
     this.statusEl = this.root.querySelector('#taskStatus');
+    this.emptyEl  = this.root.querySelector('#tasksEmpty');
     const toggle  = this.root.querySelector('#editToggle');
 
     toggle.addEventListener('change', () => {
@@ -67,12 +68,23 @@ export class TaskManagerCard {
       if (this.statusEl) this.statusEl.textContent = `Tarea «${e.detail.Name}» añadida`;
     });
 
+    // El botón del estado vacío lleva el foco al campo donde se escribe
+    // el nombre de la tarea: es el paso siguiente (T-056).
+    this.root.querySelector('#tasksEmptyBtn')?.addEventListener('click', () => {
+      const nameInput = this.root.querySelector('#taskName');
+      if (nameInput) nameInput.focus();
+    });
+
     this.renderList();
   }
 
   renderList() {
     this.listRoot.innerHTML = '';
     this.countEl.textContent = this.context.Tasks.length;
+
+    // El estado vacío (qué es la app, un ejemplo y el paso siguiente)
+    // solo se ve mientras no haya ninguna tarea (T-056).
+    if (this.emptyEl) this.emptyEl.hidden = this.context.Tasks.length > 0;
 
     this.context.Tasks.forEach((t) => {
       // El identificador de la tarea: con él se sabe SIEMPRE qué tarea

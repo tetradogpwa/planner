@@ -6,7 +6,7 @@
 // (Alt+1..Alt+8 y atajo '?' desde fuera de campos).
 
 import { Key } from 'webdriverio';
-import { esperarArranque } from '../helpers.mjs';
+import { esperarArranque, crearTarea } from '../helpers.mjs';
 
 /** Lee el id del elemento con foco (o cadena vacía si no hay id). */
 const focoId = () =>
@@ -598,6 +598,13 @@ describe('Uso completo con teclado', () => {
 
   // ── Vista Semana: flechas entre cabeceras de día ──────────────
   it('en Semana, flecha abajo/arriba mueve el foco entre cabeceras de día', async () => {
+    // La vista Semana solo pinta los siete días si hay tareas: sin
+    // ninguna muestra el estado vacío (T-056). Creamos una para poder
+    // recorrer las cabeceras (lo que se comprueba aquí no cambia).
+    await browser.keys([Key.Alt, '1']);
+    await porId('taskName').waitForDisplayed();
+    await crearTarea('Tarea del teclado', 'daily');
+
     // Vamos a la vista Semana.
     await browser.keys([Key.Alt, '2']);
     await porId('view-week-body-title').waitForDisplayed();

@@ -34,6 +34,10 @@
   gap: 0.5rem;
 }
 
+/* Sin tareas los controles se ocultan (estado vacío, T-056): el
+   atributo hidden no basta, porque la regla de arriba pone display. */
+.week-nav[hidden] { display: none; }
+
 .week-nav-btn {
   margin: 0;
   flex: 0 1 auto;

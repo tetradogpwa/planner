@@ -691,6 +691,44 @@ pre {
 label { color: var(--text); }
 
 /* ============================================================
+   ESTADO VACÍO
+   ============================================================
+   Lo que se ve cuando todavía no hay nada que enseñar (T-056):
+   explica qué hace la app y da el paso siguiente con una acción
+   clara. Los colores salen de los tokens del tema. */
+.estado-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: clamp(12px, 3vw, 1.5rem);
+  background: var(--surface-alt);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+}
+/* El atributo hidden no basta: la regla de arriba pone display: flex. */
+.estado-vacio[hidden] { display: none; }
+.estado-vacio-titulo {
+  margin: 0;
+  font-size: calc(1rem * var(--fs-title));
+  font-weight: 700;
+  color: var(--text);
+}
+.estado-vacio p {
+  margin: 0;
+  max-width: 46rem;
+  font-size: calc(0.9375rem * var(--fs-body));
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.estado-vacio-ejemplo { font-style: italic; }
+.estado-vacio-btn {
+  font-size: calc(0.9375rem * var(--fs-button));
+  min-height: 2.25rem;
+}
+
+/* ============================================================
    ANIMATIONS
    ============================================================ */
 @keyframes fadeIn {

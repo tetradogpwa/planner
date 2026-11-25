@@ -89,6 +89,10 @@ describe('Vista Semana: la semana de hoy y la navegación entre semanas', () => 
     // Reloj falso: a partir de aquí la app cree que hoy es el
     // 11/03/2026.
     await fijarFecha(HOY);
+    // Una tarea diaria: sin ninguna tarea la vista Semana muestra el
+    // estado vacío en vez de los siete días (T-056), y este recorrido
+    // necesita los días pintados.
+    await crearTarea('Tarea de prueba', 'daily');
   });
 
   it('al abrir la vista Semana se ve la semana que contiene hoy, con hoy resaltado y desplegado', async () => {

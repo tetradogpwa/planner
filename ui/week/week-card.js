@@ -14,18 +14,28 @@ export class WeekCard {
    * @param {HTMLElement} root
    * @param {object}     weekData  { mondayTo, weekTasks }
    * @param {number}     index     posición de la semana (para los ids)
-   * @param {object}     options   { nav: boolean, onNav: (delta) => void }
+   * @param {object}     options   { nav: boolean, onNav: (delta) => void,
+   *                                 totalTareas: number,
+   *                                 onCrearTarea: () => void }
    *
    *  `nav` añade los controles ◀ Anterior · Hoy · Siguiente ▶ (solo
    *  los lleva la vista "Semana actual") y `onNav` recibe el salto
    *  pedido: -1 (semana anterior), +1 (semana siguiente) o 0 (la
    *  semana que contiene hoy).
+   *
+   *  `totalTareas` es cuántas tareas hay en la app: si no hay ninguna,
+   *  la tarjeta se pinta como estado vacío (en vez de los siete días
+   *  con "Sin tareas") y `onCrearTarea` es lo que hace el botón del
+   *  estado vacío (T-056).
    */
   constructor(root, weekData, index, options = {}) {
-    this.root    = root;
-    this.week    = weekData;
-    this.index   = index;
-    this.options = options;
+    this.root        = root;
+    this.week        = weekData;
+    this.index       = index;
+    this.options     = options;
+    // Cuántas tareas hay en la app. Con null (la vista de todas las
+    // semanas) la semana se pinta siempre con sus días.
+    this.totalTareas = options.totalTareas ?? null;
     // ID estable para que los aria-controls de las cabeceras de día
     // apunten a IDs únicos cuando hay varias semanas pintadas (vista
     // completa). Si el contenedor ya trae id, lo respetamos.
@@ -40,6 +50,7 @@ export class WeekCard {
     this.root.innerHTML = `<style>${css}</style>${html}`;
     this.cache();
     this.buildNav();
+    this.bindEmpty();
     this.bindModo();
     if (this.week) this.render();
   }
@@ -48,6 +59,16 @@ export class WeekCard {
     this.titleRegion   = this.root.querySelector('.week-title-region');
     this.title         = this.root.querySelector('.week-title');
     this.daysContainer = this.root.querySelector('.days-container');
+    this.grid          = this.root.querySelector('.calendar-grid');
+    this.emptyEl       = this.root.querySelector('.estado-vacio');
+  }
+
+  /** El botón del estado vacío: lleva a la creación de la primera
+   *  tarea (T-056). */
+  bindEmpty() {
+    this.emptyEl?.querySelector('.estado-vacio-btn')?.addEventListener('click', () => {
+      this.options.onCrearTarea?.();
+    });
   }
 
   /** Crea los controles de navegación (solo en la vista "Semana
@@ -69,6 +90,7 @@ export class WeekCard {
     // está en el título y con Tab se llega a los botones.
     const grid = this.root.querySelector('.calendar-grid');
     grid.parentElement.insertBefore(nav, grid);
+    this.nav = nav;
 
     // La semana se anuncia en una región role="status": el título, que
     // está dentro, cambia de texto al cambiar de semana.
@@ -89,9 +111,10 @@ export class WeekCard {
    *  La tarjeta no se destruye: su región role="status" sigue en el
    *  DOM, así que el cambio de semana se anuncia a los lectores de
    *  pantalla (si se recreara la tarjeta, el aviso se perdería). */
-  setWeek(weekData, index = this.index) {
-    this.week  = weekData;
-    this.index = index;
+  setWeek(weekData, index = this.index, totalTareas = this.totalTareas) {
+    this.week       = weekData;
+    this.index      = index;
+    this.totalTareas = totalTareas;
     this.render();
   }
 
@@ -112,8 +135,19 @@ export class WeekCard {
       else this.hoyBtn.removeAttribute('aria-current');
     }
 
+    // Sin tareas no hay semana que enseñar: se muestra el estado vacío
+    // (qué es la app y el enlace para crear la primera tarea) en vez de
+    // los siete días con "Sin tareas" (T-056).
+    const vacio = this.totalTareas === 0;
+    if (this.grid)    this.grid.hidden = vacio;
+    if (this.emptyEl) this.emptyEl.hidden = !vacio;
+    // Los controles de semana tampoco tienen sentido sin tareas.
+    if (this.nav) this.nav.hidden = vacio;
+
     this.daysContainer.innerHTML = '';
     this.dayCards = [];
+
+    if (vacio) return;
 
     this.week.weekTasks.forEach((tasksOfDay, dayIndex) => {
       const wrapper = document.createElement('div');

@@ -242,10 +242,20 @@ async function render(view, { tab = null } = {}) {
         currentWeekCard = new WeekCard(body, semana, 0, {
           nav: true,
           onNav: (delta) => moverSemana(delta),
+          // Sin tareas la semana se pinta como estado vacío, con el
+          // enlace para crear la primera (T-056).
+          totalTareas: Context.Tasks.length,
+          onCrearTarea: async () => {
+            await setView('tasks');
+            // El foco va al campo donde se escribe el nombre: es lo
+            // que el usuario tiene que hacer a continuación.
+            const nameInput = document.getElementById('taskName');
+            if (nameInput) nameInput.focus();
+          },
         });
         await currentWeekCard.init();
       } else {
-        currentWeekCard.setWeek(semana);
+        currentWeekCard.setWeek(semana, currentWeekCard.index, Context.Tasks.length);
       }
       break;
     }

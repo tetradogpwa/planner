@@ -12,6 +12,17 @@
     </label>
   </div>
 
+  <!-- Estado vacío (T-056): solo se ve cuando no hay ninguna tarea.
+       Explica qué hace la app, da un ejemplo y lleva el foco al
+       campo donde se escribe el nombre de la primera tarea. -->
+  <div class="estado-vacio" id="tasksEmpty" hidden>
+    <h4 class="estado-vacio-titulo">Empieza con tu primera tarea</h4>
+    <p>El Planificador Semanal coloca tus tareas en los días de la semana que tú elijas: escribes la tarea una vez y se repite sola cada día, cada N días, en los días que marques o en un ciclo de semanas.</p>
+    <p class="estado-vacio-ejemplo">Por ejemplo: «Beber agua» todos los días, «Ir al gimnasio» los lunes, miércoles y viernes, o «Preparar el informe» una sola vez.</p>
+    <p>Escribe el nombre de la tarea en el campo de arriba y pulsa «Añadir tarea».</p>
+    <button type="button" class="estado-vacio-btn" id="tasksEmptyBtn">Escribir mi primera tarea</button>
+  </div>
+
   <div id="taskListMount"></div>
 
   <!-- Aviso de que la tarea se ha guardado: es una región role="status"
