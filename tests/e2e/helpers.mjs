@@ -479,6 +479,18 @@ export async function celdasCon(nombre) {
  *  document.documentElement.clientWidth refleje el nuevo ancho
  *  (algunos drivers no aplican el resize hasta el siguiente frame). */
 export async function ventanaMovil(ancho = 390, alto = 844) {
+  await ventanaTamano(ancho, alto);
+}
+
+/** Fija el tamaño de la ventana a uno de escritorio (por defecto
+ *  1280×800, el tamaño con el que se abren los E2E). Sirve para
+ *  comprobar la vista Semana en rejilla (a partir de 1024 px). */
+export async function ventanaEscritorio(ancho = 1280, alto = 800) {
+  await ventanaTamano(ancho, alto);
+}
+
+/** Cambia el tamaño de la ventana y espera a que la página lo vea. */
+async function ventanaTamano(ancho, alto) {
   await browser.setWindowSize(ancho, alto);
   await browser.waitUntil(
     async () => {

@@ -1,6 +1,7 @@
 import { TaskItemCard } from './taskItem/taskItem-card.js';
 import { DAY_NAMES_LONG } from '../../back/dayNames.js';
 import { today } from '../../back/calendar.js';
+import { consultaRejilla, enRejilla } from './weekLayout.js';
 
 /** Fecha con año (23/11/2026): el título tiene que decir en qué
  *  semana está, también cuando la semana salta de mes o de año. */
@@ -39,6 +40,7 @@ export class WeekCard {
     this.root.innerHTML = `<style>${css}</style>${html}`;
     this.cache();
     this.buildNav();
+    this.bindModo();
     if (this.week) this.render();
   }
 
@@ -111,6 +113,7 @@ export class WeekCard {
     }
 
     this.daysContainer.innerHTML = '';
+    this.dayCards = [];
 
     this.week.weekTasks.forEach((tasksOfDay, dayIndex) => {
       const wrapper = document.createElement('div');
@@ -123,8 +126,32 @@ export class WeekCard {
       // Pasamos también la fecha real del día para detectar "hoy" y
       // el id del contenedor padre (la semana) para que los IDs únicos
       // generados por taskItem no se pisen entre semanas.
-      new TaskItemCard(wrapper, tasksOfDay || [], dayIndex, label, dayDate, this.root.id).init();
+      const card = new TaskItemCard(wrapper, tasksOfDay || [], dayIndex, label, dayDate, this.root.id);
+      this.dayCards.push(card);
+      card.init();
       this.daysContainer.appendChild(wrapper);
     });
+  }
+
+  /** Escucha los cambios de ancho de la ventana: al pasar de 1024 px
+   *  o más (rejilla de columnas) a menos (acordeón), o al revés, los
+   *  días se abren o se cierran. Si la tarjeta ya no está en el DOM
+   *  (la vista se ha repintado), se desuscribe sola. */
+  bindModo() {
+    this.onModo = () => {
+      if (!this.root.isConnected) {
+        consultaRejilla.removeEventListener('change', this.onModo);
+        return;
+      }
+      this.applyModo();
+    };
+    consultaRejilla.addEventListener('change', this.onModo);
+  }
+
+  /** Aplica el modo actual de la ventana (rejilla o acordeón) a los
+   *  días de la semana. */
+  applyModo() {
+    const rejilla = enRejilla();
+    this.dayCards.forEach(card => card.applyModo(rejilla));
   }
 }

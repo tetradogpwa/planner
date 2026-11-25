@@ -2,6 +2,7 @@ import { Context }         from '../../../context.js';
 import { PlannerApi }      from '../../../api.js';
 import { formatLocalDate } from '../../../back/calendar.js';
 import { slotLabel }       from '../../slotLabel.js';
+import { enRejilla }       from '../weekLayout.js';
 
 function colorIndex(name) {
   let h = 0;
@@ -88,6 +89,7 @@ export class TaskItemCard {
     if (isToday) {
       this.cell.classList.add('is-today');
     }
+    this.esHoy = isToday;
 
     // Badge de conteo
     const totalBadges = this.tasks.reduce((acc, t) => acc + (t.Total ?? 1), 0);
@@ -119,10 +121,21 @@ export class TaskItemCard {
     // vuelve a pintar después de haber marcado algo).
     this.syncMarks();
 
-    // Hoy se abre automáticamente
-    if (isToday) {
-      this.open();
-    }
+    // Los días se abren según el modo de la ventana: en rejilla
+    // (1024 px o más) se ve la semana entera; en acordeón, solo el de
+    // hoy, como siempre.
+    this.applyModo(enRejilla());
+  }
+
+  /** Abre o cierra el día según el modo de la ventana: en rejilla
+   *  (1024 px o más) se ven los 7 días a la vez; en acordeón, solo el
+   *  de hoy (el de siempre). */
+  applyModo(rejilla) {
+    // La tarjeta puede no estar pintada todavía (su HTML y su CSS se
+    // traen por fetch): entonces no hay nada que abrir ni cerrar.
+    if (!this.cell) return;
+    if (rejilla || this.esHoy) this.open();
+    else this.close();
   }
 
   /** Crea la fila de una aparición: la casilla para marcarla como
@@ -237,12 +250,14 @@ export class TaskItemCard {
   /** Navegación por teclado entre cabeceras de día: flecha arriba /
    *  abajo se mueve a la cabecera anterior / siguiente dentro del
    *  mismo contenedor (.days-container). Home/End van al primero y al
-   *  último. Enter y Espacio NO los gestionamos aquí: `.day-header` es
-   *  un <button> y el navegador ya dispara el click (que abre o cierra
-   *  el día); manejarlo a mano duplicaría el toggle o dependería de
-   *  que `preventDefault` cancele el click según el navegador. Esta
-   *  parte se engancha al pulsar sobre la cabecera; el contenedor es
-   *  el responsable del listado de cabeceras. */
+   *  último. En rejilla (1024 px o más) los días son columnas, así que
+   *  también valen las flechas izquierda / derecha. Enter y Espacio NO
+   *  los gestionamos aquí: `.day-header` es un <button> y el navegador
+   *  ya dispara el click (que abre o cierra el día); manejarlo a mano
+   *  duplicaría el toggle o dependería de que `preventDefault` cancele
+   *  el click según el navegador. Esta parte se engancha al pulsar
+   *  sobre la cabecera; el contenedor es el responsable del listado de
+   *  cabeceras. */
   bindRovingKeyboard() {
     this.header.addEventListener('keydown', (e) => {
       const container = this.header.closest('.days-container');
@@ -251,10 +266,19 @@ export class TaskItemCard {
       const idx = headers.indexOf(this.header);
       if (idx < 0) return;
 
+      const rejilla = enRejilla();
       let next;
       switch (e.key) {
         case 'ArrowUp':   next = (idx - 1 + headers.length) % headers.length; break;
         case 'ArrowDown': next = (idx + 1) % headers.length; break;
+        // En acordeón los días van uno debajo de otro: las flechas
+        // laterales no mueven el foco.
+        case 'ArrowLeft':
+          if (!rejilla) return;
+          next = (idx - 1 + headers.length) % headers.length; break;
+        case 'ArrowRight':
+          if (!rejilla) return;
+          next = (idx + 1) % headers.length; break;
         case 'Home':      next = 0; break;
         case 'End':       next = headers.length - 1; break;
         default: return;

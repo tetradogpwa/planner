@@ -44,9 +44,21 @@
 .week-card > *,
 .week-card .days-container > * { min-width: 0; }
 
-/* Ya no usamos grid de 7 columnas: los días se apilan */
+/* Los días se apilan: la semana es un acordeón (solo se ve el día
+   abierto). Es lo que se ve en el móvil. */
 .days-container {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+}
+
+/* A partir de 1024 px la semana se ve como rejilla: los 7 días son
+   columnas y caben todos a la vez, sin tener que abrir cada día. Es
+   el mismo ancho que mira el JavaScript (ui/week/weekLayout.js). */
+@media (min-width: 1024px) {
+  .days-container {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
 }

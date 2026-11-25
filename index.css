@@ -797,17 +797,6 @@ label { color: var(--text); }
   color: var(--on-btn);
 }
 
-/* ============================================================
-   RESPONSIVE HELPERS
-   ============================================================ */
-
-/* Ajuste del grid semanal en pantallas pequeñas */
-@media (max-width: 600px) {
-  .days-container {
-    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-    gap: 0.2rem !important;
-  }
-}
 /* Banner nativo de AdMob (Android): se pinta sobre el WebView, así que
    dejamos su hueco abajo. Ver ads/providers/admob.js */
 body.has-native-ad-banner {

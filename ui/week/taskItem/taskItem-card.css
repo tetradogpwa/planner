@@ -217,3 +217,52 @@
   color: var(--badge-slot-fg);
   border-left-color: var(--badge-slot-bd);
 }
+
+/* ── Rejilla (a partir de 1024 px) ──
+   Cada día es una columna estrecha: la cabecera se apila (nombre,
+   fecha, contador) y el texto se parte, para que nada se salga de su
+   columna ni quede recortado (tampoco con la letra al 200 %). */
+@media (min-width: 1024px) {
+  .day-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.2rem;
+    padding: 0.5rem 0.35rem;
+  }
+
+  .day-header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .day-header-right {
+    margin-left: 0;
+    justify-content: flex-start;
+    gap: 0.25rem;
+  }
+
+  .task-list {
+    padding: 0.4rem 0.35rem;
+  }
+
+  .day-name,
+  .day-date,
+  .day-progress,
+  .task-count-badge {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  .task-item {
+    gap: 0.25rem;
+  }
+
+  .task-badge {
+    padding: 2px 4px;
+    /* 'anywhere' sí deja que una palabra larga se parta (y que la
+       insignia pueda encogerse hasta el ancho de la columna). */
+    overflow-wrap: anywhere;
+  }
+}
