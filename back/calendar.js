@@ -148,22 +148,6 @@ export function GetNWeeks(from, nWeeks, nWeeksToAvoid = 0, tasks = []) {
   return GetWeeks(from, to, nWeeksToAvoid, tasks);
 }
 
-/** Devuelve el resto del mes actual desde `from`. */
-export function GetRestoOfMonth(from, tasks = []) {
-  const hoy = today();
-  return GetWeeks(from, getLastDayOfMonth(hoy), getDiffWeeks(from, hoy), tasks);
-}
-
-/** Devuelve las semanas del mes indicado. */
-export function GetMonth(from, month, year, tasks = []) {
-  const date = new Date(year, month, 1); date.setHours(0, 0, 0, 0);
-  if (from.getTime() > date.getTime()) {
-    const hoy = today();
-    return GetWeeks(hoy, getLastDayOfMonth(hoy), 0, tasks);
-  }
-  return GetWeeks(from, getLastDayOfMonth(date), getDiffWeeks(from, date), tasks);
-}
-
 // ── Semana en JSON plano ─────────────────────────────────────────────────────
 
 /** Devuelve los 7 días de la semana `offset` desde `from`, cada uno con

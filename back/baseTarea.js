@@ -1,4 +1,4 @@
-import { parseLocalDate, todayISO } from './calendar.js';
+import { todayISO } from './calendar.js';
 import { nuevoId }           from './idTarea.js';
 
 // ────────────────────────────────────────────────────────────────────
@@ -40,11 +40,6 @@ export class TaskBase{
 
     set StartDate(startDate){
         this.startDate=startDate;
-    }
-
-    /** Fecha de inicio de la tarea (a las 00:00 en hora local). */
-    getStart(){
-        return parseLocalDate(this.StartDate);
     }
 
     get Total(){

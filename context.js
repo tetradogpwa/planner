@@ -32,14 +32,6 @@ export class Context {
     localStorage.setItem(Context.KeyStartDate, date.getTime() + '');
   }
 
-  static SetTasksFromJson(json) {
-    // El origen (la fecha de inicio del planificador) sirve para
-    // migrar las tareas del formato viejo a fechas reales.
-    const parsed = FromJson(json, { origin: Context._startDate });   // lanza si el JSON no es válido
-    if (!Array.isArray(parsed)) throw new Error('Formato de tareas inválido');
-    Context.Tasks = parsed;
-  }
-
   static UpdateTasks() {
     localStorage.setItem(Context.KeyTasks, ToJson(Context.Tasks));
   }

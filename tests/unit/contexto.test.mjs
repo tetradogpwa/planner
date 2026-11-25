@@ -119,29 +119,6 @@ test('la fecha de inicio guardada es la que se lee al arrancar', () => {
   assert.equal(Context.StartDate.getTime(), new Date(2026, 10, 23).getTime());
 });
 
-// ── Importar un JSON de tareas ─────────────────────────────────────────
-
-test('importar un JSON sustituye la lista de tareas y la guarda', () => {
-  const json = JSON.stringify([
-    { className: 'DailyTask', name: 'Agua', total: 2, startDate: '2026-11-23' },
-  ]);
-
-  Context.SetTasksFromJson(json);
-
-  assert.equal(Context.Tasks.length, 1);
-  assert.equal(Context.Tasks[0].Name, 'Agua');
-  assert.equal(Context.Tasks[0].Total, 2);
-  assert.equal(JSON.parse(storage.getItem('Context_TASKS')).length, 1);
-});
-
-test('importar un JSON que no se puede leer no deja la lista a medias', () => {
-  Context.Tasks = [createDailyTask('Agua')];
-
-  assert.throws(() => Context.SetTasksFromJson('{esto no es json'), /JSON inválido/);
-  assert.equal(Context.Tasks.length, 1, 'la lista anterior sigue ahí');
-  assert.equal(Context.Tasks[0].Name, 'Agua');
-});
-
 // ── Las marcas de «hecho» ──────────────────────────────────────────────
 
 test('marcar una aparición la deja como hecha', () => {

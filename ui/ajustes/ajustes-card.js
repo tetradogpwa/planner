@@ -145,7 +145,7 @@ export class AjustesCard {
     let card;
     switch (name) {
       case 'appearance':
-        card = new SettingsCard(panel, { appearanceOnly: true });
+        card = new SettingsCard(panel);
         break;
       case 'accessibility':
         card = new AccessibilityCard(panel, { withFontSizes: true });
@@ -172,13 +172,5 @@ export class AjustesCard {
     if (!await card.init()) return;
     this.cards[name] = card;
     panel.dataset.mounted = '1';
-  }
-
-  /** Devuelve la pestaña activa actual. Lo usa index.js para saber en
-   *  qué pestaña quedó Ajustes tras un Alt+N y mover el foco al
-   *  heading cuando corresponde. */
-  getActiveTab() {
-    const sel = this.tabs.find(t => t.getAttribute('aria-selected') === 'true');
-    return sel?.dataset.tab ?? null;
   }
 }
