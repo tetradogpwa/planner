@@ -2,7 +2,6 @@
 // la semana y que siga ahí al volver a abrir. Si esta spec falla, la
 // app no sirve para lo más básico.
 
-import { Key } from 'webdriverio';
 import {
   esperarArranque,
   aceptarTerminos,
@@ -10,6 +9,7 @@ import {
   crearTarea,
   nombresDeTareas,
   irATareas,
+  navegarVistaAlt,
 } from '../helpers.mjs';
 
 describe('Arranque y primera tarea', () => {
@@ -35,7 +35,10 @@ describe('Arranque y primera tarea', () => {
   });
 
   it('la tarea diaria sale hoy en la vista Semana (Alt+2)', async () => {
-    await browser.keys([Key.Alt, '2']);
+    // navegarVistaAlt espera al aviso de pintado de la app
+    // ('planner:painted'): sin esa espera se puede leer la celda de
+    // hoy antes de que la vista Semana esté pintada.
+    await navegarVistaAlt(2);
     const hoy = $('#view-week .day-cell.is-today');
     await hoy.waitForDisplayed();
     await expect(hoy.$('.day-header')).toHaveAttribute('aria-expanded', 'true');

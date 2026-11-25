@@ -198,25 +198,40 @@ describe('Legal: URL pública de los documentos (T-029)', () => {
   it('la app no hace fetch a la URL pública', async () => {
     // Interceptamos fetch y comprobamos que ninguna petición va a
     // gabrielcatdeveloper.github.io (ni a ningún otro sitio).
-    const peticiones = await browser.execute(async () => {
-      const original = window.fetch;
-      const vista = [];
+    //
+    // No se espera un plazo fijo: se espera a que la app termine de
+    // gestionar el clic, que es cuando pide al sistema que abra la
+    // URL pública (la última cosa que hace el clic). El doble del
+    // abridor va contando las aperturas: ese contador es la señal.
+    await browser.execute(() => {
+      window.__peticionesFetch = [];
+      window.__fetchOriginal = window.fetch;
       window.fetch = function (entrada, ...resto) {
         const url = typeof entrada === 'string' ? entrada : (entrada?.url ?? '');
-        vista.push(url);
-        return original.call(this, entrada, ...resto);
+        window.__peticionesFetch.push(url);
+        return window.__fetchOriginal.call(this, entrada, ...resto);
       };
-      try {
-        // Un clic real en un documento publicado: el doble del
-        // abridor evita abrir el navegador.
-        window.__TAURI__ && (window.__TAURI__.shell = window.__TAURI__.shell || {});
-        window.__TAURI__.shell.open = async () => {};
-        document.querySelector('a[data-doc="TERMS"]').click();
-        await new Promise(r => setTimeout(r, 400));
-      } finally {
-        window.fetch = original;
+      // Un clic real en un documento publicado: el doble del
+      // abridor evita abrir el navegador.
+      window.__shellOpenOriginal = window.__TAURI__?.shell?.open;
+      window.__TAURI__ && (window.__TAURI__.shell = window.__TAURI__.shell || {});
+      window.__TAURI__.shell.open = async () => {
+        window.__aperturas = (window.__aperturas ?? 0) + 1;
+      };
+      document.querySelector('a[data-doc="TERMS"]').click();
+    });
+
+    await browser.waitUntil(
+      async () => await browser.execute(() => (window.__aperturas ?? 0) > 0),
+      { timeout: 5_000, timeoutMsg: 'La app no pidió abrir el documento en el navegador' },
+    );
+
+    const peticiones = await browser.execute(() => {
+      window.fetch = window.__fetchOriginal;
+      if (window.__shellOpenOriginal && window.__TAURI__?.shell) {
+        window.__TAURI__.shell.open = window.__shellOpenOriginal;
       }
-      return vista;
+      return window.__peticionesFetch ?? [];
     });
     const externas = peticiones.filter(u => /^https?:/i.test(u));
     expect(externas).toEqual([]);

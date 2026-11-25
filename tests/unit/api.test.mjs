@@ -55,6 +55,13 @@ beforeEach(() => {
   // Vacía las tareas entre pruebas. deleteTask emite eventos; los
   // tests que los observan añaden su propio listener en cada caso.
   while (PlannerApi.listTasks().length) PlannerApi.deleteTask(0);
+  // Devuelve la fecha de inicio a la de partida (el 19/10/2026).
+  // Hay pruebas que la cambian con setStartDate: sin restaurarla, el
+  // valor del que dependen getWeek y getStartDate dependería del
+  // orden en que se ejecutan las pruebas (y el fichero pasaría solo
+  // por casualidad). Al fijarla antes de cada prueba, el resultado no
+  // depende del orden.
+  PlannerApi.setStartDate('2026-10-19');
 });
 
 /** Devuelve la lista de eventos 'planner:changed' capturados durante

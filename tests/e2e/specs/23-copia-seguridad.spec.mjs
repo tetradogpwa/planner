@@ -16,6 +16,7 @@ import {
   abrirAppNueva,
   crearTarea,
   cargarTextoEnInput,
+  desinstalarCapturaDeDescarga,
   descargarYLeer,
   escucharCambios,
   esperarStatus,
@@ -72,7 +73,20 @@ describe('Copia de seguridad completa (T-054)', () => {
 
   before(async () => {
     await abrirAppNueva();
+  });
+
+  // La captura de las descargas se instala para cada prueba y se
+  // desmonta al terminar: si se dejara montada, el parche de
+  // URL.createObjectURL y del clic de los <a> seguiría en la página y
+  // falsearía las pruebas que vinieran después. Se instala en cada
+  // prueba (y no una sola vez) porque una recarga de la app recrea la
+  // página y se perdería el parche.
+  beforeEach(async () => {
     await instalarCapturaDeDescarga();
+  });
+
+  afterEach(async () => {
+    await desinstalarCapturaDeDescarga();
   });
 
   it('exportar guarda las tareas con su id y sus marcas de «hecho»', async () => {
@@ -244,10 +258,9 @@ describe('Copia de seguridad completa (T-054)', () => {
   });
 
   it('la copia también guarda las preferencias (el tema)', async () => {
-    // La prueba anterior recargó la app: la captura de la descarga hay
-    // que volver a montarla (la recarga borra los overrides de la página).
-    await instalarCapturaDeDescarga();
-
+    // La captura de la descarga la monta el `beforeEach` de este
+    // fichero (la prueba anterior recargó la app, y una recarga borra
+    // los overrides de la página).
     await elegirTema('dark');
 
     // Exportamos la copia con el tema oscuro.

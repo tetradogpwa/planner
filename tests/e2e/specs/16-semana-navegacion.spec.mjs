@@ -23,6 +23,7 @@ import {
   abrirAppNueva,
   celdasCon,
   crearTarea,
+  esperarCeldasSemana,
   esperarPintado,
   esperarStatus,
   irAImprimir,
@@ -96,8 +97,16 @@ describe('Vista Semana: la semana de hoy y la navegación entre semanas', () => 
   });
 
   it('al abrir la vista Semana se ve la semana que contiene hoy, con hoy resaltado y desplegado', async () => {
-    await $('button.nav-item[data-view="week"]').click();
+    // La navegación espera al aviso de pintado de la app
+    // ('planner:painted'): sin ella se puede leer el título (y las
+    // celdas) del pintado anterior.
+    await esperarPintado(async () => {
+      await $('button.nav-item[data-view="week"]').click();
+    });
     await esperarTitulo('09/03/2026');
+    // Las celdas de día se inyectan de forma asíncrona: se espera a
+    // que estén todas pintadas antes de leerlas.
+    await esperarCeldasSemana();
 
     // El título dice qué semana es, de lunes a domingo.
     const titulo = await tituloSemana();
@@ -135,43 +144,61 @@ describe('Vista Semana: la semana de hoy y la navegación entre semanas', () => 
     expect(rol).toBe('status');
 
     // Anterior → la semana previa (lunes 02/03 – domingo 08/03).
-    await $('#week-nav-prev').click();
+    await esperarPintado(async () => {
+      await $('#week-nav-prev').click();
+    });
     await esperarSemana(SEMANA_ANT, SEMANA_HOY);
 
     // Siguiente → la siguiente (de la previa, la de hoy: lunes 09/03 –
     // domingo 15/03).
-    await $('#week-nav-next').click();
+    await esperarPintado(async () => {
+      await $('#week-nav-next').click();
+    });
     await esperarSemana(SEMANA_HOY, SEMANA_ANT);
 
     // Siguiente otra vez → la siguiente (lunes 16/03 – domingo 22/03).
-    await $('#week-nav-next').click();
+    await esperarPintado(async () => {
+      await $('#week-nav-next').click();
+    });
     await esperarSemana(SEMANA_SIG, SEMANA_HOY);
 
     // Hoy → vuelve a la semana que contiene hoy.
-    await $('#week-nav-today').click();
+    await esperarPintado(async () => {
+      await $('#week-nav-today').click();
+    });
     await esperarSemana(SEMANA_HOY, SEMANA_SIG);
   });
 
   it('los controles se activan con teclado y hay atajos para cambiar de semana', async () => {
     // Volvemos a la semana de hoy para empezar el recorrido.
-    await $('#week-nav-today').click();
+    await esperarPintado(async () => {
+      await $('#week-nav-today').click();
+    });
     await esperarSemana(SEMANA_HOY);
 
     // El botón "Siguiente" con el foco se activa con Enter.
     await browser.execute(() => document.getElementById('week-nav-next').focus());
-    await browser.keys([Key.Enter]);
+    await esperarPintado(async () => {
+      await browser.keys([Key.Enter]);
+    });
     await esperarSemana(SEMANA_SIG, SEMANA_HOY);
 
     // Alt+Flecha izquierda: la semana anterior.
-    await browser.keys([Key.Alt, Key.ArrowLeft]);
+    await esperarPintado(async () => {
+      await browser.keys([Key.Alt, Key.ArrowLeft]);
+    });
     await esperarSemana(SEMANA_HOY, SEMANA_SIG);
 
     // Alt+Flecha derecha: la siguiente.
-    await browser.keys([Key.Alt, Key.ArrowRight]);
+    await esperarPintado(async () => {
+      await browser.keys([Key.Alt, Key.ArrowRight]);
+    });
     await esperarSemana(SEMANA_SIG, SEMANA_HOY);
 
     // Alt+H: la semana que contiene hoy.
-    await browser.keys([Key.Alt, 'h']);
+    await esperarPintado(async () => {
+      await browser.keys([Key.Alt, 'h']);
+    });
     await esperarSemana(SEMANA_HOY, SEMANA_SIG);
   });
 
@@ -182,8 +209,11 @@ describe('Vista Semana: la semana de hoy y la navegación entre semanas', () => 
     await $('#taskName').waitForDisplayed();
     await crearTarea('Tarea de hoy', 'daily');
 
-    await $('button.nav-item[data-view="week"]').click();
+    await esperarPintado(async () => {
+      await $('button.nav-item[data-view="week"]').click();
+    });
     await esperarTitulo('09/03/2026');
+    await esperarCeldasSemana();
 
     // Empieza el miércoles 11/03: sale de miércoles a domingo.
     const celdas = await celdasCon('Tarea de hoy');
@@ -192,7 +222,8 @@ describe('Vista Semana: la semana de hoy y la navegación entre semanas', () => 
 
   it('"Todas las semanas" empieza en la semana de hoy', async () => {
     // Se espera al pintado: las 12 semanas se pintan una a una.
-    await esperarPintado(() => navegarVistaAlt(3));
+    // (navegarVistaAlt ya espera al aviso de pintado de la app.)
+    await navegarVistaAlt(3);
 
     const titulos = await browser.execute(() =>
       Array.from(document.querySelectorAll('#view-allWeeks .week-title'))

@@ -6,7 +6,12 @@
 // (Alt+1..Alt+8 y atajo '?' desde fuera de campos).
 
 import { Key } from 'webdriverio';
-import { esperarArranque, crearTarea } from '../helpers.mjs';
+import {
+  esperarArranque,
+  esperarPintado,
+  crearTarea,
+  navegarVistaAlt,
+} from '../helpers.mjs';
 
 /** Lee el id del elemento con foco (o cadena vacía si no hay id). */
 const focoId = () =>
@@ -118,9 +123,11 @@ describe('Uso completo con teclado', () => {
     await browser.refresh();
     await porId('view-tasks-heading').waitForDisplayed();
 
-    // Pequeña pausa para que WebKit termine el primer pintado tras el
-    // refresh (focus puede quedarse en body unos ms).
-    await browser.pause(200);
+    // El primer pintado tras el refresh: la tarjeta de tareas inyecta
+    // su formulario (#taskName) al final, así que esperarlo ES
+    // esperar al pintado (y a que el foco vuelva al <body>), no a un
+    // plazo.
+    await porId('taskName').waitForDisplayed({ timeout: 10_000 });
 
     // El primer Tab de la sesión enfoca el skip-link (el primero del
     // DOM: <a class="skip-link" href="#main-content">…</a>). El
@@ -160,27 +167,14 @@ describe('Uso completo con teclado', () => {
   for (const { n, vista, idHeading } of atajosBase) {
     it(`Alt+${n} abre la vista ${vista}, enfoca su encabezado y marca aria-current en el menú`, async () => {
       // Partimos de la vista Tareas para que el atajo tenga que
-      // "mover" de vista (excepto Alt+1).
+      // "mover" de vista (excepto Alt+1). navegarVistaAlt espera al
+      // aviso de pintado de la app ('planner:painted').
       if (n !== 1) {
-        await browser.keys([Key.Alt, '1']);
-        await porId('view-tasks-heading').waitForDisplayed();
-        await browser.waitUntil(
-          async () => (await browser.execute(
-            () => document.getElementById('view-tasks').classList.contains('active'),
-          )),
-          { timeout: 3_000, timeoutMsg: 'La vista Tareas no quedó activa tras Alt+1' },
-        );
+        await navegarVistaAlt(1);
       }
-      await browser.keys([Key.Alt, String(n)]);
+      await navegarVistaAlt(n);
 
       // La vista queda activa y el encabezado recibe el foco.
-      await browser.waitUntil(
-        async () => (await browser.execute(
-          (v) => document.getElementById('view-' + v).classList.contains('active'),
-          vista,
-        )),
-        { timeout: 5_000, timeoutMsg: `Alt+${n} no activó la vista ${vista}` },
-      );
       await browser.waitUntil(
         async () => await browser.execute(
           (id) => !!document.getElementById(id),
@@ -202,9 +196,8 @@ describe('Uso completo con teclado', () => {
 
   // ── Menú lateral: flechas, Inicio y Fin ────────────────────────
   it('en el menú lateral, flechas abajo/arriba, Inicio y Fin mueven el foco entre opciones', async () => {
-    // Empezamos desde la vista Tareas.
-    await browser.keys([Key.Alt, '1']);
-    await porId('view-tasks-heading').waitForDisplayed();
+    // Empezamos desde la vista Tareas (esperando al pintado).
+    await navegarVistaAlt(1);
 
     // Tras Alt+1 el foco está en el encabezado de Tareas. Para probar
     // las flechas del menú, llevamos el foco a su primer botón SIN
@@ -251,11 +244,13 @@ describe('Uso completo con teclado', () => {
   // ── Alt+N enfoca #taskName ────────────────────────────────────
   it('Alt+N enfoca #taskName desde otra vista', async () => {
     // Estamos en Tareas; saltamos a Semana.
-    await browser.keys([Key.Alt, '2']);
-    await porId('view-week-body-title').waitForDisplayed();
+    await navegarVistaAlt(2);
 
-    // Alt+N → cambia a Tareas y enfoca #taskName.
-    await browser.keys([Key.Alt, 'n']);
+    // Alt+N → cambia a Tareas y enfoca #taskName. Se espera al aviso
+    // de pintado: la app cambia de vista y la pinta de verdad.
+    await esperarPintado(async () => {
+      await browser.keys([Key.Alt, 'n']);
+    });
     // Espera a que la vista Tareas esté activa y a que #taskName
     // aparezca en el DOM (AddTaskCard lo inyecta de forma asíncrona).
     await porId('view-tasks-heading').waitForDisplayed();
@@ -273,9 +268,25 @@ describe('Uso completo con teclado', () => {
     // hacemos con Alt+1 (que sí funciona) en lugar de Alt+N para que
     // este test sea independiente del criterio "Alt+N enfoca
     // #taskName". Si Alt+N tiene un bug, este test seguirá pasando.
-    await browser.keys([Key.Alt, '1']);
-    await porId('view-tasks-heading').waitForDisplayed();
+    await navegarVistaAlt(1);
     await porId('taskName').waitForDisplayed();
+
+    // La app inyecta el diálogo de ayuda la primera vez que se abre.
+    // Lo abrimos y lo cerramos aquí para que la comprobación de "no
+    // visible" se apoye en el estado real del diálogo (el elemento
+    // existe y la app dice que está cerrado), no en su ausencia.
+    await browser.execute(() => {
+      document.querySelector('button.nav-item[data-view="tasks"]')?.focus();
+    });
+    await browser.keys([Key.Shift, '/']);
+    await porId('shortcuts-modal').waitForDisplayed();
+    await browser.keys(Key.Escape);
+    await browser.waitUntil(
+      async () => (await browser.execute(
+        () => document.getElementById('shortcuts-modal').hidden,
+      )) === true,
+      { timeout: 3_000, timeoutMsg: 'La ayuda no se cerró con Escape' },
+    );
 
     // Ponemos el foco en #taskName explícitamente (clic real, como
     // lo haría una persona para empezar a escribir).
@@ -283,11 +294,41 @@ describe('Uso completo con teclado', () => {
     await porId('taskName').setValue('a');
     await browser.keys('?');
 
-    // La ayuda debe seguir oculta.
-    const modal = porId('shortcuts-modal');
-    await browser.pause(300);
-    const visible = await modal.isDisplayed().catch(() => false);
-    expect(visible).toBe(false);
+    // La ayuda debe seguir oculta. No se espera un plazo: se espera a
+    // que el estado del diálogo se estabilice (que siga oculto en dos
+    // fotogramas seguidos). Si la tecla '?' la hubiera abierto, el
+    // estado cambiaría y esta espera fallaría.
+    await browser.waitUntil(
+      async () => await browser.execute(() => new Promise(resolve => {
+        const modal = document.getElementById('shortcuts-modal');
+        const primera = modal?.hidden ?? null;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          resolve(primera === true && (modal?.hidden ?? null) === true);
+        }));
+      })),
+      { timeout: 3_000, timeoutMsg: 'La ayuda se abrió al escribir en #taskName' },
+    );
+
+    // Leemos el estado real del diálogo dentro de la página: si el
+    // driver falla, la lectura lanza y la prueba falla (no se degrada
+    // a "no visible").
+    const estado = await browser.execute(() => {
+      const modal = document.getElementById('shortcuts-modal');
+      if (!modal) return { existe: false };
+      const cs = getComputedStyle(modal);
+      return {
+        existe: true,
+        hidden: modal.hidden,
+        display: cs.display,
+        alto: modal.getBoundingClientRect().height,
+      };
+    });
+    if (!estado.existe) {
+      throw new Error('El diálogo de ayuda no está en el DOM: no se puede comprobar si se abrió');
+    }
+    expect(estado.hidden).toBe(true);      // la app dice que está cerrado
+    expect(estado.display).toBe('none');   // y el CSS lo esconde
+    expect(estado.alto).toBe(0);           // y no ocupa sitio en pantalla
 
     // Limpiamos el campo para no contaminar pruebas siguientes.
     await browser.execute(() => {
@@ -470,7 +511,7 @@ describe('Uso completo con teclado', () => {
   // se muestra en el modal con su copia local.
   it('abrir un documento desde Legal enfoca el título del modal y devuelve el foco al enlace', async () => {
     // Vamos a la pestaña Legal de Ajustes (Alt+7 desde T-022).
-    await browser.keys([Key.Alt, '7']);
+    await navegarVistaAlt(7);
     // La pestaña Legal está dentro de #view-ajustes; esperamos al
     // primer enlace de documento como señal de que la pestaña pintó.
     await $('a[data-doc="THIRD_PARTY_LICENSES"]').waitForDisplayed();
@@ -517,7 +558,7 @@ describe('Uso completo con teclado', () => {
 
   it('en el modal legal, Tab y Shift+Tab no salen del diálogo al abrirlo con el foco en el título', async () => {
     // Vamos a la pestaña Legal de Ajustes (Alt+7 desde T-022).
-    await browser.keys([Key.Alt, '7']);
+    await navegarVistaAlt(7);
     await $('a[data-doc="THIRD_PARTY_LICENSES"]').waitForDisplayed();
 
     // Abrimos el modal con un clic real sobre el enlace (como
@@ -601,12 +642,12 @@ describe('Uso completo con teclado', () => {
     // La vista Semana solo pinta los siete días si hay tareas: sin
     // ninguna muestra el estado vacío (T-056). Creamos una para poder
     // recorrer las cabeceras (lo que se comprueba aquí no cambia).
-    await browser.keys([Key.Alt, '1']);
+    await navegarVistaAlt(1);
     await porId('taskName').waitForDisplayed();
     await crearTarea('Tarea del teclado', 'daily');
 
     // Vamos a la vista Semana.
-    await browser.keys([Key.Alt, '2']);
+    await navegarVistaAlt(2);
     await porId('view-week-body-title').waitForDisplayed();
 
     // Esperamos a que las cabeceras de día estén enganchadas.

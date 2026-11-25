@@ -36,6 +36,7 @@ import {
   crearTareaDias,
   crearTareaNDias,
   tiposDeTareas,
+  irAPestanaAjustes,
   recargar,
   ventanaMovil,
   navegarVistaAlt,
@@ -382,15 +383,8 @@ describe('Pestaña Apariencia: tema, escala de letra y desbordamiento móvil al 
       // Los E2E corren en escritorio, donde la pestaña tiene que
       // existir: si faltara, es un fallo y no un caso que saltar.
       expect(existe).toBe(true);
-      await browser.execute(() => {
-        document.querySelector('.ajustes-tab[data-tab="mcp"]').click();
-      });
-      await browser.waitUntil(
-        async () => await browser.execute(
-          () => !document.getElementById('ajustes-panel-mcp')?.hidden,
-        ),
-        { timeout: 5_000, timeoutMsg: 'Ajustes › Asistente (MCP) no se abrió' },
-      );
+      // Clic en la pestaña y espera a que su contenido esté montado.
+      await irAPestanaAjustes('mcp');
       const medidas = await browser.execute(() => {
         const doc = document.documentElement;
         const content = document.querySelector('.content');

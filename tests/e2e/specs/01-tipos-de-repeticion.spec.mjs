@@ -11,6 +11,7 @@ import {
   crearTarea,
   crearTareaNDias,
   crearTareaDias,
+  esperarPintado,
   nombresDeTareas,
   tiposDeTareas,
   fechaCorta,
@@ -142,6 +143,10 @@ describe('Formulario de tareas: tipos de repetición', () => {
   });
 
   it('en la Semana, "Diaria" aparece todos los días desde que se creó y "Una vez" solo en una', async () => {
+    // La navegación (irASemana) espera al aviso de pintado de la app
+    // ('planner:painted'): la vista se activa antes de pintarse, así
+    // que sin esa espera las celdas que se leen abajo podrían ser las
+    // del pintado anterior.
     await irASemana();
     // La tarea diaria se creó hoy: sale todos los días desde ese día
     // (antes no existía) y en las 7 celdas a partir de ahí.
@@ -153,6 +158,8 @@ describe('Formulario de tareas: tipos de repetición', () => {
     // calendario va anclado a fechas reales, así que una tarea "sin
     // repetición" caduca (no vuelve a salir al día siguiente) y sale en
     // la columna de su día de la semana de verdad.
+    // (La lectura va con la vista ya pintada: por eso aquí no sale el
+    // 'stale element reference' que se vio antes.)
     expect(unaVez).toEqual(celdasDeUnaVez(hoy()));
   });
 
@@ -171,9 +178,13 @@ describe('Formulario de tareas: tipos de repetición', () => {
   });
 
   it('con Veces/día = 2, una tarea diaria muestra dos insignias, una por vez', async () => {
-    // Volvemos a la vista Tareas para crear una nueva tarea.
-    await $('button.nav-item[data-view="tasks"]').click();
-    await $('#view-tasks-heading').waitForDisplayed();
+    // Volvemos a la vista Tareas para crear una nueva tarea. Se espera
+    // al aviso de pintado ('planner:painted'): la vista se activa
+    // antes de pintarse, así que sin esta espera se podría leer el
+    // contenido del pintado anterior.
+    await esperarPintado(async () => {
+      await $('button.nav-item[data-view="tasks"]').click();
+    });
     await $('#taskName').setValue('Dos veces');
     await $('#timesPerDay').setValue('2');
     await $('input[name="repeat"][value="daily"]').click();
@@ -201,8 +212,11 @@ describe('Formulario de tareas: tipos de repetición', () => {
   });
 
   it('valida: nombre vacío muestra el error junto al campo y no crea la tarea', async () => {
-    await $('button.nav-item[data-view="tasks"]').click();
-    await $('#view-tasks-heading').waitForDisplayed();
+    // Volvemos a la vista Tareas y esperamos al aviso de pintado
+    // ('planner:painted'): la vista se activa antes de pintarse.
+    await esperarPintado(async () => {
+      await $('button.nav-item[data-view="tasks"]').click();
+    });
     const antes = await $('#taskCount').getText();
 
     // Reiniciamos el último alert registrado por el polyfill.
@@ -228,8 +242,11 @@ describe('Formulario de tareas: tipos de repetición', () => {
   });
 
   it('valida: "Días específicos" sin días muestra el error y no crea la tarea', async () => {
-    await $('button.nav-item[data-view="tasks"]').click();
-    await $('#view-tasks-heading').waitForDisplayed();
+    // Volvemos a la vista Tareas y esperamos al aviso de pintado
+    // ('planner:painted'): la vista se activa antes de pintarse.
+    await esperarPintado(async () => {
+      await $('button.nav-item[data-view="tasks"]').click();
+    });
     const antes = await $('#taskCount').getText();
 
     await browser.execute(() => { window.__lastAlert = null; });
@@ -250,8 +267,11 @@ describe('Formulario de tareas: tipos de repetición', () => {
   });
 
   it('valida: "Ciclo" con todas las semanas sin días muestra el error y no crea la tarea', async () => {
-    await $('button.nav-item[data-view="tasks"]').click();
-    await $('#view-tasks-heading').waitForDisplayed();
+    // Volvemos a la vista Tareas y esperamos al aviso de pintado
+    // ('planner:painted'): la vista se activa antes de pintarse.
+    await esperarPintado(async () => {
+      await $('button.nav-item[data-view="tasks"]').click();
+    });
     const antes = await $('#taskCount').getText();
 
     await browser.execute(() => { window.__lastAlert = null; });

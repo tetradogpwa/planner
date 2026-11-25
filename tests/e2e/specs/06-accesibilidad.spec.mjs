@@ -7,7 +7,12 @@
 // el diálogo "?" sobre la pestaña no duplica ids en el documento.
 
 import { Key } from 'webdriverio';
-import { aceptarTerminos } from '../helpers.mjs';
+import {
+  aceptarTerminos,
+  esperarPintado,
+  irAPestanaAjustes,
+  navegarVistaAlt,
+} from '../helpers.mjs';
 
 describe('Pestaña Accesibilidad de Ajustes', () => {
   before(async () => {
@@ -39,7 +44,11 @@ describe('Pestaña Accesibilidad de Ajustes', () => {
       if (help) help.hidden = true;
     });
 
-    await browser.keys([Key.Alt, '8']);
+    // Alt+8 abre Ajustes en la pestaña Accesibilidad. navegarVistaAlt
+    // espera al aviso de pintado de la app ('planner:painted'): sin
+    // esa espera se puede leer el panel antes de que su tarjeta esté
+    // inyectada.
+    await navegarVistaAlt(8);
     // La pestaña activa debe ser "accessibility" y su panel visible.
     await browser.waitUntil(
       async () => await browser.execute(
@@ -100,16 +109,7 @@ describe('Pestaña Accesibilidad de Ajustes', () => {
     expect(enAccesibilidad).toBe(true);
 
     // Cambiamos a Apariencia y comprobamos que NO está.
-    await browser.execute(() => {
-      const tab = document.querySelector('.ajustes-tab[data-tab="appearance"]');
-      tab?.click();
-    });
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-appearance')?.hidden === false,
-      ),
-      { timeout: 3_000, timeoutMsg: 'La pestaña Apariencia no quedó visible' },
-    );
+    await irAPestanaAjustes('appearance');
     const enApariencia = await browser.execute(() => {
       const panel = document.getElementById('ajustes-panel-appearance');
       return panel?.querySelectorAll('input[name="textScale"]').length > 0;
@@ -119,29 +119,18 @@ describe('Pestaña Accesibilidad de Ajustes', () => {
 
   it('abrirla desde el menú lateral funciona igual', async () => {
     // Volvemos a Tareas y luego clicamos el botón del menú Ajustes.
-    await browser.keys([Key.Alt, '1']);
-    await $('#view-tasks-heading').waitForDisplayed();
-    const navBtn = await $('button.nav-item[data-view="ajustes"]');
-    await navBtn.click();
-    // La pestaña por defecto al abrir Ajustes desde el menú es
-    // Apariencia; saltamos a Accesibilidad con clic.
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-appearance')?.hidden === false,
-      ),
-      { timeout: 5_000, timeoutMsg: 'Ajustes no se abrió en Apariencia al clicar el menú' },
-    );
-    await browser.execute(() => {
-      const tab = document.querySelector('.ajustes-tab[data-tab="accessibility"]');
-      tab?.click();
+    await navegarVistaAlt(1);
+    // El clic espera al aviso de pintado ('planner:painted'): la vista
+    // se activa antes de pintarse.
+    await esperarPintado(async () => {
+      await $('button.nav-item[data-view="ajustes"]').click();
     });
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-accessibility')?.hidden === false,
-      ),
-      { timeout: 5_000, timeoutMsg: 'La pestaña Accesibilidad no se abrió al clicar su pestaña' },
-    );
-    const ariaCurrent = await navBtn.getAttribute('aria-current');
+    // La pestaña por defecto al abrir Ajustes desde el menú es
+    // Apariencia; saltamos a Accesibilidad con clic. Cada cambio de
+    // pestaña espera a que su contenido esté montado.
+    await irAPestanaAjustes('appearance');
+    await irAPestanaAjustes('accessibility');
+    const ariaCurrent = await $('button.nav-item[data-view="ajustes"]').getAttribute('aria-current');
     expect(ariaCurrent).toBe('page');
   });
 
@@ -149,13 +138,7 @@ describe('Pestaña Accesibilidad de Ajustes', () => {
     // Saltamos a la pestaña Legal y comprobamos que el botón se ha
     // eliminado (el atajo se quedó en la pestaña Accesibilidad, no
     // en Legal).
-    await browser.keys([Key.Alt, '7']);
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-legal')?.hidden === false,
-      ),
-      { timeout: 5_000, timeoutMsg: 'La pestaña Legal no se abrió tras Alt+7' },
-    );
+    await navegarVistaAlt(7);
     const boton = await $('#legal-shortcuts-btn');
     expect(await boton.isExisting()).toBe(false);
   });
@@ -167,13 +150,7 @@ describe('Pestaña Accesibilidad de Ajustes', () => {
     // ni aria-labelledby en los <section>: si los llevara, quedarían
     // duplicados y los aria-labelledby apuntarían al primer nodo, no
     // al del propio diálogo.
-    await browser.keys([Key.Alt, '8']);
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-accessibility')?.hidden === false,
-      ),
-      { timeout: 5_000, timeoutMsg: 'La pestaña Accesibilidad no se abrió tras Alt+8' },
-    );
+    await navegarVistaAlt(8);
     await browser.waitUntil(
       async () => await browser.execute(
         () => document.querySelectorAll('#accessibility-shortcuts dt').length > 0,

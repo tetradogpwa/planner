@@ -66,24 +66,31 @@ describe('Permisos del WebView: sin disco y sin hosts de anuncios', () => {
   });
 
   it('la CSP bloquea el script de AdSense (build sin anuncios)', async () => {
-    const violacion = await browser.execute(async () => {
-      const esperar = new Promise(resolve => {
-        const timer = setTimeout(() => resolve(null), 5000);
-        document.addEventListener('securitypolicyviolation', event => {
-          clearTimeout(timer);
-          resolve({
-            directiva: event.violatedDirective,
-            bloqueado: event.blockedURI,
-          });
-        }, { once: true });
-      });
+    // El aviso de la CSP se registra en la página y se espera a que
+    // llegue: no se espera un plazo dentro de la página (si el
+    // evento no llegara, la espera de WebdriverIO falla con un
+    // mensaje claro).
+    await browser.execute(() => {
+      window.__violacionCsp = null;
+      document.addEventListener('securitypolicyviolation', event => {
+        window.__violacionCsp = {
+          directiva: event.violatedDirective,
+          bloqueado: event.blockedURI,
+        };
+      }, { once: true });
+    });
 
+    await browser.execute(() => {
       const script = document.createElement('script');
       script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
       document.head.append(script);
-
-      return esperar;
     });
+
+    await browser.waitUntil(
+      async () => await browser.execute(() => window.__violacionCsp !== null),
+      { timeout: 10_000, timeoutMsg: 'El navegador no avisó de que la CSP bloqueó el script' },
+    );
+    const violacion = await browser.execute(() => window.__violacionCsp);
 
     // El navegador bloquea el script antes de pedirlo: eso solo pasa si
     // la CSP no permite el host de AdSense.

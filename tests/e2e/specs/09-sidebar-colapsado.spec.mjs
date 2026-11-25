@@ -40,6 +40,26 @@ describe('Menú lateral contraído en escritorio', () => {
     };
   });
 
+  /** Espera a que el ancho del sidebar deje de cambiar. Se mide en
+   *  fotogramas consecutivos, no con un plazo: si tres fotogramas
+   *  seguidos dan el mismo ancho, la transición CSS de `width` ya
+   *  terminó (durante la transición el ancho cambia en cada
+   *  fotograma). */
+  const anchoEstable = () => browser.execute(() => new Promise(resolve => {
+    const sb = document.getElementById('sidebar');
+    let anterior = null;
+    let iguales = 0;
+    const paso = () => {
+      const w = sb.getBoundingClientRect().width;
+      if (anterior !== null && Math.abs(w - anterior) < 0.5) iguales += 1;
+      else iguales = 0;
+      anterior = w;
+      if (iguales >= 3) resolve(w);
+      else requestAnimationFrame(paso);
+    };
+    requestAnimationFrame(paso);
+  }));
+
   /** Colapsa el menú y espera a que termine la transición CSS
    *  (ancho nuevo < 80 px y estable durante dos lecturas). */
   const colapsar = async () => {
@@ -81,23 +101,13 @@ describe('Menú lateral contraído en escritorio', () => {
     // Espera a que termine la transición CSS de `width 0.25s` antes de
     // medir: si pillamos la barra a mitad, el ancho queda entre el
     // expandido (224 px) y el contraído (64 px) y la prueba falla.
-    // Comparamos dos lecturas del rectWidth con un pequeño delay; si
-    // coinciden la barra ya no se está moviendo.
-    await browser.waitUntil(
-      async () => {
-        const w = await browser.execute(async () => {
-          const sb = document.getElementById('sidebar');
-          const a = sb.getBoundingClientRect().width;
-          await new Promise(r => setTimeout(r, 50));
-          const b = sb.getBoundingClientRect().width;
-          return Math.abs(a - b) < 0.5 ? a : 0;
-        });
-        // El valor final esperado es ~64.6 px (icono + paddings) +
-        // 1 px de border-right. Pedimos < 80 px y estable.
-        return w > 0 && w < 80;
-      },
-      { timeout: 2000, timeoutMsg: 'El sidebar no terminó la transición al contraerse' },
-    );
+    // La espera es "el ancho dejó de cambiar" (fotogramas
+    // consecutivos), no un plazo.
+    const estable = await anchoEstable();
+    // El valor final esperado es ~64.6 px (icono + paddings) +
+    // 1 px de border-right.
+    expect(estable).toBeGreaterThan(0);
+    expect(estable).toBeLessThan(80);
     const m = await browser.execute(() => {
       const sidebar = document.getElementById('sidebar');
       const icon = document.querySelector('button.nav-item[data-view="tasks"] .nav-icon');
@@ -170,26 +180,12 @@ describe('Menú lateral contraído en escritorio', () => {
     try {
       // Espera a que termine la transición CSS de `width 0.25s` tras
       // cambiar --fs-nav: si medimos a mitad, el sidebar aún no llega
-      // al nuevo ancho y la prueba falla por un par de píxeles. Para
-      // confirmar estabilidad hacemos dos measurements separadas.
-      await browser.waitUntil(
-        async () => {
-          const w = await browser.execute(async () => {
-            const sb = document.getElementById('sidebar');
-            const a = sb.getBoundingClientRect().width;
-            await new Promise(r => setTimeout(r, 80));
-            const b = sb.getBoundingClientRect().width;
-            return Math.abs(a - b) < 0.5 ? a : 0;
-        });
-        // A fs-nav=2 esperamos ~89 px (icono + 1.5rem + 1rem + 1 borde).
-        return w > 85;
-      },
-      { timeout: 2000, timeoutMsg: 'El sidebar no terminó la transición al crecer con --fs-nav=2' },
-      );
-      // Doble lectura tras la transición: confirma que el ancho es
-      // estable (no sigue creciendo). Algunos navegadores webkit pueden
-      // dejar la transición a medias si la media query cambia a la vez.
-      await browser.pause(60);
+      // al nuevo ancho y la prueba falla por un par de píxeles. La
+      // espera es "el ancho dejó de cambiar" (fotogramas
+      // consecutivos), no un plazo.
+      const estable = await anchoEstable();
+      // A fs-nav=2 esperamos ~89 px (icono + 1.5rem + 1rem + 1 borde).
+      expect(estable).toBeGreaterThan(85);
       const m = await browser.execute(() => {
         const sidebar = document.getElementById('sidebar');
         const item = document.querySelector('button.nav-item[data-view="tasks"]');

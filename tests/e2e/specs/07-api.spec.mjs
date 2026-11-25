@@ -4,7 +4,7 @@
 // navega a la vista Semana, borra la tarea y comprueba que se vacía
 // la lista de Tareas al volver.
 
-import { aceptarTerminos, nombresDeTareas } from '../helpers.mjs';
+import { aceptarTerminos, esperarPintado, nombresDeTareas } from '../helpers.mjs';
 
 describe('PlannerApi (capa pública)', () => {
   it('monta window.PlannerApi al arrancar', async () => {
@@ -27,7 +27,11 @@ describe('PlannerApi (capa pública)', () => {
   });
 
   it('navigate("week") cambia la vista activa', async () => {
-    await browser.execute(() => window.PlannerApi.navigate('week'));
+    // Se espera al aviso de pintado de la app ('planner:painted'): la
+    // vista se activa antes de pintarse.
+    await esperarPintado(async () => {
+      await browser.execute(() => window.PlannerApi.navigate('week'));
+    });
     // La vista week queda activa.
     const weekActive = await $('#view-week').getAttribute('class');
     expect(weekActive).toContain('active');
@@ -43,7 +47,10 @@ describe('PlannerApi (capa pública)', () => {
     const status = await browser.execute(() => document.getElementById('plannerStatus').textContent);
     expect(status).toBe('Tarea «API diaria» eliminada');
     // Volvemos a Tareas y comprobamos que la lista está vacía.
-    await browser.execute(() => window.PlannerApi.navigate('tasks'));
+    // Se espera al pintado: el contador lo pone el repintado.
+    await esperarPintado(async () => {
+      await browser.execute(() => window.PlannerApi.navigate('tasks'));
+    });
     await expect($('#taskCount')).toHaveText('0');
     expect(await nombresDeTareas()).toEqual([]);
   });

@@ -16,19 +16,37 @@ export async function esperarArranque() {
 export async function aceptarTerminos() {
   await $('[data-action="accept"]').click();
   await $('#view-tasks-heading').waitForDisplayed();
+  await esperarPintadoTareas();
+}
+
+/** Espera a que la vista Tareas esté pintada de verdad.
+ *
+ *  La app activa la vista antes de pintarla y el pintado es asíncrono
+ *  (trae el HTML y el CSS de la tarjeta): el formulario (#taskName) se
+ *  inyecta AL FINAL del pintado, así que esperarlo es esperar al
+ *  pintado, no a un plazo. */
+async function esperarPintadoTareas() {
+  await $('#taskName').waitForDisplayed({ timeout: 10_000 });
 }
 
 /** Arranque completo de una instalación nueva hasta la vista Tareas. */
 export async function abrirAppNueva() {
   const pantalla = await esperarArranque();
   if (pantalla === 'terminos') await aceptarTerminos();
+  else await esperarPintadoTareas();
 }
 
 /** Recarga la ventana (equivale a cerrar y volver a abrir la app con
  *  los mismos datos guardados). */
 export async function recargar() {
   await browser.refresh();
-  return esperarArranque();
+  const pantalla = await esperarArranque();
+  // Tras el refresh no se puede escuchar el evento 'planner:painted'
+  // (la página se recrea), así que se espera al pintado con la misma
+  // señal que se usa en el resto: el formulario de la vista Tareas,
+  // que se inyecta al final del pintado.
+  if (pantalla === 'app') await esperarPintadoTareas();
+  return pantalla;
 }
 
 /** Crea una tarea desde el formulario. `repeticion` es el value del
@@ -182,16 +200,36 @@ export function fechaCorta(d = new Date()) {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-/** Navega a la vista Semana usando el menú lateral. Espera a que
- *  haya al menos una celda de día en pantalla. */
-export async function irASemana() {
-  await $('button.nav-item[data-view="week"]').click();
+/** Espera a que la vista Semana tenga sus celdas de día pintadas de
+ *  verdad. La tarjeta de cada día se inyecta de forma asíncrona
+ *  (trae su HTML y su CSS), así que puede haber celdas a medio
+ *  pintar: con que aparezca una no basta.
+ *
+ *  Sin tareas la vista no tiene celdas: muestra el estado vacío
+ *  (T-056), y eso también es un estado ya pintado. */
+export async function esperarCeldasSemana() {
   await browser.waitUntil(
-    async () => await browser.execute(
-      () => document.querySelectorAll('#view-week .day-cell').length > 0
-    ),
-    { timeout: 10_000, timeoutMsg: 'La vista Semana no pintó celdas de día' },
+    async () => await browser.execute(() => {
+      const week = document.getElementById('view-week');
+      if (!week) return false;
+      const celdas = week.querySelectorAll('.day-cell');
+      if (celdas.length === 0) {
+        return !!week.querySelector('.estado-vacio:not([hidden])');
+      }
+      return [...celdas].every(c => !!c.querySelector('.day-header'));
+    }),
+    { timeout: 10_000, timeoutMsg: 'La vista Semana no pintó sus celdas de día' },
   );
+}
+
+/** Navega a la vista Semana usando el menú lateral. Espera a que
+ *  la vista esté pintada (no solo activa) y a que sus celdas de día
+ *  estén pintadas. */
+export async function irASemana() {
+  await esperarPintado(async () => {
+    await $('button.nav-item[data-view="week"]').click();
+  });
+  await esperarCeldasSemana();
 }
 
 /** Navega a la vista Tareas usando el menú lateral (clic real sobre
@@ -236,12 +274,40 @@ export async function esperarPintado(accion) {
   );
 }
 
+/** Espera a que la pestaña `tab` de Ajustes esté visible y con su
+ *  contenido montado. El panel se muestra (se quita el atributo
+ *  hidden) antes de que su tarjeta esté inyectada, así que esperar
+ *  solo a que esté visible deja leer un panel a medio pintar. */
+export async function esperarPestanaAjustes(tab) {
+  await browser.waitUntil(
+    async () => await browser.execute(
+      t => {
+        const panel = document.getElementById(`ajustes-panel-${t}`);
+        return !!panel && !panel.hidden && panel.dataset.mounted === '1';
+      },
+      tab,
+    ),
+    { timeout: 5_000, timeoutMsg: `La pestaña ${tab} de Ajustes no se pintó` },
+  );
+}
+
+/** Cambia de pestaña dentro de Ajustes (clic real sobre la pestaña)
+ *  y espera a que su contenido esté montado. */
+export async function irAPestanaAjustes(tab) {
+  await browser.execute(t => {
+    document.querySelector(`.ajustes-tab[data-tab="${t}"]`)?.click();
+  }, tab);
+  await esperarPestanaAjustes(tab);
+}
+
 /** Abre la pestaña "Datos" dentro de Ajustes (clic sobre el botón
  *  "Ajustes" del menú lateral y luego sobre su pestaña "Datos"). El
  *  bloque sigue exponiendo #dataStatus y los botones de importar /
  *  exportar / borrar; antes vivía en una vista propia. */
 export async function irAGestionDatos() {
-  await $('button.nav-item[data-view="ajustes"]').click();
+  await esperarPintado(async () => {
+    await $('button.nav-item[data-view="ajustes"]').click();
+  });
   await browser.waitUntil(
     async () => await browser.execute(
       () => document.getElementById('view-ajustes').classList.contains('active'),
@@ -264,7 +330,9 @@ export async function irAGestionDatos() {
 /** Abre la pestaña "Imprimir y PDF" dentro de Ajustes. Antes era la
  *  vista Imprimir / PDF; ahora vive como pestaña de Ajustes. */
 export async function irAImprimir() {
-  await $('button.nav-item[data-view="ajustes"]').click();
+  await esperarPintado(async () => {
+    await $('button.nav-item[data-view="ajustes"]').click();
+  });
   await browser.waitUntil(
     async () => await browser.execute(
       () => document.getElementById('view-ajustes').classList.contains('active'),
@@ -395,6 +463,27 @@ export async function instalarCapturaDeDescarga() {
   });
 }
 
+/** Deshace la captura de descargas: devuelve al navegador su
+ *  URL.createObjectURL y el clic de los <a>. Sin esto el parche se
+ *  queda montado en la página y falsea las pruebas siguientes del
+ *  mismo fichero (que no esperan una descarga, sino el
+ *  comportamiento normal del navegador). */
+export async function desinstalarCapturaDeDescarga() {
+  await browser.execute(() => {
+    if (window.__origCreateObjectURL) {
+      URL.createObjectURL = window.__origCreateObjectURL;
+      delete window.__origCreateObjectURL;
+    }
+    if (window.__origAnchorClick) {
+      HTMLAnchorElement.prototype.click = window.__origAnchorClick;
+      delete window.__origAnchorClick;
+    }
+    window.__exportedTexto = null;
+    window.__exportedDownload = null;
+    window.__lastBlob = null;
+  });
+}
+
 /** Pulsa el botón que descarga un archivo y devuelve su contenido y su
  *  nombre. Necesita `instalarCapturaDeDescarga` antes. */
 export async function descargarYLeer(selector) {
@@ -508,8 +597,10 @@ async function ventanaTamano(ancho, alto) {
  *   4=Ajustes › Datos, 5=Ajustes › Imprimir y PDF,
  *   6=Ajustes › Apariencia, 7=Ajustes › Legal,
  *   8=Ajustes › Accesibilidad.
- *  Espera a que la vista objetivo quede activa antes de devolver el
- *  control. */
+ *  Espera a que la app avise de que la vista terminó de pintarse
+ *  (evento 'planner:painted') antes de devolver el control: la vista
+ *  se activa antes de pintarse, así que esperar solo a que esté activa
+ *  deja leer el contenido del pintado anterior. */
 export async function navegarVistaAlt(n) {
   // Todas las vistas tienen un id `view-<name>` en el DOM. Ajustes
   // también, aunque ahora Alt+4..8 llevan a pestañas concretas
@@ -522,7 +613,9 @@ export async function navegarVistaAlt(n) {
   const vista = mapaVista[n];
   if (!vista) throw new Error(`Atajo de vista desconocido: Alt+${n}`);
   const Key = (await import('webdriverio')).Key;
-  await browser.keys([Key.Alt, String(n)]);
+  await esperarPintado(async () => {
+    await browser.keys([Key.Alt, String(n)]);
+  });
   await browser.waitUntil(
     async () => await browser.execute(
       (v) => document.getElementById('view-' + v).classList.contains('active'),

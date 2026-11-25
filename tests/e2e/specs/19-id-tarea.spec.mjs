@@ -42,15 +42,21 @@ const activarGestionar = async () => {
 };
 
 // Espera a que la lista tenga los nombres esperados y los devuelve.
-// Se escribe a mano (en vez de con waitUntil) para que, si no llegan,
-// el fallo diga cuál era la lista de verdad.
+// Se espera a la lista real (se compara con lo esperado), no a un
+// plazo: si no llega, el fallo dice cuál era la lista de verdad.
 const esperarNombres = async (esperado, ms = 5_000) => {
-  const limite = Date.now() + ms;
   let vista = [];
-  while (Date.now() < limite) {
-    vista = await nombresDeTareas();
-    if (vista.join(' | ') === esperado) return vista;
-    await browser.pause(100);
+  const llegó = await browser.waitUntil(
+    async () => {
+      vista = await nombresDeTareas();
+      return vista.join(' | ') === esperado;
+    },
+    { timeout: ms, timeoutMsg: `La lista de tareas no llegó a ser "${esperado}"` },
+  ).then(() => true).catch(() => false);
+  if (!llegó) {
+    throw new Error(
+      `La lista de tareas no llegó a ser "${esperado}". Ahora es: "${vista.join(' | ')}"`,
+    );
   }
   return vista;
 };

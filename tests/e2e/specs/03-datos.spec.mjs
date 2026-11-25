@@ -25,6 +25,7 @@ import {
   recargar,
   cargarArchivoEnInput,
   cargarTextoEnInput,
+  desinstalarCapturaDeDescarga,
   descargarYLeer,
   escucharCambios,
   instalarCapturaDeDescarga,
@@ -42,6 +43,20 @@ const FIXTURE   = joinPath(HERE, '..', 'fixtures', 'tareas.json');
 const FIXTURE_ROTA = joinPath(HERE, '..', 'fixtures', 'json-corrupto.json');
 
 describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
+
+  // La captura de las descargas se instala para cada prueba (la usan
+  // las de exportar) y se desmonta al terminar: si se dejara montada,
+  // el parche de URL.createObjectURL y del clic de los <a> seguiría
+  // en la página y falsearía las pruebas que vengan después. Se
+  // instala en cada prueba (y no una sola vez) porque una recarga de
+  // la app recrea la página y se perdería el parche.
+  beforeEach(async () => {
+    await instalarCapturaDeDescarga();
+  });
+
+  afterEach(async () => {
+    await desinstalarCapturaDeDescarga();
+  });
 
   // ── Importar ───────────────────────────────────────────────────────
 
@@ -164,8 +179,8 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     // WebKitGTK headless el XHR/fetch contra un blob: URL falla con
     // "A network error occurred" en cuanto la descarga nativa empieza.
     // Tenemos que leer el Blob antes de que click() haga su trabajo.
-    await instalarCapturaDeDescarga();
-
+    // (La captura se instala en el `beforeEach` de este fichero y se
+    // desmonta en el `afterEach`.)
     await irAGestionDatos();
     const { texto, nombre } = await descargarYLeer('#exportJsonBtn');
 
@@ -199,7 +214,8 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     await irAGestionDatos();
 
     // Capturamos una nueva exportación del estado actual (la captura
-    // de la descarga del test anterior sigue montada).
+    // de la descarga está montada desde el `beforeEach` de este
+    // fichero).
     const { texto } = await descargarYLeer('#exportJsonBtn');
 
     // Borramos todo (aceptando el diálogo de la app).

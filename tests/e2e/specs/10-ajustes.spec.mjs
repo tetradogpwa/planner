@@ -34,6 +34,9 @@
 import { Key } from 'webdriverio';
 import {
   abrirAppNueva,
+  esperarPestanaAjustes,
+  esperarPintado,
+  irAPestanaAjustes,
   navegarVistaAlt,
 } from '../helpers.mjs';
 
@@ -74,16 +77,21 @@ describe('Vista Ajustes con pestañas', () => {
 
   it('abrir Ajustes desde el menú muestra Apariencia y enfoca #view-ajustes-heading', async () => {
     // Volvemos a Tareas para que setView("ajustes") desde el menú
-    // sea un cambio real de vista.
-    await browser.keys([Key.Alt, '1']);
-    await $('#view-tasks-heading').waitForDisplayed();
+    // sea un cambio real de vista. navegarVistaAlt espera al aviso de
+    // pintado de la app ('planner:painted').
+    await navegarVistaAlt(1);
 
-    const navBtn = await $('button.nav-item[data-view="ajustes"]');
-    await navBtn.click();
+    // El clic en Ajustes también espera al pintado: la vista se activa
+    // antes de pintarse, así que leer el foco nada más clicar podía
+    // leer el estado del pintado anterior.
+    await esperarPintado(async () => {
+      await $('button.nav-item[data-view="ajustes"]').click();
+    });
     await $('#view-ajustes-heading').waitForDisplayed();
 
     // aria-current="page" en el botón del menú.
-    const ariaCurrent = await navBtn.getAttribute('aria-current');
+    const ariaCurrent = await $('button.nav-item[data-view="ajustes"]')
+      .getAttribute('aria-current');
     expect(ariaCurrent).toBe('page');
 
     // El encabezado de la vista recibe el foco.
@@ -159,18 +167,9 @@ describe('Vista Ajustes con pestañas', () => {
   for (const { tab, marker, titulo } of checksPestanas) {
     it(`la pestaña "${titulo}" muestra su contenido propio`, async () => {
       await navegarVistaAlt(6); // Ajustes › Apariencia
-      // Clic sobre la pestaña destino.
-      await browser.execute(t => {
-        const tabEl = document.querySelector(`.ajustes-tab[data-tab="${t}"]`);
-        tabEl?.click();
-      }, tab);
-      await browser.waitUntil(
-        async () => await browser.execute(
-          t => !document.getElementById(`ajustes-panel-${t}`).hidden,
-          tab,
-        ),
-        { timeout: 5_000, timeoutMsg: `La pestaña ${tab} no quedó visible` },
-      );
+      // Clic sobre la pestaña destino y espera a que su contenido esté
+      // montado (el panel se muestra antes de que su tarjeta exista).
+      await irAPestanaAjustes(tab);
       // El selector característico existe en el panel.
       const existe = await browser.execute(
         ({ tab, sel }) => document.querySelector(`#ajustes-panel-${tab} ${sel}`) !== null,
@@ -181,16 +180,7 @@ describe('Vista Ajustes con pestañas', () => {
   }
 
   it('Borrar tareas está como último bloque de la pestaña Datos', async () => {
-    await browser.execute(() => {
-      const tab = document.querySelector('.ajustes-tab[data-tab="data"]');
-      tab?.click();
-    });
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-data')?.hidden === false,
-      ),
-      { timeout: 5_000, timeoutMsg: 'La pestaña Datos no se abrió' },
-    );
+    await irAPestanaAjustes('data');
     // El botón #clearAllBtn está dentro del último bloque (.export-row-danger)
     // de la pestaña Datos: comprobamos que viene después de #exportJsonBtn
     // y de #importJsonInput en el orden del DOM.
@@ -210,16 +200,7 @@ describe('Vista Ajustes con pestañas', () => {
   });
 
   it('la pestaña Accesibilidad contiene los tamaños de letra Y los atajos de teclado', async () => {
-    await browser.execute(() => {
-      const tab = document.querySelector('.ajustes-tab[data-tab="accessibility"]');
-      tab?.click();
-    });
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-accessibility')?.hidden === false,
-      ),
-      { timeout: 5_000, timeoutMsg: 'La pestaña Accesibilidad no se abrió' },
-    );
+    await irAPestanaAjustes('accessibility');
     const tieneEscala = await browser.execute(() =>
       document.querySelectorAll('#ajustes-panel-accessibility input[name="textScale"]').length > 0
     );
@@ -239,16 +220,7 @@ describe('Vista Ajustes con pestañas', () => {
   });
 
   it('la pestaña Apariencia NO contiene los tamaños de letra ni los atajos', async () => {
-    await browser.execute(() => {
-      const tab = document.querySelector('.ajustes-tab[data-tab="appearance"]');
-      tab?.click();
-    });
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-appearance')?.hidden === false,
-      ),
-      { timeout: 5_000, timeoutMsg: 'La pestaña Apariencia no se abrió' },
-    );
+    await irAPestanaAjustes('appearance');
     const noEscala = await browser.execute(() =>
       document.querySelectorAll('#ajustes-panel-appearance input[name="textScale"]').length === 0
     );
@@ -322,9 +294,9 @@ describe('Vista Ajustes con pestañas', () => {
   for (const { n, tab } of atajosPestana) {
     it(`Alt+${n} abre Ajustes en la pestaña "${tab}" y enfoca la pestaña`, async () => {
       // Volvemos a Tareas para que el atajo mueva de vista.
-      await browser.keys([Key.Alt, '1']);
-      await $('#view-tasks-heading').waitForDisplayed();
-      await browser.keys([Key.Alt, String(n)]);
+      // navegarVistaAlt espera al aviso de pintado de la app.
+      await navegarVistaAlt(1);
+      await navegarVistaAlt(n);
 
       await browser.waitUntil(
         async () => await browser.execute(
@@ -372,31 +344,31 @@ describe('Vista Ajustes con pestañas', () => {
 
   for (const { alias, tab } of aliasesNavigate) {
     it(`PlannerApi.navigate("${alias}") abre Ajustes en la pestaña "${tab}"`, async () => {
-      // Volvemos a Tareas.
-      await browser.execute(() => window.PlannerApi.navigate('tasks'));
+      // Volvemos a Tareas (esperando al aviso de pintado).
+      await esperarPintado(async () => {
+        await browser.execute(() => window.PlannerApi.navigate('tasks'));
+      });
       await $('#view-tasks-heading').waitForDisplayed();
-      await browser.execute(a => window.PlannerApi.navigate(a), alias);
-      await browser.waitUntil(
-        async () => await browser.execute(
-          t => !document.getElementById(`ajustes-panel-${t}`).hidden,
-          tab,
-        ),
-        { timeout: 5_000, timeoutMsg: `navigate("${alias}") no abrió ${tab}` },
-      );
+      // La navegación también espera al pintado, y luego a que el
+      // panel de la pestaña esté montado: el panel se muestra antes de
+      // que su tarjeta exista.
+      await esperarPintado(async () => {
+        await browser.execute(a => window.PlannerApi.navigate(a), alias);
+      });
+      await esperarPestanaAjustes(tab);
       await expect($(`#ajustes-tab-${tab}`)).toHaveAttribute('aria-selected', 'true');
     });
   }
 
   it('PlannerApi.navigate("ajustes") abre Ajustes en la pestaña Apariencia (defecto)', async () => {
-    await browser.execute(() => window.PlannerApi.navigate('tasks'));
+    await esperarPintado(async () => {
+      await browser.execute(() => window.PlannerApi.navigate('tasks'));
+    });
     await $('#view-tasks-heading').waitForDisplayed();
-    await browser.execute(() => window.PlannerApi.navigate('ajustes'));
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-appearance')?.hidden === false,
-      ),
-      { timeout: 5_000, timeoutMsg: 'navigate("ajustes") no abrió Apariencia' },
-    );
+    await esperarPintado(async () => {
+      await browser.execute(() => window.PlannerApi.navigate('ajustes'));
+    });
+    await esperarPestanaAjustes('appearance');
     await expect($('#ajustes-tab-appearance')).toHaveAttribute('aria-selected', 'true');
   });
 
@@ -422,16 +394,7 @@ describe('Vista Ajustes con pestañas', () => {
   // ── 8. La pestaña Asistente (MCP) expone los mismos controles ──────
 
   it('la pestaña Asistente (MCP) expone #mcpTitle y los controles del servidor', async () => {
-    await browser.execute(() => {
-      const tab = document.querySelector('.ajustes-tab[data-tab="mcp"]');
-      tab?.click();
-    });
-    await browser.waitUntil(
-      async () => await browser.execute(
-        () => document.querySelector('#ajustes-panel-mcp')?.hidden === false,
-      ),
-      { timeout: 5_000, timeoutMsg: 'La pestaña Asistente (MCP) no se abrió' },
-    );
+    await irAPestanaAjustes('mcp');
     // #mcpTitle, #mcpEnabled, #mcpToken, #mcpPort existen dentro del panel.
     const ids = ['mcpTitle', 'mcpEnabled', 'mcpToken', 'mcpPort'];
     for (const id of ids) {

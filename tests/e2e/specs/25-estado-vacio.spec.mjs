@@ -12,15 +12,18 @@
 import {
   abrirAppNueva,
   crearTarea,
+  esperarPintado,
   nombresDeTareas,
 } from '../helpers.mjs';
 
-/** Abre la vista Semana con el menú lateral y espera a que esté
- *  activa. No se usa el helper `irASemana`: ese espera a que se
- *  pinten las celdas de los días, y con el estado vacío no hay
- *  ninguna celda. */
+/** Abre la vista Semana con el menú lateral y espera a que la app
+ *  avise de que la terminó de pintar. No se usa el helper
+ *  `irASemana`: ese espera a que se pinten las celdas de los días, y
+ *  con el estado vacío no hay ninguna celda. */
 async function irASemana() {
-  await $('button.nav-item[data-view="week"]').click();
+  await esperarPintado(async () => {
+    await $('button.nav-item[data-view="week"]').click();
+  });
   await browser.waitUntil(
     async () => await browser.execute(
       () => document.getElementById('view-week')?.classList.contains('active') ?? false,
@@ -95,7 +98,9 @@ describe('Primer uso: los estados vacíos de Tareas y Semana', () => {
   });
 
   it('el enlace "Crear la primera tarea" lleva a Tareas con el foco en el campo del nombre', async () => {
-    await $('#view-week .estado-vacio-btn').click();
+    await esperarPintado(async () => {
+      await $('#view-week .estado-vacio-btn').click();
+    });
 
     // Estamos en la vista Tareas...
     await browser.waitUntil(
@@ -130,7 +135,9 @@ describe('Primer uso: los estados vacíos de Tareas y Semana', () => {
   it('al borrar la última tarea, los dos estados vacíos vuelven a aparecer', async () => {
     // Borramos la única tarea desde la vista Tareas, con el interruptor
     // "Gestionar" encendido (como haría una persona).
-    await $('button.nav-item[data-view="tasks"]').click();
+    await esperarPintado(async () => {
+      await $('button.nav-item[data-view="tasks"]').click();
+    });
     await browser.waitUntil(
       async () => await browser.execute(
         () => document.getElementById('view-tasks')?.classList.contains('active') ?? false,

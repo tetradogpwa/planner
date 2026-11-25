@@ -19,6 +19,8 @@ import { Key } from 'webdriverio';
 import {
   abrirAppNueva,
   celdasCon,
+  esperarCeldasSemana,
+  esperarPintado,
   irASemana,
   irATareas,
 } from '../helpers.mjs';
@@ -109,8 +111,13 @@ describe('Formulario de tarea: fecha, Enter y errores sin alert()', () => {
       [false, false, false, false, false, false, false],
     );
 
-    await $('#week-nav-next').click();
+    await esperarPintado(async () => {
+      await $('#week-nav-next').click();
+    });
     await esperarSemana(SEMANA_SIGUIENTE);
+    // Las celdas de la semana nueva se inyectan de forma asíncrona:
+    // se espera a que estén pintadas antes de leerlas.
+    await esperarCeldasSemana();
     expect(await celdasCon('Tarea futura')).toEqual(
       [false, false, true, false, false, false, false],
     );
@@ -202,8 +209,11 @@ describe('Formulario de tarea: fecha, Enter y errores sin alert()', () => {
 
     await irASemana();
     await esperarSemana('09/03/2026');
-    await $('#week-nav-next').click();
+    await esperarPintado(async () => {
+      await $('#week-nav-next').click();
+    });
     await esperarSemana(SEMANA_SIGUIENTE);
+    await esperarCeldasSemana();
     expect(await celdasCon('Tarea futura')).toEqual(
       [false, false, true, false, false, false, false],
     );
