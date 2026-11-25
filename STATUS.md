@@ -5,21 +5,21 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 16:47 UTC
+Actualizado: 2026-11-25 17:10 UTC
 
 ## Ahora
 
-**T-069 · 08-mcp: «el puerto se cierra» exige que la app diga que paró**
+**T-070 · 11-edicion-gratuita: un fetch fallido no prueba que un documento no se distribuye**
 
 - Estado: Siguiente en la cola · intentos: 0 · devoluciones del revisor: 0
 - Dificultad: 🟡 media · Delicadeza: 🟢 baja
-- Reto: Solo endurece una prueba de la app para que exija respuesta del servidor de asistentes antes y después de parar. Si la prueba está mal, no cambia la app.
+- Reto: Solo corrige una prueba de la app para que un fallo de red no se tome por «no se distribuye». Un error en la prueba no toca los datos del usuario.
 
 ## Resumen
 
-- Abiertas: 34 (1 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 25 media · 🔴 1 difícil
-- Delicadeza: 🟢 6 baja · 🟡 20 media · 🔴 7 alta
+- Abiertas: 33 (1 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 24 media · 🔴 1 difícil
+- Delicadeza: 🟢 5 baja · 🟡 20 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -29,7 +29,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-069 | Pendiente | 🟡 media | 🟢 baja | 0 | 08-mcp: «el puerto se cierra» exige que la app diga que paró |
 | T-070 | Pendiente | 🟡 media | 🟢 baja | 0 | 11-edicion-gratuita: un fetch fallido no prueba que un documento no se distribuye |
 | T-071 | Pendiente | 🟡 media | 🟡 media | 0 | 12-legal: el aviso del navegador se comprueba con contraste WCAG real |
 | T-072 | Pendiente | 🟡 media | 🟡 media | 0 | theme-boot.js: en tema automático seguir al sistema, no al esquema guardado |
@@ -65,12 +64,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-105 | Pendiente | — sin evaluar | — | 0 | El CI encuentra el hash del frontend en el binario |
 
 ## El reto de cada tarea
-
-### T-069 · 08-mcp: «el puerto se cierra» exige que la app diga que paró
-
-🟡 media · delicadeza 🟢 baja
-
-Solo endurece una prueba de la app para que exija respuesta del servidor de asistentes antes y después de parar. Si la prueba está mal, no cambia la app.
 
 ### T-070 · 11-edicion-gratuita: un fetch fallido no prueba que un documento no se distribuye
 
@@ -272,8 +265,8 @@ Aún no la ha evaluado MiniMax.
 
 ## Últimas terminadas
 
+- T-069 · 08-mcp: «el puerto se cierra» exige que la app diga que paró (2026-11-25, 1 intento)
 - T-063 · Aislar el CSS de cada tarjeta (2026-11-25, 5 intentos)
 - T-060 · Pruebas de context.js, ui/a11y.js y preferences.js (2026-11-25, 4 intentos)
 - T-062 · Una base común para las tarjetas: errores visibles y plantillas en caché (2026-11-25, 4 intentos)
 - T-061 · Un solo escapado de HTML y el Markdown legal con pruebas (2026-11-25, 1 intento)
-- T-059 · Toda navegación de las E2E espera al pintado y sin esperas fijas (2026-11-25, 4 intentos)
