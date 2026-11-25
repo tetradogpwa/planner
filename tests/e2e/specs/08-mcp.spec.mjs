@@ -100,6 +100,20 @@ async function mcpClient(port, token) {
   };
 }
 
+/** Estado REAL del servidor MCP según la capa nativa (el comando
+ *  `mcp_status` de src-tauri/src/lib.rs). Devuelve
+ *  `{ ok: true, estado }` con el estado (`{ active, port }`) o
+ *  `{ ok: false, error }` si el comando no existe o falla. */
+async function estadoMcpNativo() {
+  return browser.execute(async () => {
+    try {
+      return { ok: true, estado: await window.__TAURI__.core.invoke('mcp_status') };
+    } catch (err) {
+      return { ok: false, error: String(err) };
+    }
+  });
+}
+
 async function gotoMcpSettings() {
   // La sección "Control por asistente (MCP)" vive ahora en la pestaña
   // "Asistente (MCP)" dentro de Ajustes (T-022). No hay atajo
@@ -406,7 +420,25 @@ describe('Servidor MCP local', () => {
     // estar en Apariencia con el interruptor en un estado conocido.
     await gotoMcpSettings();
     if (!(await $('#mcpEnabled').isSelected())) await $('#mcpEnabled').click();
-    const port = await $('#mcpPort').getValue();
+    const port = Number(await $('#mcpPort').getValue());
+
+    // ANTES de desactivar: la capa nativa tiene que decir que el
+    // servidor está ACTIVO y en el puerto que muestra la UI. Sin esta
+    // comprobación, un fetch que rechaza más abajo no probaría nada:
+    // el servidor puede que no hubiera arrancado nunca.
+    const antes = await browser.waitUntil(
+      async () => {
+        const r = await estadoMcpNativo();
+        return r.ok && r.estado.active ? r : false;
+      },
+      {
+        timeout: 5000,
+        timeoutMsg: 'El servidor MCP no estaba activo antes de desactivar el interruptor',
+      },
+    );
+    expect(antes.estado.active).toBe(true);
+    expect(antes.estado.port).toBe(port);
+
     // Desactivamos. En este driver concreto (`webkit2gtk-driver`) un
     // doble click en el mismo checkbox puede colapsar los dos eventos
     // `change`, así que tras desactivar nos quedamos con el puerto
@@ -414,25 +446,43 @@ describe('Servidor MCP local', () => {
     // de spec abre una sesión nueva con datos limpios) parta de cero.
     const checkbox = await $('#mcpEnabled');
     if (await checkbox.isSelected()) await checkbox.click();
-    // El servidor tarda un instante en soltar el puerto. Cuando el
-    // puerto está cerrado, fetch rechaza la promesa ("Failed to
-    // fetch") o devuelve un response no-2xx; en cualquier caso NO
-    // debe ser 200.
+
+    // DESPUÉS de desactivar: la app tiene que CONFIRMAR que paró
+    // (`mcp_status` dice `active: false`). Un fetch que rechaza no
+    // basta: si el servidor nunca hubiera arrancado, también
+    // rechazaría.
     await browser.waitUntil(
       async () => {
-        let status = null;
-        let error = null;
+        const r = await estadoMcpNativo();
+        return r.ok && r.estado.active === false;
+      },
+      {
+        timeout: 5000,
+        timeoutMsg: 'La app seguía con el MCP activo tras desactivar el interruptor',
+      },
+    );
+
+    // Y con el servidor parado, el puerto está cerrado de verdad: el
+    // POST tiene que RECHAZAR. Si siguiera escuchando contestaría
+    // (401 sin token), así que "no es 200" no vale: tiene que fallar
+    // la conexión.
+    let ultimoStatus = null;
+    await browser.waitUntil(
+      async () => {
         try {
           const res = await fetch(`http://127.0.0.1:${port}/mcp`, { method: 'POST' });
-          status = res.status;
-        } catch (e) { error = String(e); }
-        // Servidor apagado: o fetch lanza, o el SO rechaza la
-        // conexión y recibimos status 0/522/etc. Consideramos cerrado
-        // todo lo que NO sea 200.
-        const cerrado = error !== null || (status !== null && status !== 200);
-        return cerrado;
+          ultimoStatus = res.status;
+          return false;
+        } catch {
+          ultimoStatus = null;
+          return true;
+        }
       },
-      { timeout: 5000, timeoutMsg: 'El puerto sigue abierto tras desactivar MCP' },
+      {
+        timeout: 5000,
+        interval: 200,
+        timeoutMsg: () => `El puerto ${port} sigue abierto: el POST respondió HTTP ${ultimoStatus}`,
+      },
     );
   });
 
