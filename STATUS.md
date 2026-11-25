@@ -269,7 +269,7 @@ La lógica que deja la app de detrás sin poder recibir el ratón ni el teclado 
 
 🟡 media · delicadeza 🟡 media
 
-La pantalla de términos atrapa ahora el teclado y deja el fondo bloqueado; es un añadido pequeño pero delicate, porque si se cuela el foco se pierde y la app de detrás queda inservible con el teclado.
+La pantalla de términos atrapa el teclado y bloquea la app de detrás. Es un añadido pequeño, pero si sale mal el foco se pierde y la app queda inservible con el teclado.
 
 ## Últimas terminadas
 
