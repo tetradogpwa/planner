@@ -114,6 +114,10 @@ necesitas.)
 $DIFF_TXT
 "
 
+# Temporales a su carpeta y limpieza de /tmp al salir (limpieza.sh).
+source "$ROOT/tools/minimax/limpieza.sh"
+limpieza_empezar "$ID-revision" "$LOG"
+
 timeout "$MINIMAX_TIMEOUT" "${OPENCODE_CMD[@]}" --title "$ID-revision" "${DIFF_ARGS[@]}" < <(printf '%s' "$PROMPT") > "$LOG" 2>&1
 CODE=$?
 

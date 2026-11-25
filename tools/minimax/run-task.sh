@@ -113,6 +113,11 @@ check >/dev/null || { check; exit 2; }
 mkdir -p .tasks/logs
 LOG=".tasks/logs/$ID-$(date +%Y%m%d-%H%M%S).log"
 
+# Los temporales de esta ejecución van a su carpeta y, al salir, se borra
+# lo que MiniMax haya dejado en /tmp (tools/minimax/limpieza.sh).
+source "$ROOT/tools/minimax/limpieza.sh"
+limpieza_empezar "$ID" "$LOG"
+
 $TASKS snapshot "$ID" >/dev/null
 $TASKS status "$ID" en_curso --note "MiniMax ($MINIMAX_MODEL en OpenCode) empieza; registro en $LOG" >/dev/null
 echo "▸ MiniMax trabajando en $ID (registro: $LOG)"

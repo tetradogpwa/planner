@@ -60,6 +60,9 @@ Revisas con los principios de la skill `ub-mode`
 - Ejecutar `git commit`, `git push`, `git reset`, `git checkout` ni nada
   que cambie el historial. El commit lo hace el script.
 - Tocar `.tasks/`, `.env`, `.claude/` ni `CLAUDE.md`.
+- Crear ficheros fuera de `$TMPDIR`: si necesitas uno temporal (salida de
+  pruebas, copias para comparar), usa `mktemp` o `mktemp -d`; esa carpeta
+  se borra sola al acabar la revisión.
 
 ## Formato de la respuesta (obligatorio)
 

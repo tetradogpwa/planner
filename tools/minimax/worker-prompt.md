@@ -87,6 +87,12 @@ Reglas (romper una es motivo de rechazo):
   `tools/test.sh` la ventana se abre en el escritorio del usuario y las
   pruebas borrarían sus datos reales.
 - Lee los logs de `logs/` con `grep` o por rangos, no enteros.
+- **Temporales solo en `$TMPDIR`** (`mktemp`, `mktemp -d`): apunta a una
+  carpeta de esta tarea que se borra sola al acabar. Nada de escribir en
+  `/tmp` ni en `/tmp/opencode` a mano, ni copias `.bak`, `-old`, `-new` o
+  `-backup` (en el repo tampoco): para ver o deshacer tus cambios usa
+  `git diff`. Lo que dejes fuera de `$TMPDIR` se borra igualmente y queda
+  apuntado en el registro de la tarea.
 
 ## Resumen final
 

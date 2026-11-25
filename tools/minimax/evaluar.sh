@@ -74,7 +74,10 @@ Tareas a evaluar (${#IDS[@]}): ${IDS[*]}
 $TAREAS"
 
 echo "▸ MiniMax evalúa ${#IDS[@]} tarea(s) (registro: $LOG)"
-timeout "$TIMEOUT" env -i \
+# Temporales a su carpeta y limpieza de /tmp al salir (limpieza.sh).
+source "$ROOT/tools/minimax/limpieza.sh"
+limpieza_empezar evaluacion "$LOG"
+timeout "$TIMEOUT" env -i TMPDIR="$TAREA_TMP" \
   HOME="$HOME" PATH="$PATH" LANG="${LANG:-C.UTF-8}" TERM="${TERM:-dumb}" \
   PLANNER_ROLE=worker \
   "$OPENCODE" run --standalone --agent "$AGENT" --model "$MINIMAX_MODEL" --auto --title "evaluacion" \
