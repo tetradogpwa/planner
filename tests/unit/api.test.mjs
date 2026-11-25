@@ -223,6 +223,78 @@ test('deleteTask: índice inválido lanza', () => {
   assert.throws(() => PlannerApi.deleteTask(7), /Índice de tarea inválido/);
 });
 
+// ── Marcar y desmarcar tareas (T-050) ──────────────────────────────────
+
+test('markTask marca la aparición y devuelve la marca', () => {
+  const t = PlannerApi.addTask({ name: 'Agua', repeat: 'daily' });
+  const marca = PlannerApi.markTask(t.id, '2026-11-25', 0);
+
+  assert.equal(marca.done, true);
+  assert.equal(marca.id, t.id);
+  assert.equal(marca.date, '2026-11-25');
+  assert.equal(marca.slot, 0);
+
+  // Y queda guardada en su propia clave, indexada por id, fecha y vez.
+  const marcas = JSON.parse(localStorage.getItem('Context_MARKS'));
+  assert.deepEqual(marcas[t.id], { '2026-11-25': [0] });
+});
+
+test('unmarkTask quita la marca de la aparición', () => {
+  const t = PlannerApi.addTask({ name: 'Agua', repeat: 'daily' });
+  PlannerApi.markTask(t.id, '2026-11-25', 0);
+  const marca = PlannerApi.unmarkTask(t.id, '2026-11-25', 0);
+
+  assert.equal(marca.done, false);
+  const marcas = JSON.parse(localStorage.getItem('Context_MARKS'));
+  assert.deepEqual(marcas[t.id], undefined);
+});
+
+test('cada vez de una tarea es una marca distinta', () => {
+  const t = PlannerApi.addTask({ name: 'Agua', repeat: 'daily', total: 2 });
+  PlannerApi.markTask(t.id, '2026-11-25', 0);
+
+  const marcas = JSON.parse(localStorage.getItem('Context_MARKS'));
+  assert.deepEqual(marcas[t.id], { '2026-11-25': [0] });
+
+  PlannerApi.markTask(t.id, '2026-11-25', 1);
+  const conDos = JSON.parse(localStorage.getItem('Context_MARKS'));
+  assert.deepEqual(conDos[t.id], { '2026-11-25': [0, 1] });
+});
+
+test('markTask y unmarkTask emiten su evento con el mensaje', () => {
+  const t = PlannerApi.addTask({ name: 'Agua', repeat: 'daily' });
+  const evs = captureEvents(() => {
+    PlannerApi.markTask(t.id, '2026-11-25', 0);
+    PlannerApi.unmarkTask(t.id, '2026-11-25', 0);
+  });
+  assert.equal(evs.length, 2);
+  assert.equal(evs[0].action, 'mark');
+  assert.equal(evs[0].status, 'Tarea «Agua» marcada como hecha');
+  assert.equal(evs[0].id, t.id);
+  assert.equal(evs[0].date, '2026-11-25');
+  assert.equal(evs[1].action, 'unmark');
+  assert.equal(evs[1].status, 'Tarea «Agua» marcada como pendiente');
+});
+
+test('borrar una tarea borra también sus marcas', () => {
+  const t = PlannerApi.addTask({ name: 'Agua', repeat: 'daily' });
+  PlannerApi.markTask(t.id, '2026-11-25', 0);
+  assert.ok(JSON.parse(localStorage.getItem('Context_MARKS'))[t.id]);
+
+  PlannerApi.deleteTask(t.id);
+
+  const marcas = JSON.parse(localStorage.getItem('Context_MARKS'));
+  assert.equal(marcas[t.id], undefined,
+    'la tarea se ha borrado: sus marcas tienen que irse con ella');
+});
+
+test('markTask con datos que no valen lanza', () => {
+  const t = PlannerApi.addTask({ name: 'Agua', repeat: 'daily' });
+  assert.throws(() => PlannerApi.markTask(t.id, '2026-02-31', 0), /Fecha inválida/);
+  assert.throws(() => PlannerApi.markTask(t.id, '2026-11-25', -1), /Número de vez inválido/);
+  assert.throws(() => PlannerApi.markTask('no-existe', '2026-11-25', 0), /Tarea no encontrada/);
+});
+
 // ── Identificador estable de cada tarea (T-049) ───────────────────────────
 
 test('cada tarea creada tiene un id único', () => {

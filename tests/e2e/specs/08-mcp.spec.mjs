@@ -187,7 +187,7 @@ describe('Servidor MCP local', () => {
     expect(res.status).toBe(401);
   });
 
-  it('tools/list expone las 9 herramientas con sus hints', async () => {
+  it('tools/list expone las 11 herramientas con sus hints', async () => {
     const token = await $('#mcpToken').getValue();
     const port  = await $('#mcpPort').getValue();
     const client = await mcpClient(port, token);
@@ -197,7 +197,8 @@ describe('Servidor MCP local', () => {
     const names = body.result.tools.map(t => t.name).sort();
     expect(names).toEqual([
       'abrir_vista', 'borrar_tarea', 'cambiar_fecha_inicio', 'crear_tarea',
-      'editar_tarea', 'exportar_json', 'listar_tareas', 'ver_semana', 'ver_tarea',
+      'desmarcar_tarea', 'editar_tarea', 'exportar_json', 'listar_tareas',
+      'marcar_tarea', 'ver_semana', 'ver_tarea',
     ]);
 
     // Anotaciones: lecturas -> readOnlyHint; borrar_tarea -> destructiveHint.
@@ -366,6 +367,38 @@ describe('Servidor MCP local', () => {
     // Ya no está.
     const despues = await client.call('ver_tarea', { id: tarea.id });
     expect(JSON.parse(despues.body.result.content[0].text)).toBeNull();
+  });
+
+  it('marcar_tarea y desmarcar_tarea marcan una aparición de una tarea', async () => {
+    const token = await $('#mcpToken').getValue();
+    const port  = await $('#mcpPort').getValue();
+    const client = await mcpClient(port, token);
+
+    const creada = await client.call('crear_tarea', {
+      spec: { name: 'Marcable', repeat: 'daily' },
+    });
+    const tarea = JSON.parse(creada.body.result.content[0].text);
+
+    // La marca se indexa por la fecha REAL del día.
+    const hoy = await browser.execute(() => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    });
+
+    const marcada = await client.call('marcar_tarea', { id: tarea.id, date: hoy });
+    expect(marcada.status).toBe(200);
+    const marca = JSON.parse(marcada.body.result.content[0].text);
+    expect(marca.done).toBe(true);
+    expect(marca.id).toBe(tarea.id);
+    expect(marca.date).toBe(hoy);
+    expect(marca.slot).toBe(0);
+
+    // Y se puede quitar.
+    const desmarcada = await client.call('desmarcar_tarea', { id: tarea.id, date: hoy });
+    expect(desmarcada.status).toBe(200);
+    expect(JSON.parse(desmarcada.body.result.content[0].text).done).toBe(false);
   });
 
   it('al desactivar el interruptor, el puerto se cierra', async () => {

@@ -312,15 +312,20 @@ function currentViewName() {
 }
 
 window.addEventListener('planner:changed', (e) => {
-  const { status } = e.detail ?? {};
+  const { status, action } = e.detail ?? {};
   // Repintamos la vista activa para que la UI refleje los cambios
   // hechos por la API (addTask, updateTask, deleteTask, setStartDate…).
   const view = currentViewName();
   // Solo repintamos las vistas que muestran tareas; las demás (legal,
   // settings, data, print) no cambian con la API en esta tarea y
   // re-inicializarlas movería el foco o haría trabajo inútil.
-  if (view === 'tasks' || view === 'week' || view === 'allWeeks') {
-    render(view);
+  //
+  // Marcar y desmarcar NO repintan: la casilla, el tachado y el
+  // contador del día se actualizan en el sitio (en la tarjeta del
+  // día). Repintar aquí destruiría la casilla que el usuario acaba de
+  // pulsar y perdería el foco del teclado.
+  if (action !== 'mark' && action !== 'unmark') {
+    if (view === 'tasks' || view === 'week' || view === 'allWeeks') render(view);
   }
   // Mensaje a la región role="status" para lectores de pantalla.
   if (plannerStatusEl && status) plannerStatusEl.textContent = status;

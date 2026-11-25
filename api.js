@@ -13,6 +13,8 @@
 //   - `Context.Tasks` (Proxy en context.js) ya persiste en localStorage
 //     al mutar, así que basta con hacer push/splice sobre él.
 //   - `Context.StartDate` tiene un setter que también persiste.
+//   - `Context.Mark` / `Context.Unmark` guardan las marcas de «hecho»
+//     (T-050) en su propia clave del almacenamiento.
 //   - Tras cada cambio se dispara un evento `planner:changed` en
 //     `window` (con un mensaje en español) para que la vista activa se
 //     repinte y se anuncie al usuario en una región role="status".
@@ -154,15 +156,47 @@ export const PlannerApi = {
    *  borrada.
    *
    *  `ref` es el `id` de la tarea; por compatibilidad también acepta su
-   *  `index` (obsoleto). */
+   *  `index` (obsoleto). Con la tarea se van también sus marcas de
+   *  «hecho» (T-050): si no, al volver a importar esa tarea aparecería
+   *  como ya hecha. */
   deleteTask(ref) {
     const i = indiceDeTarea(ref);
     if (i === -1) throw new Error(mensajeDeReferencia(ref));
     const name = Context.Tasks[i].Name;
     const id   = Context.Tasks[i].Id;
     Context.Tasks.splice(i, 1);
+    Context.ClearMarks(id);
     emitChanged('delete', `Tarea «${name}» eliminada`, { id, index: i, name });
     return name;
+  },
+
+  /** Marca como hecha una aparición de una tarea y lo guarda.
+   *
+   *  Una aparición es una tarea en un día: se identifica con el `id` de
+   *  la tarea, la fecha real del día ('YYYY-MM-DD') y el número de vez
+   *  (0 = la primera del día; solo hace falta para las tareas con más
+   *  de una vez al día).
+   *
+   *  Devuelve la marca: { id, date, slot, done: true }. */
+  markTask(ref, date, slot = 0) {
+    const i = indiceDeTarea(ref);
+    if (i === -1) throw new Error(mensajeDeReferencia(ref));
+    const task = Context.Tasks[i];
+    const marca = Context.Mark(task.Id, date, slot);
+    emitChanged('mark', `Tarea «${task.Name}» marcada como hecha`, { ...marca, name: task.Name });
+    return { ...marca, done: true };
+  },
+
+  /** Quita la marca de «hecho» de una aparición (la deja pendiente).
+   *
+   *  Mismos datos que `markTask`. Devuelve { id, date, slot, done: false }. */
+  unmarkTask(ref, date, slot = 0) {
+    const i = indiceDeTarea(ref);
+    if (i === -1) throw new Error(mensajeDeReferencia(ref));
+    const task = Context.Tasks[i];
+    const marca = Context.Unmark(task.Id, date, slot);
+    emitChanged('unmark', `Tarea «${task.Name}» marcada como pendiente`, { ...marca, name: task.Name });
+    return { ...marca, done: false };
   },
 
   /** Devuelve los 7 días de la semana `offset` desde la fecha de inicio. */

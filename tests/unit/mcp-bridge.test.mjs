@@ -46,6 +46,8 @@ const apiStub = {
   updateTask: (i, spec) => { apiCalls.push(['updateTask', i, spec]); return { index: i, ...spec }; },
   deleteTask: (i) => { apiCalls.push(['deleteTask', i]); return 'X'; },
   getWeek: (o) => { apiCalls.push(['getWeek', o]); return []; },
+  markTask: (id, d, s) => { apiCalls.push(['markTask', id, d, s]); return { id, date: d, slot: s, done: true }; },
+  unmarkTask: (id, d, s) => { apiCalls.push(['unmarkTask', id, d, s]); return { id, date: d, slot: s, done: false }; },
   setStartDate: (d) => { apiCalls.push(['setStartDate', d]); return d; },
   navigate: (v) => { apiCalls.push(['navigate', v]); return { view: v }; },
   exportJson: () => { apiCalls.push('exportJson'); return '[]'; },
@@ -156,6 +158,37 @@ test('exportar_json devuelve el string JSON de api.exportJson()', async () => {
   const r = await handleMcpCall({ id: '1', tool: 'exportar_json', args: {} }, apiStub);
   assert.equal(r.ok, true);
   assert.equal(r.payload, '[]');
+});
+
+// ── Marcar y desmarcar (T-050) ─────────────────────────────────────────
+
+test('marcar_tarea pasa id, fecha y vez a api.markTask', async () => {
+  const r = await handleMcpCall(
+    { id: '1', tool: 'marcar_tarea', args: { id: 'uuid-1', date: '2026-11-25', slot: 1 } },
+    apiStub,
+  );
+  assert.equal(r.ok, true);
+  assert.deepEqual(apiCalls[0], ['markTask', 'uuid-1', '2026-11-25', 1]);
+  assert.equal(r.payload.done, true);
+});
+
+test('marcar_tarea usa la vez 0 si no viene', async () => {
+  const r = await handleMcpCall(
+    { id: '1', tool: 'marcar_tarea', args: { id: 'uuid-1', date: '2026-11-25' } },
+    apiStub,
+  );
+  assert.equal(r.ok, true);
+  assert.deepEqual(apiCalls[0], ['markTask', 'uuid-1', '2026-11-25', 0]);
+});
+
+test('desmarcar_tarea pasa id, fecha y vez a api.unmarkTask', async () => {
+  const r = await handleMcpCall(
+    { id: '1', tool: 'desmarcar_tarea', args: { id: 'uuid-1', date: '2026-11-25', slot: 0 } },
+    apiStub,
+  );
+  assert.equal(r.ok, true);
+  assert.deepEqual(apiCalls[0], ['unmarkTask', 'uuid-1', '2026-11-25', 0]);
+  assert.equal(r.payload.done, false);
 });
 
 test('tool desconocida devuelve ok:false con mensaje en español', async () => {

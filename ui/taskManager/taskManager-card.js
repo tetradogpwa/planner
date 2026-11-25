@@ -104,6 +104,9 @@ export class TaskManagerCard {
         // siguiente tarea), o la anterior si era la última. Si la
         // lista queda vacía, saltamos al interruptor "Gestionar".
         this.context.Tasks.splice(pos, 1);
+        // Con la tarea se van sus marcas de «hecho» (T-050): si no, al
+        // volver a importar esa tarea aparecería como ya hecha.
+        this.context.ClearMarks(taskId);
         this.renderList();
         this.#focusAfterDelete(pos);
       };

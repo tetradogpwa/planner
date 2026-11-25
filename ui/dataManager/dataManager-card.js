@@ -80,6 +80,8 @@ export class DataManagerCard {
     this.root.querySelector('#clearAllBtn').onclick = () => {
       if (confirm('¿Borrar todas las tareas?')) {
         this.context.Tasks.length = 0;
+        // Con las tareas se van también sus marcas de «hecho» (T-050).
+        this.context.ClearAllMarks();
         this.#setStatus('🗑️ Datos borrados');
       }
     };

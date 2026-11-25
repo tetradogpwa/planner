@@ -1,3 +1,7 @@
+import { Context }         from '../../../context.js';
+import { PlannerApi }      from '../../../api.js';
+import { formatLocalDate } from '../../../back/calendar.js';
+
 function colorIndex(name) {
   let h = 0;
   for (let i = 0; i < (name?.length ?? 0); i++) {
@@ -22,6 +26,11 @@ export class TaskItemCard {
     this.dayLabel = dayLabel;
     this.dayDate  = dayDate;
     this.parentId = parentId;
+    // La fecha real del día ('YYYY-MM-DD'): es lo que indexa las
+    // marcas de «hecho», para que sigan valiendo al cambiar de semana.
+    this.date     = dayDate ? formatLocalDate(dayDate) : '';
+    // Número de apariciones del día (las que se pueden marcar).
+    this.total    = 0;
   }
 
   async init() {
@@ -34,6 +43,8 @@ export class TaskItemCard {
     this.render();
     this.bindToggle();
     this.bindRovingKeyboard();
+    this.bindMarks();
+    this.bindMarksChanged();
   }
 
   cache() {
@@ -42,6 +53,7 @@ export class TaskItemCard {
     this.nameEl    = this.root.querySelector('.day-name');
     this.dateEl    = this.root.querySelector('.day-date');
     this.countEl   = this.root.querySelector('.task-count-badge');
+    this.progressEl= this.root.querySelector('.day-progress');
     this.list      = this.root.querySelector('.task-list');
   }
 
@@ -88,6 +100,7 @@ export class TaskItemCard {
 
     // Lista de tareas
     this.list.innerHTML = '';
+    this.total = 0;
     if (!this.tasks?.length) {
       this.list.innerHTML = `<span class="empty-day">Sin tareas</span>`;
     } else {
@@ -95,22 +108,109 @@ export class TaskItemCard {
         const hasSlot = task.Total > 1;
         const parity  = colorIndex(task.Name);
         for (let i = 0; i < task.Total; i++) {
-          const badge = document.createElement('div');
-          badge.className = hasSlot
-            ? 'task-badge badge-slot'
-            : `task-badge ${parity === 0 ? 'badge-odd' : 'badge-even'}`;
-          const slot = hasSlot ? (i === 0 ? ' · 0–12H' : ' · 12–24H') : '';
-          badge.textContent = `${(task.Name ?? '').toUpperCase()}${slot}`;
-          badge.title = badge.textContent;
-          this.list.appendChild(badge);
+          this.list.appendChild(this.crearAparicion(task, i, hasSlot, parity, suffix));
+          this.total++;
         }
       });
     }
+
+    // Las marcas ya guardadas se reflejan al pintar (por si el día se
+    // vuelve a pintar después de haber marcado algo).
+    this.syncMarks();
 
     // Hoy se abre automáticamente
     if (isToday) {
       this.open();
     }
+  }
+
+  /** Crea la fila de una aparición: la casilla para marcarla como
+   *  hecha y la insignia con el nombre de la tarea.
+   *
+   *  Cada aparición es una marca distinta: la casilla lleva el id de
+   *  la tarea, la fecha real del día y el número de vez (para las
+   *  tareas con más de una vez al día). */
+  crearAparicion(task, vez, hasSlot, parity, suffix) {
+    const item = document.createElement('div');
+    item.className = 'task-item';
+
+    const slot  = hasSlot ? (vez === 0 ? '0–12H' : '12–24H') : '';
+    const check = document.createElement('input');
+    check.type        = 'checkbox';
+    check.className   = 'task-check';
+    check.id          = `${suffix}-${task.Id}-${vez}`;
+    check.dataset.taskId = task.Id;
+    check.dataset.date    = this.date;
+    check.dataset.vez     = String(vez);
+    check.setAttribute('aria-label', `${task.Name ?? ''}${slot ? ` (${slot})` : ''}`);
+
+    const badge = document.createElement('label');
+    badge.className = hasSlot
+      ? 'task-badge badge-slot'
+      : `task-badge ${parity === 0 ? 'badge-odd' : 'badge-even'}`;
+    badge.htmlFor = check.id;
+    badge.textContent = `${(task.Name ?? '').toUpperCase()}${slot ? ` · ${slot}` : ''}`;
+    badge.title = badge.textContent;
+
+    item.append(check, badge);
+    return item;
+  }
+
+  /** Al pulsar la casilla, la aparición se marca (o se desmarca) y
+   *  queda guardada. */
+  bindMarks() {
+    this.list.addEventListener('change', (e) => {
+      const check = e.target?.closest?.('.task-check');
+      if (!check) return;
+      const { taskId, date, vez } = check.dataset;
+      try {
+        if (check.checked) PlannerApi.markTask(taskId, date, Number(vez));
+        else              PlannerApi.unmarkTask(taskId, date, Number(vez));
+      } catch (err) {
+        // Si no se ha podido guardar, la casilla vuelve a su estado.
+        check.checked = !check.checked;
+        console.warn('[semana] no se ha podido guardar la marca:', err);
+      }
+    });
+  }
+
+  /** Escucha los cambios de marca para que el día se actualice también
+   *  cuando el cambio no viene de esta casilla (por ejemplo, de un
+   *  asistente que usa la API o el MCP).
+   *
+   *  Si la tarjeta ya no está en el DOM (la semana se ha repintado),
+   *  se desuscribe sola: así no se quedan escuchas de tarjetas viejas. */
+  bindMarksChanged() {
+    this.onMarksChanged = () => {
+      if (!this.root.isConnected) {
+        window.removeEventListener('planner:changed', this.onMarksChanged);
+        return;
+      }
+      this.syncMarks();
+    };
+    window.addEventListener('planner:changed', this.onMarksChanged);
+  }
+
+  /** Pone las casillas, el tachado de las hechas y el contador del día
+   *  al día con las marcas guardadas. */
+  syncMarks() {
+    let hechas = 0;
+    for (const item of this.list.querySelectorAll('.task-item')) {
+      const check = item.querySelector('.task-check');
+      const marcada = Context.IsMarked(
+        check.dataset.taskId, check.dataset.date, Number(check.dataset.vez),
+      );
+      check.checked = marcada;
+      item.classList.toggle('is-done', marcada);
+      if (marcada) hechas++;
+    }
+    this.updateProgress(hechas);
+  }
+
+  /** Escribe "2/5 hechas" en la cabecera del día. */
+  updateProgress(hechas) {
+    const total = this.total ?? 0;
+    this.progressEl.textContent = total > 0 ? `${hechas}/${total} hechas` : '';
   }
 
   open() {

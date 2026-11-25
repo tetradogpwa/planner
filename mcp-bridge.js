@@ -15,6 +15,10 @@
 // en la lista) se sigue aceptando, pero está obsoleto: si otra tarea
 // se borra mientras el asistente edita esta, la posición ya no es la
 // misma tarea.
+//
+// Marcar y desmarcar (T-050) se refieren a una APARICIÓN: la tarea, la
+// fecha real del día ('YYYY-MM-DD') y el número de vez (0 = la primera
+// del día; solo hace falta para las tareas con más de una vez al día).
 // ────────────────────────────────────────────────────────────────────
 
 import { PlannerApi } from './api.js';
@@ -44,6 +48,8 @@ export async function handleMcpCall(payload, api = PlannerApi) {
     editar_tarea:         (args)             => api.updateTask(referenciaTarea(args), args.spec),
     borrar_tarea:         (args)             => api.deleteTask(referenciaTarea(args)),
     ver_semana:           ({ offset = 0 })   => api.getWeek(offset),
+    marcar_tarea:         (args)             => api.markTask(referenciaTarea(args), args.date, args.slot ?? 0),
+    desmarcar_tarea:      (args)             => api.unmarkTask(referenciaTarea(args), args.date, args.slot ?? 0),
     cambiar_fecha_inicio: ({ isoDate })      => api.setStartDate(isoDate),
     abrir_vista:          ({ view })         => { api.navigate(view); return { view }; },
     exportar_json:        ()                 => api.exportJson(),

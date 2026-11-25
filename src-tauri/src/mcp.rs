@@ -162,6 +162,18 @@ pub struct VerSemanaArgs {
     pub offset: i64,
 }
 
+/// Una aparición de una tarea: la tarea, el día (por su fecha real) y
+/// el número de vez (para las tareas con más de una vez al día).
+#[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct MarcarTareaArgs {
+    #[schemars(description = "Identificador único de la tarea (el que devuelve listar_tareas). Es lo que hay que usar.")]
+    pub id: String,
+    #[schemars(description = "Fecha ISO 'YYYY-MM-DD' del día (la fecha real del día, no el índice del día de la semana).")]
+    pub date: String,
+    #[schemars(description = "Número de vez dentro del día (0 = la primera). Solo hace falta si la tarea tiene más de una vez al día.")]
+    pub slot: Option<i64>,
+}
+
 #[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct CambiarFechaArgs {
     #[schemars(description = "Fecha ISO 'YYYY-MM-DD'")]
@@ -269,6 +281,32 @@ impl PlannerServer {
         Parameters(args): Parameters<VerSemanaArgs>,
     ) -> Result<CallToolResult, McpError> {
         self.call_frontend("ver_semana", serde_json::json!({ "offset": args.offset })).await
+    }
+
+    /// `marcar_tarea` — marca una aparición de una tarea como hecha.
+    #[tool(description = "Marca como hecha una aparición de una tarea: la tarea (por su id), el día (por su fecha real 'YYYY-MM-DD') y el número de vez (0 = la primera del día; solo hace falta para tareas con más de una vez al día). Devuelve la marca como JSON.")]
+    async fn marcar_tarea(
+        &self,
+        Parameters(args): Parameters<MarcarTareaArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self.call_frontend("marcar_tarea", serde_json::json!({
+            "id":   args.id,
+            "date": args.date,
+            "slot": args.slot.unwrap_or(0),
+        })).await
+    }
+
+    /// `desmarcar_tarea` — deja pendiente una aparición de una tarea.
+    #[tool(description = "Quita la marca de 'hecho' de una aparición de una tarea (la deja pendiente). Mismos datos que marcar_tarea: id de la tarea, fecha ISO 'YYYY-MM-DD' del día y número de vez. Devuelve la marca como JSON.")]
+    async fn desmarcar_tarea(
+        &self,
+        Parameters(args): Parameters<MarcarTareaArgs>,
+    ) -> Result<CallToolResult, McpError> {
+        self.call_frontend("desmarcar_tarea", serde_json::json!({
+            "id":   args.id,
+            "date": args.date,
+            "slot": args.slot.unwrap_or(0),
+        })).await
     }
 
     /// `cambiar_fecha_inicio` — fija la fecha de inicio.

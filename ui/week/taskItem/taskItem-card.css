@@ -73,7 +73,9 @@
 
 .day-header-right {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
   margin-left: auto;
 }
@@ -99,6 +101,15 @@
   background: var(--hover-bg);
   color: var(--muted);
   display: inline-block;
+}
+
+/* Cuántas hay hechas: "2/5 hechas". Vive en una región role="status",
+   así que el cambio se anuncia a los lectores de pantalla. */
+.day-progress {
+  font-size: calc(0.75rem * var(--fs-meta));
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 /* Chevron */
@@ -150,7 +161,26 @@
 }
 
 /* ── Badges ── */
+
+/* Una aparición: la casilla para marcarla y la insignia con el
+   nombre. */
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.task-check {
+  flex: none;
+  margin: 0.3rem 0 0;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
 .task-badge {
+  display: block;
   font-size: calc(0.8125rem * var(--fs-task));
   font-weight: 600;
   padding: 3px 8px;
@@ -161,6 +191,13 @@
   line-height: 1.5;
   white-space: normal;
   word-break: break-word;
+}
+
+/* La hecha se ve TACHADA: el estado no depende solo del color (la
+   casilla marcada también lo dice). Los colores no cambian, así que
+   el contraste AA se mantiene en todos los temas. */
+.task-item.is-done .task-badge {
+  text-decoration: line-through;
 }
 
 .badge-odd {
