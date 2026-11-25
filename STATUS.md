@@ -5,13 +5,13 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 18:27 UTC
+Actualizado: 2026-11-25 19:05 UTC
 
 ## Ahora
 
 **T-075 · Sacar el panel de contraste y la lista de temas guardados de settings-card.js**
 
-- Estado: Siguiente en la cola · intentos: 0 · devoluciones del revisor: 0
+- Estado: Siguiente en la cola · intentos: 1 · devoluciones del revisor: 1
 - Dificultad: 🟡 media · Delicadeza: 🟡 media
 - Reto: Parte un fichero grande de Ajustes en tres sin cambiar textos ni identificadores. Un error en el reparto rompe el editor de apariencia o la lista de temas.
 
@@ -29,7 +29,7 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-075 | Pendiente | 🟡 media | 🟡 media | 0 | Sacar el panel de contraste y la lista de temas guardados de settings-card.js |
+| T-075 | Pendiente | 🟡 media | 🟡 media | 1 | Sacar el panel de contraste y la lista de temas guardados de settings-card.js |
 | T-076 | Pendiente | 🟡 media | 🟡 media | 0 | Borrar las funciones y la carpeta que nadie usa |
 | T-077 | Pendiente | 🟡 media | 🟡 media | 0 | Borrar el service worker desactivado (sw.js) |
 | T-078 | Pendiente | 🟢 fácil | 🟡 media | 0 | Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 |
