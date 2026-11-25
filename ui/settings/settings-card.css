@@ -4,7 +4,7 @@
   max-width: 40rem;
 }
 
-/* Cabecera con el título a la izquierda y el toggle a la derecha. */
+/* Cabecera de la tarjeta: el interruptor de «Modo edición». */
 .settings-header {
   display: flex;
   align-items: center;
@@ -12,62 +12,14 @@
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
 }
-.settings-header .settings-title { margin: 0; }
-
-/* Red de seguridad: el atributo HTML `hidden` debe ganarle a cualquier
-   `display: grid/flex` que declaremos en este archivo. Si no, los
-   selectores con clase tienen la misma especificidad que `[hidden]`
-   del UA stylesheet y, al ir después en el cascade, lo sobrescriben
-   dejando el bloque visible aún con `hidden`. */
-[hidden] { display: none !important; }
-.settings-title { margin: 0; font-size: calc(1.25rem * var(--fs-title)); }
-
-.settings-group {
-  margin: 0;
-  padding: clamp(12px, 3vw, 1.5rem);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-.settings-group legend {
-  font-size: calc(1rem * var(--fs-label));
-  padding: 0 0.4rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.settings-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-.settings-option {
-  font-size: calc(1rem * var(--fs-chip));
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.9rem;
-  min-height: 2.75rem;
-  border: 1px solid var(--input-border);
-  border-radius: 999px;
-  color: var(--text);
-  cursor: pointer;
-}
-.settings-option small { color: var(--text-secondary); font-size: calc(0.875rem * var(--fs-meta)); }
-.settings-option input {
-  width: 1.1rem; height: 1.1rem;
-  margin: 0;
-  accent-color: var(--primary);
-}
-.settings-option:has(input:checked) {
-  border-color: var(--primary);
-  background: var(--soft-strong);
-}
-.settings-option:has(input:focus-visible) {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-}
+/* Las clases compartidas con las otras tarjetas de Ajustes
+   (.settings-group, .settings-options, .settings-option, .settings-btn,
+   .settings-subtitle, .settings-help, .settings-status,
+   .visually-hidden) están en ui/settings/settings-shared.css: las usa
+   también la pestaña Accesibilidad y la de Asistente (MCP), y aquí se
+   repetirían sus reglas (cada tarjeta inyecta su CSS en el documento,
+   así que una clase repetida en dos ficheros depende del orden de
+   navegación). */
 
 /* Temas guardados por el usuario dentro del mismo fieldset «Tema»
    (después de los oficiales). El contenedor es «display: contents»
@@ -118,8 +70,11 @@
 .settings-preview h3 { margin: 0 0 0.5rem; font-size: calc(1rem * var(--fs-label)); color: var(--text-secondary); }
 .settings-preview p  { margin: 0 0 0.75rem; }
 .settings-preview-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-/* Badges de muestra: mismos tokens que en la vista semanal. */
-.settings-preview .task-badge {
+/* Badges de muestra: mismos tokens que en la vista semanal, pero con
+   clases propias (las de la vista semanal viven en su propia tarjeta y
+   dos tarjetas con el mismo nombre de clase se pisan según el orden
+   de navegación). */
+.settings-preview .preview-badge {
   font-size: calc(0.8125rem * var(--fs-task));
   font-weight: 600;
   padding: 3px 8px;
@@ -128,36 +83,11 @@
   letter-spacing: 0.03em;
   border-left: 3px solid transparent;
 }
-.settings-preview .badge-odd  { background: var(--badge-odd-bg);  color: var(--badge-odd-fg);  border-left-color: var(--badge-odd-bd); }
-.settings-preview .badge-even { background: var(--badge-even-bg); color: var(--badge-even-fg); border-left-color: var(--badge-even-bd); }
-.settings-preview .badge-slot { background: var(--badge-slot-bg); color: var(--badge-slot-fg); border-left-color: var(--badge-slot-bd); }
+.settings-preview .preview-badge-odd  { background: var(--badge-odd-bg);  color: var(--badge-odd-fg);  border-left-color: var(--badge-odd-bd); }
+.settings-preview .preview-badge-even { background: var(--badge-even-bg); color: var(--badge-even-fg); border-left-color: var(--badge-even-bd); }
+.settings-preview .preview-badge-slot { background: var(--badge-slot-bg); color: var(--badge-slot-fg); border-left-color: var(--badge-slot-bd); }
 
-/* ── Subtítulos, ayudas y botones del editor ── */
-.settings-subtitle {
-  margin: 0;
-  font-size: calc(1rem * var(--fs-label));
-  font-weight: 700;
-  color: var(--text);
-}
-.settings-help {
-  margin: 0.35rem 0 0;
-  color: var(--text-secondary);
-  max-width: 60ch;
-}
-.settings-status { margin: 0.4rem 0 0; color: var(--text-secondary); font-size: calc(0.875rem * var(--fs-meta)); min-height: 1.2em; }
-
-.settings-btn {
-  margin: 0;
-  padding: 0.55rem 1rem;
-  min-height: 2.75rem;
-  color: var(--text);
-  background: transparent;
-  border: 1px solid var(--input-border);
-  border-radius: 8px;
-}
-.settings-btn:hover { background: var(--hover-bg); opacity: 1; }
-
-/* ── Toggle de modo edición (mismo patrón que Gestión de tareas) ── */
+/* ── Toggle de modo edición ── */
 .custom-edit-toggle:not([hidden]) {
   display: inline-flex;
   align-items: center;
@@ -170,11 +100,17 @@
    tema nuevo"). Los botones Eliminar de cada tema guardado se
    muestran/ocultan dentro de la fila correspondiente desde
    renderSavedThemes(), no aquí. Se ocultan desde JS con el
-   atributo `hidden`; el UA stylesheet (`[hidden]` arriba, con
-   `!important`) y la forma `:not([hidden])` aquí se combinan para
-   que el atributo siempre gane a este `display: grid`. */
+   atributo `hidden`; la regla global `[hidden] { display: none
+   !important; }` de index.css y la forma `:not([hidden])` aquí se
+   combinan para que el atributo siempre gane a este `display: grid`. */
 .custom-edit-only:not([hidden]) { display: grid; gap: 0.4rem; }
-.switch-row {
+
+/* El interruptor de "Modo edición". Sus clases llevan el prefijo de
+   la tarjeta porque la de Tareas (ui/taskManager/taskManager-card.css)
+   define las suyas (.switch, .slider, .switch-row) y, como cada
+   tarjeta inyecta su CSS en el documento, sin el prefijo el aspecto
+   del interruptor dependería de si se ha pasado antes por Ajustes. */
+.settings-switch-row {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
@@ -182,22 +118,22 @@
   color: var(--text-secondary);
   cursor: pointer;
 }
-.switch {
+.settings-switch {
   position: relative;
   display: inline-block;
   width: 2.5rem;
   height: 1.4rem;
   flex-shrink: 0;
 }
-.switch input { opacity: 0; width: 0; height: 0; }
-.switch .slider {
+.settings-switch input { opacity: 0; width: 0; height: 0; }
+.settings-switch .settings-slider {
   position: absolute;
   inset: 0;
   background: var(--input-border);
   border-radius: 999px;
   transition: background 0.18s;
 }
-.switch .slider::before {
+.settings-switch .settings-slider::before {
   content: '';
   position: absolute;
   width: 1.05rem;
@@ -209,9 +145,9 @@
   border-radius: 50%;
   transition: transform 0.18s;
 }
-.switch input:checked + .slider { background: var(--primary); }
-.switch input:checked + .slider::before { transform: translate(1.1rem, -50%); }
-.switch input:focus-visible + .slider {
+.settings-switch input:checked + .settings-slider { background: var(--primary); }
+.settings-switch input:checked + .settings-slider::before { transform: translate(1.1rem, -50%); }
+.settings-switch input:focus-visible + .settings-slider {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
@@ -220,10 +156,11 @@
 .custom-theme { display: grid; gap: 1.25rem; }
 /* El atributo HTML `hidden` debe ganarle al `display` que pongamos
    nosotros en cada bloque; si no, las clases con `display: grid/flex`
-   del CSS tienen la misma especificidad que `[hidden]` del user-agent
-   stylesheet y, al ir después en el cascade, lo sobrescriben. Por eso
-   usamos `:not([hidden])` para aplicar el `display` solo cuando NO está
-   oculto, y dejamos que el UA stylesheet se encargue del caso oculto. */
+   del CSS tienen la misma especificidad que `[hidden]` y, al ir
+   después en el cascade, lo sobrescriben. Por eso usamos
+   `:not([hidden])` para aplicar el `display` solo cuando NO está
+   oculto, y la regla global `[hidden] { display: none !important; }`
+   de index.css se encarga del caso oculto. */
 .custom-theme:not([hidden])   { display: grid; gap: 1.25rem; }
 .custom-base                 { display: grid; gap: 0.4rem; }
 .custom-base label { font-weight: 600; }
@@ -267,25 +204,9 @@
   max-width: min(22rem, 100%);
 }
 
-/* Tamaño de los iconos del menú (solo se ve en tema personalizado). */
-.custom-icon-size { display: grid; gap: 0.4rem; }
-.custom-icon-size label { font-weight: 600; }
-.custom-icon-size-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-}
-.custom-icon-size input[type="range"] { flex: 1 1 12rem; accent-color: var(--primary); min-height: 2.5rem; margin: 0; }
-.custom-icon-size output {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-secondary);
-  min-width: 4.5rem;
-  text-align: right;
-}
-
-/* Acciones: restaurar y guardar */
+/* Acciones: restaurar y guardar. El botón usa .settings-btn (compartido,
+   en settings-shared.css) y .settings-btn-block (propio de esta
+   tarjeta). */
 .custom-actions {
   display: grid;
   gap: 0.85rem;
@@ -294,10 +215,7 @@
   border-radius: 10px;
   background: var(--surface-alt);
 }
-.custom-actions .settings-btn { min-height: 2.75rem; }
 .settings-btn-block { width: 100%; }
-.settings-btn-danger { color: var(--danger); border-color: var(--danger); }
-.settings-btn-danger:hover { background: var(--danger-soft); }
 
 .custom-save { display: grid; gap: 0.4rem; }
 .custom-save label { font-weight: 600; }
@@ -318,25 +236,15 @@
   border: 0;
   align-items: center;
 }
-.custom-save-scheme .settings-option {
+.custom-save-scheme .settings-option-small {
   padding: 0.35rem 0.7rem;
   min-height: 2.5rem;
   font-size: calc(0.8125rem * var(--fs-meta));
 }
-.custom-save-scheme .settings-option input {
+.custom-save-scheme .settings-option-small input {
   width: 1rem; height: 1rem;
 }
 
-/* Etiqueta accesible que no se muestra visualmente. */
-.visually-hidden {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border: 0;
-}
 .custom-name-input {
   flex: 1 1 12rem;
   min-height: 2.75rem;
@@ -357,7 +265,9 @@
   0%   { background: var(--soft-strong); }
   100% { background: transparent; }
 }
-.settings-btn.is-flashing { animation: settings-flash 0.35s ease-out; }
+/* El aviso de "guardado" (el botón que parpadea) es el botón de
+   restaurar, que es el único con .settings-btn-block. */
+.settings-btn-block.is-flashing { animation: settings-flash 0.35s ease-out; }
 
 .color-groups { display: grid; gap: 1rem; }
 .color-group {
@@ -498,35 +408,6 @@
   color: var(--text-secondary);
 }
 
-/* ── Tamaño por partes ── */
-.size-rows { display: grid; gap: 1rem; margin: 1rem 0; }
-.size-row {
-  display: grid;
-  gap: 0.35rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-  min-width: 0;
-}
-.size-row-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; }
-.size-row-head label { font-weight: 600; }
-.size-row-head output {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-secondary);
-}
-.size-row input[type="range"] {
-  width: 100%;
-  min-height: 2.75rem;
-  margin: 0;
-  accent-color: var(--primary);
-}
-.size-sample {
-  color: var(--text);
-  overflow-wrap: anywhere;
-  line-height: 1.3;
-}
-.size-sample.is-upper { text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-secondary); }
-
 /* ── Vista previa: botones y enlace de muestra ── */
 .settings-preview-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.9rem; }
 .preview-btn {
@@ -541,52 +422,3 @@
 .preview-btn-danger { background: var(--danger-btn); }
 .preview-link { color: var(--link); text-decoration: underline; font-size: calc(1rem * var(--fs-body)); }
 
-/* ── Sección "Control por asistente (MCP)" ── */
-.mcp-config {
-  display: grid;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-  padding: clamp(12px, 3vw, 1.5rem);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-alt);
-}
-.mcp-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-.mcp-row label {
-  font-weight: 600;
-  min-width: 6rem;
-  font-size: calc(0.875rem * var(--fs-label));
-}
-.mcp-row input {
-  flex: 1 1 12rem;
-  min-width: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: calc(0.875rem * var(--fs-input));
-  padding: 0.4rem 0.6rem;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--input-border);
-  border-radius: 4px;
-}
-.mcp-cmd-row {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.4rem;
-}
-.mcp-cmd-row label {
-  min-width: 0;
-}
-.mcp-cmd-row input {
-  flex: 0 0 auto;
-  width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-all;
-}
-.mcp-cmd-row .mcp-copy-cmd {
-  align-self: flex-end;
-}

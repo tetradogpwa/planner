@@ -9,7 +9,13 @@
 
      La intro del diálogo (tecla ?, Esc) está en shortcuts-card.html,
      no aquí: en la vista Accesibilidad Esc no cierra nada. La vista
-     pone su propia intro en accessibility-card.html. -->
+     pone su propia intro en accessibility-card.html.
+
+     El <div class="shortcuts-list-box"> es la raíz de la lista: sus
+     estilos (ui/shortcuts/shortcuts-list.css) se aplican igual en los
+     dos sitios, sin depender de las clases de la tarjeta que lo
+     contiene. -->
+<div class="shortcuts-list-box">
 <section>
   <h4>Navegación</h4>
   <dl class="shortcuts-list">
@@ -64,3 +70,4 @@
   Mientras escribes en un campo de texto, los atajos no se
   disparan (salvo los que usan <kbd>Alt</kbd>).
 </p>
+</div>

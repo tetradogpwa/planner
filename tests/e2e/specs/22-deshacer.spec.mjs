@@ -274,7 +274,7 @@ describe('Deshacer el borrado (T-053)', () => {
     // botón «Eliminar» de los temas guardados. El <input> está
     // visualmente oculto: se pulsa el slider visible que tiene al lado,
     // como haría una persona.
-    const slider = await $('#customEditToggle + .slider');
+    const slider = await $('#customEditToggle + .settings-slider');
     await slider.scrollIntoView();
     await slider.click();
     await browser.waitUntil(

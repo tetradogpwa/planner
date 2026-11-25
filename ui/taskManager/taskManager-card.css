@@ -189,9 +189,9 @@
   overflow: hidden;
 }
 
-.edit-panel.open {
+.edit-panel.is-open {
   display: block;
 }
 
 /* Cuando el panel está abierto, la fila superior pierde su radio inferior */
-.edit-panel.open ~ * { } /* (controlado por JS con .panel-open) */
+.edit-panel.is-open ~ * { } /* (controlado por JS con .is-open) */

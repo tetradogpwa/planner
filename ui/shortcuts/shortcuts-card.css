@@ -2,10 +2,13 @@
    con flex para centrar el contenido, y el panel interior limita el
    alto para que no se salga en pantallas pequeñas o con letra grande.
 
-   Los estilos de la LISTA en sí (`.shortcuts-list`, `kbd`, `.shortcuts-intro`,
-   `.shortcuts-hint`, `h4`) viven en ui/shortcuts/shortcuts-list.css
-   para que se carguen tanto al abrir este diálogo como al entrar a la
-   vista Accesibilidad (sin que el diálogo tenga selectores de la vista). */
+   De la LISTA compartida (`.shortcuts-list`, `.shortcuts-hint`, `h4`)
+   se ocupa ui/shortcuts/shortcuts-list.css, para que se carguen tanto
+   al abrir este diálogo como al entrar a la vista Accesibilidad (sin
+   que el diálogo tenga selectores de la vista). El estilo de las teclas
+   (`kbd`) es global y vive en index.css, porque el elemento es global.
+   El párrafo introductorio del diálogo (`.shortcuts-intro`) es propio
+   de este fichero: en la vista Accesibilidad la intro es otra. */
 .shortcuts-modal[hidden] { display: none; }
 .shortcuts-modal {
   position: fixed; inset: 0;
@@ -60,5 +63,14 @@
   overflow-y: auto;
   padding: clamp(12px, 3vw, 1.25rem);
   line-height: 1.55;
+  font-size: calc(0.9375rem * var(--fs-body));
+}
+
+/* Párrafo introductorio del diálogo (la tecla ? y la tecla Esc). Es
+   del diálogo, no de la lista compartida: en la vista Accesibilidad
+   la intro es otra (accessibility-card.css). */
+.shortcuts-intro {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
   font-size: calc(0.9375rem * var(--fs-body));
 }

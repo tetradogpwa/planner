@@ -1,5 +1,5 @@
 /* Pestaña "Asistente (MCP)" dentro de Ajustes. La maquetación sale
-   casi toda de las reglas compartidas en ui/settings/settings-card.css
+   casi toda de las reglas compartidas en ui/settings/settings-shared.css
    (.settings-subtitle, .settings-help, .settings-options, .settings-option,
    .settings-btn, .settings-status). Solo añadimos lo específico. */
 
@@ -9,7 +9,7 @@
    emoji va en su propio <span aria-hidden="true"> y el texto en el
    span #mcpTitle, que da nombre a la sección (aria-labelledby) sin
    incluir el icono. */
-.mcp-card h3.settings-subtitle > span[aria-hidden] { margin-right: 0.4rem; }
+.mcp-card h3 > span[aria-hidden] { margin-right: 0.4rem; }
 
 .mcp-config {
   display: grid;

@@ -1,9 +1,10 @@
 /* Pestaña "Accesibilidad" de Ajustes. La lista de atajos y sus
-   estilos viven en ui/shortcuts/shortcuts-list.css y
-   ui/shortcuts/shortcuts-card.css (cargados por accessibility-card.js),
-   igual que antes. Aquí solo maqueta la cabecera de la pestaña y el
-   hueco donde se monta AccessibilityFontSizesCard (monta su propio
-   CSS en runtime, así que no necesitamos reglas adicionales). */
+   estilos viven en ui/shortcuts/shortcuts-list.css (lo carga
+   accessibility-card.js), igual que antes; el estilo de las teclas
+   (<kbd>) es global y vive en index.css. Aquí solo maqueta la
+   cabecera de la pestaña y el hueco donde se monta
+   AccessibilityFontSizesCard (monta su propio CSS en runtime, así que
+   no necesitamos reglas adicionales). */
 
 .accessibility-card { padding: 0; }
 .accessibility-card[hidden] { display: none; }

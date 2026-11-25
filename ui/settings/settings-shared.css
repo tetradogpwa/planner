@@ -4,7 +4,24 @@
    dentro de settings-card.css y el card del MCP los necesitaba; al
    separar el MCP los movimos aquí para que ambas tarjetas los
    carguen explícitamente sin tener que importar settings-card.css
-   entero. */
+   entero.
+
+   Aquí viven también las clases que usa la pestaña Accesibilidad
+   (ui/accessibility/fontSizes-card), que carga este mismo fichero. */
+
+.settings-group {
+  margin: 0;
+  padding: clamp(12px, 3vw, 1.5rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.settings-group legend {
+  font-size: calc(1rem * var(--fs-label));
+  padding: 0 0.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
 
 .settings-subtitle {
   margin: 0;

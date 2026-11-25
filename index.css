@@ -159,6 +159,20 @@
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* El atributo HTML `hidden` tiene que ganarle a cualquier `display`
+   que declaremos en las clases (`.estado-vacio { display: flex }`…):
+   con `!important` esta regla gana siempre, así que el atributo basta
+   por sí solo para ocultar un bloque, sin reglas extra por clase. Sin
+   `!important` no bastaba: los selectores con clase tienen la misma
+   especificidad que `[hidden]` del UA stylesheet y, al ir después en el
+   cascade, lo sobrescribían dejando el bloque visible aún con `hidden`.
+   Esta regla es GLOBAL y vive aquí, en el CSS global: cada tarjeta
+   inyecta su CSS en el documento, así que si la regla viviera en una
+   tarjeta, el atributo `hidden` solo funcionaría después de haber
+   pasado por esa tarjeta (y el aspecto de la app dependería del
+   orden de navegación). */
+[hidden] { display: none !important; }
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: calc(1rem * var(--fs-body));
@@ -688,6 +702,34 @@ pre {
   white-space: pre-wrap;
 }
 
+/* Las teclas de teclado (<kbd>) se ven igual en todas partes: en la
+   lista de atajos (compartida por el diálogo y la vista
+   Accesibilidad) y en las frases que las mencionan. El estilo es
+   global porque el elemento lo es: si viviera en el CSS de una
+   tarjeta, las teclas se verían según qué tarjeta se ha cargado.
+
+   Por ser global, también afecta a las dos teclas de la intro del
+   diálogo de ayuda (ui/shortcuts/shortcuts-card.html: "La tecla ?
+   abre esta ayuda… Esc la cierra"), que antes salían como texto
+   plano y ahora se ven encuadradas como tecla, igual que las de la
+   lista. Es deliberado: que una tecla se vea como tecla en todos los
+   sitios (la intro de la vista Accesibilidad ya se veía así). Lo
+   comprueba el E2E 28-css-aislado.spec.mjs, que mide el aspecto de
+   ese <kbd> para que el cambio no se cuele sin que nadie lo mire. */
+kbd {
+  display: inline-block;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: calc(0.8rem * var(--fs-meta));
+  padding: 1px 6px;
+  margin: 0 1px;
+  background: var(--surface-alt);
+  color: var(--text);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 var(--border-strong);
+  white-space: nowrap;
+}
+
 label { color: var(--text); }
 
 /* ============================================================
@@ -707,8 +749,9 @@ label { color: var(--text); }
   border-radius: var(--radius);
   color: var(--text);
 }
-/* El atributo hidden no basta: la regla de arriba pone display: flex. */
-.estado-vacio[hidden] { display: none; }
+/* El caso oculto lo resuelve la regla global `[hidden] { display: none
+   !important; }` de arriba: gana a cualquier `display` de clase, así
+   que aquí no hace falta ninguna regla extra. */
 .estado-vacio-titulo {
   margin: 0;
   font-size: calc(1rem * var(--fs-title));

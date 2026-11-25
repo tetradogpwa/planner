@@ -36,7 +36,6 @@ const ASSETS = [
   './ui/taskManager/editTask/editTask-card.js',
   // UI - Task Item
   './ui/taskManager/taskItem/taskItem-card.html',
-  './ui/taskManager/taskItem/taskItem-card.css',
   './ui/taskManager/taskItem/taskItem-card.js',
   // UI - Week
   './ui/week/week-card.html',

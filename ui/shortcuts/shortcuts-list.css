@@ -6,20 +6,17 @@
    Este archivo se inyecta SIEMPRE que cualquiera de los dos componentes
    se monta (no solo al abrirse el diálogo por primera vez), para que
    la lista se vea con estilos en ambos sitios aunque el usuario entre
-   en Accesibilidad sin haber pulsado '?' antes. */
+   en Accesibilidad sin haber pulsado '?' antes.
 
-/* Párrafo introductorio. En el diálogo lleva una nota sobre Esc; en la
-   vista Accesibilidad se sustituye por otra intro propia en
-   accessibility-card.html. */
-.shortcuts-intro {
-  margin: 0 0 1rem;
-  color: var(--text-secondary);
-  font-size: calc(0.9375rem * var(--fs-body));
-}
-.shortcuts-body section,
-.accessibility-shortcuts section { margin-bottom: 1.25rem; }
-.shortcuts-body h4,
-.accessibility-shortcuts h4 {
+   Solo se nombran clases de la propia lista (.shortcuts-list-box):
+   las de la tarjeta que la contiene son distintas en cada sitio, y
+   nombrarlas aquí haría que el aspecto dependiera de qué tarjeta se
+   ha cargado antes. El estilo de las teclas (<kbd>) es global, en
+   index.css. */
+
+/* Secciones de la lista: los <section> con su <h4>. */
+.shortcuts-list-box section { margin-bottom: 1.25rem; }
+.shortcuts-list-box h4 {
   margin: 0 0 0.5rem;
   font-size: calc(0.95rem * var(--fs-label));
   text-transform: uppercase;
@@ -56,23 +53,9 @@
   overflow-wrap: anywhere;
 }
 
-/* Cajas tipo tecla: usan los tokens del tema. El selector cubre el
-   diálogo y la vista Accesibilidad (los dos sitios donde aparece la
-   lista y los kbd del HTML compartido). */
-.shortcuts-list kbd,
-.accessibility-card kbd {
-  display: inline-block;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: calc(0.8rem * var(--fs-meta));
-  padding: 1px 6px;
-  margin: 0 1px;
-  background: var(--surface-alt);
-  color: var(--text);
-  border: 1px solid var(--input-border);
-  border-radius: 4px;
-  box-shadow: 0 1px 0 var(--border-strong);
-  white-space: nowrap;
-}
+/* Las cajas tipo tecla (<kbd>) tienen su estilo en index.css: es un
+   elemento global y se ve igual en el diálogo y en la vista
+   Accesibilidad. */
 
 .shortcuts-hint {
   margin: 0.5rem 0 0;

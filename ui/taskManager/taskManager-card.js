@@ -192,13 +192,13 @@ export class TaskManagerCard {
   // ── Panel inline de edición ───────────────────────────────────────────────
 
   #togglePanel(panel, task) {
-    const isOpen = panel.classList.contains('open');
+    const isOpen = panel.classList.contains('is-open');
 
     // Cerrar todos los paneles abiertos
     this.#closeAllPanels();
 
     if (!isOpen) {
-      panel.classList.add('open');
+      panel.classList.add('is-open');
       // La tarea que se está editando, por su id: el guardado tiene
       // que ir a ESTA tarea, no a la que ocupaba su posición cuando
       // se abrió el panel (T-049).
@@ -236,7 +236,7 @@ export class TaskManagerCard {
         // del recorrido. La fila se busca por su id (y no por la
         // posición capturada al abrir el panel), que es la que sigue
         // siendo la misma tarea (T-049).
-        panel.classList.remove('open');
+        panel.classList.remove('is-open');
         panel.innerHTML = '';
         const pos = this.#indiceDe(taskId);
         const buttons = this.listRoot.querySelectorAll('.btn-edit');
@@ -247,8 +247,8 @@ export class TaskManagerCard {
   }
 
   #closeAllPanels() {
-    this.listRoot.querySelectorAll('.edit-panel.open').forEach(p => {
-      p.classList.remove('open');
+    this.listRoot.querySelectorAll('.edit-panel.is-open').forEach(p => {
+      p.classList.remove('is-open');
       p.innerHTML = '';
     });
   }
