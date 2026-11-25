@@ -5,7 +5,7 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 15:54 UTC
+Actualizado: 2026-11-25 16:01 UTC
 
 ## Ahora
 
@@ -18,9 +18,9 @@ Actualizado: 2026-11-25 15:54 UTC
 
 ## Resumen
 
-- Abiertas: 31 (0 sin evaluar)
-- Dificultad: 🟢 5 fácil · 🟡 22 media · 🔴 4 difícil
-- Delicadeza: 🟢 4 baja · 🟡 19 media · 🔴 8 alta
+- Abiertas: 34 (0 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 25 media · 🔴 2 difícil
+- Delicadeza: 🟢 6 baja · 🟡 21 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -42,13 +42,10 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-077 | Pendiente | 🟡 media | 🟡 media | 0 | Borrar el service worker desactivado (sw.js) |
 | T-078 | Pendiente | 🟢 fácil | 🟡 media | 0 | Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 |
 | T-079 | Pendiente | 🟡 media | 🔴 alta | 0 | MCP en Rust: ningún .lock().unwrap() (mutex envenenado) |
-| T-080 | Pendiente | 🔴 difícil | 🔴 alta | 0 | MCP en Rust: una llamada cancelada o caducada no deja entradas en pending |
-| T-081 | Pendiente | 🔴 difícil | 🔴 alta | 0 | MCP en Rust: puerto válido y sin dos arranques a la vez |
 | T-082 | Pendiente | 🟡 media | 🟡 media | 0 | MCP en Rust: validar índice, vista y spec antes de llamar al frontend |
 | T-083 | Pendiente | 🟢 fácil | 🟡 media | 0 | El servidor MCP se arranca desde un solo sitio del frontend |
 | T-084 | Pendiente | 🟡 media | 🔴 alta | 0 | PRIVACY.md y DATA_SAFETY.md: las dos ediciones y los datos locales |
 | T-085 | Pendiente | 🟢 fácil | 🟡 media | 0 | THIRD_PARTY_LICENSES.md sin ficheros que no existen, con prueba |
-| T-086 | Pendiente | 🔴 difícil | 🟡 media | 0 | La pantalla de términos atrapa el foco y bloquea la app de detrás |
 | T-087 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de consentimiento atrapa el foco |
 | T-088 | Pendiente | 🟡 media | 🟡 media | 0 | El modal legal es un diálogo accesible |
 | T-089 | Pendiente | 🟡 media | 🟡 media | 0 | Cada pestaña de términos controla su propio panel |
@@ -61,6 +58,12 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-096 | Pendiente | 🟡 media | 🔴 alta | 0 | Deshacer «Borrar todo» no borra las tareas creadas después |
 | T-097 | Pendiente | 🟡 media | 🔴 alta | 0 | Deshacer varios borrados en otro orden deja cada tarea en su sitio |
 | T-098 | Pendiente | 🟡 media | 🔴 alta | 0 | La copia de seguridad incluye los temas guardados |
+| T-099 | Pendiente | 🟡 media | 🟢 baja | 0 | MCP en Rust: una entrada pendiente que se borra sola (EntradaPendiente) |
+| T-100 | Pendiente | 🟡 media | 🟡 media | 0 | MCP en Rust: call_frontend usa EntradaPendiente |
+| T-101 | Pendiente | 🟢 fácil | 🟢 baja | 0 | MCP en Rust: rechazar puertos por debajo de 1024 |
+| T-102 | Pendiente | 🔴 difícil | 🔴 alta | 0 | MCP en Rust: arrancar y parar el servidor por turnos |
+| T-103 | Pendiente | 🟢 fácil | 🟡 media | 0 | Una sola función para bloquear la app detrás de una pantalla |
+| T-104 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de términos atrapa el foco y bloquea la app de detrás |
 
 ## El reto de cada tarea
 
@@ -136,18 +139,6 @@ Sustituye números repetidos por las constantes que ya existen en cuatro fichero
 
 Sustituye 22 bloqueos que abortan la app en Rust por una recuperación segura y añade una prueba. Un fallo aquí puede tumbar la app entera al usar el servidor de asistentes.
 
-### T-080 · MCP en Rust: una llamada cancelada o caducada no deja entradas en pending
-
-🔴 difícil · delicadeza 🔴 alta
-
-Limpiar las respuestas pendientes del servidor de asistentes exige un mecanismo de limpieza al salir y pruebas asíncronas con tiempo límite. Si se cuela, se acumulan entradas y el servidor se atasca o se cae.
-
-### T-081 · MCP en Rust: puerto válido y sin dos arranques a la vez
-
-🔴 difícil · delicadeza 🔴 alta
-
-Valida el puerto del servidor de asistentes y evita que dos arranques a la vez se pisen, lo que exige esperar turnos en código asíncrono. Un error deja el servidor mal arrancado o colgado.
-
 ### T-082 · MCP en Rust: validar índice, vista y spec antes de llamar al frontend
 
 🟡 media · delicadeza 🟡 media
@@ -171,12 +162,6 @@ Corrige los textos legales sobre anuncios y datos guardados, sin tocar los térm
 🟢 fácil · delicadeza 🟡 media
 
 Corrige una licencia que cita un fichero inexistente y añade una prueba que la comprueba. Si se cuela, la lista de licencias miente sobre lo que se distribuye.
-
-### T-086 · La pantalla de términos atrapa el foco y bloquea la app de detrás
-
-🔴 difícil · delicadeza 🟡 media
-
-Atrapar el foco de la pantalla de términos y bloquear la app de detrás exige una prueba nueva que pulse el tabulador quince veces. Si se cuela, la app puede quedar inutilizable con teclado.
 
 ### T-087 · La pantalla de consentimiento atrapa el foco
 
@@ -249,6 +234,42 @@ Al deshacer varios borrados, cada tarea vuelve junto a su vecina. Es poco códig
 🟡 media · delicadeza 🔴 alta · sigue a T-054
 
 La copia de seguridad debe llevar también los temas guardados y el tema activo, con prueba unitaria y de la app. Si se cuela, el usuario pierde su configuración al importar en otro dispositivo.
+
+### T-099 · MCP en Rust: una entrada pendiente que se borra sola (EntradaPendiente)
+
+🟡 media · delicadeza 🟢 baja
+
+Se añade una pieza nueva en el servidor de asistentes que se borra sola al salir de su ámbito, con tres pruebas. El código viene escrito, pero hay que entender bien la propiedad de los datos en Rust para que el borrado automático funcione.
+
+### T-100 · MCP en Rust: call_frontend usa EntradaPendiente
+
+🟡 media · delicadeza 🟡 media
+
+La respuesta pendiente del servidor de asistentes pasa a borrarse sola, así una llamada cancelada o caducada no deja entradas colgadas. Son tres cambios pequeños, pero un fallo en el nombre de la variable soltaría la entrada antes de tiempo.
+
+### T-101 · MCP en Rust: rechazar puertos por debajo de 1024
+
+🟢 fácil · delicadeza 🟢 baja
+
+Se añade una comprobación que rechaza los puertos reservados del sistema y el cero, con el mensaje en español. El código está dado y las seis pruebas son directas.
+
+### T-102 · MCP en Rust: arrancar y parar el servidor por turnos
+
+🔴 difícil · delicadeza 🔴 alta
+
+Arrancar y parar el servidor de asistentes se turnan con un cerrojo para que dos pulsaciones a la vez no se pisen. Es un reto delicado: si parar se llama desde arrancar, la app se queda colgada para siempre.
+
+### T-103 · Una sola función para bloquear la app detrás de una pantalla
+
+🟢 fácil · delicadeza 🟡 media
+
+La lógica que deja la app de detrás sin poder recibir el ratón ni el teclado se traslada a un archivo común y la usa la pantalla de consentimiento. Es mover código casi literal; si se olvida alguna parte, el fondo queda interactivo pero no se rompe nada.
+
+### T-104 · La pantalla de términos atrapa el foco y bloquea la app de detrás
+
+🟡 media · delicadeza 🟡 media
+
+La pantalla de términos atrapa ahora el teclado y deja el fondo bloqueado; es un añadido pequeño pero delicate, porque si se cuela el foco se pierde y la app de detrás queda inservible con el teclado.
 
 ## Últimas terminadas
 
