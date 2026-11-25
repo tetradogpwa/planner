@@ -7,6 +7,10 @@
 //
 // «Borrar todo» pide confirmación en el diálogo propio de la app
 // (T-053): no en el confirm() del navegador, que ya no se usa.
+//
+// La importación también pide confirmación antes de sustituir la lista
+// (T-054): el diálogo dice cuántas tareas entran y cuántas se
+// descartan.
 
 import { join as joinPath } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,7 +24,13 @@ import {
   irAImprimir,
   recargar,
   cargarArchivoEnInput,
+  cargarTextoEnInput,
+  descargarYLeer,
+  escucharCambios,
+  instalarCapturaDeDescarga,
   esperarStatus,
+  mensajeDelDialogo,
+  pulsarEnDialogo,
 } from '../helpers.mjs';
 
 // Ruta absoluta al fixture con 3 tareas (DailyTask, DaysOfWeekTask,
@@ -30,26 +40,6 @@ const FIXTURE   = joinPath(HERE, '..', 'fixtures', 'tareas.json');
 // Fixture con un JSON roto a propósito (la lista de tareas se corta a
 // mitad). Importarlo NO puede borrar las tareas del usuario (T-031).
 const FIXTURE_ROTA = joinPath(HERE, '..', 'fixtures', 'json-corrupto.json');
-
-/** Instala un listener de `planner:changed` que guarda en
- *  window.__changed los eventos que dispara la app (acción y mensaje).
- *  Se reinstala en cada uso porque una recarga de la app borra los
- *  listeners de la página. */
-async function escucharCambios() {
-  await browser.execute(() => {
-    window.__changed = [];
-    if (window.__changedHandler) {
-      window.removeEventListener('planner:changed', window.__changedHandler);
-    }
-    window.__changedHandler = (e) => {
-      window.__changed.push({
-        action: e.detail?.action ?? null,
-        status: e.detail?.status ?? null,
-      });
-    };
-    window.addEventListener('planner:changed', window.__changedHandler);
-  });
-}
 
 describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
 
@@ -72,6 +62,12 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     const camino = await cargarArchivoEnInput('#importJsonInput', FIXTURE);
     // eslint-disable-next-line no-console
     console.log('Importación por:', camino);
+
+    // Antes de sustituir nada, la importación pide confirmación y dice
+    // cuántas tareas entran y cuántas se descartan (T-054).
+    await $('.dialogo-capa .dialogo').waitForDisplayed({ timeout: 5_000 });
+    expect(await mensajeDelDialogo()).toBe('Se van a sustituir 0 tareas por 3 (0 descartadas)');
+    await pulsarEnDialogo('aceptar');
 
     // La tarjeta avisa en su #dataStatus con el emoji y el plural.
     await esperarStatus('#dataStatus', '✅ 3 tarea(s) importada(s)');
@@ -158,68 +154,37 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     await expect($('#taskCount')).toHaveText('2');
 
     // Envolvemos HTMLAnchorElement.prototype.click y URL.createObjectURL
-  // antes de pulsar el botón de Descargar. La tarjeta crea un Blob con
-  // el JSON, lo envuelve en un blob: URL y hace click() en un <a>
-  // para disparar la descarga. Capturamos el Blob directamente (no la
-  // URL, que en headless WebKit se invalida en cuanto se inicia la
-  // descarga) y guardamos también el nombre de archivo.
-  //
-  // Por qué NO leemos el blob URL desde fuera del override: en
-  // WebKitGTK headless el XHR/fetch contra un blob: URL falla con
-  // "A network error occurred" en cuanto la descarga nativa empieza.
-  // Tenemos que leer el Blob antes de que click() haga su trabajo.
-  await browser.execute(() => {
-    window.__exportedDownload = null;
-    window.__exportedTexto = null;
-    if (!window.__origCreateObjectURL) {
-      window.__origCreateObjectURL = URL.createObjectURL;
-    }
-    URL.createObjectURL = function (blob) {
-      window.__lastBlob = blob;
-      return window.__origCreateObjectURL.call(URL, blob);
-    };
-    if (!window.__origAnchorClick) {
-      window.__origAnchorClick = HTMLAnchorElement.prototype.click;
-    }
-    HTMLAnchorElement.prototype.click = function () {
-      if (this.href && this.href.startsWith('blob:') && window.__lastBlob) {
-        // Leemos el Blob ahora mismo, antes de que el click nativo
-        // haga nada: lo convertimos a texto vía FileReader (text()).
-        const blob = window.__lastBlob;
-        const download = this.download;
-        window.__lastBlob = null;
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          window.__exportedTexto = reader.result;
-          window.__exportedDownload = download;
-        };
-        reader.readAsText(blob);
-      }
-      return window.__origAnchorClick.apply(this, arguments);
-    };
-  });
+    // antes de pulsar el botón de Descargar. La tarjeta crea un Blob con
+    // el JSON, lo envuelve en un blob: URL y hace click() en un <a>
+    // para disparar la descarga. Capturamos el Blob directamente (no la
+    // URL, que en headless WebKit se invalida en cuanto se inicia la
+    // descarga) y guardamos también el nombre de archivo.
+    //
+    // Por qué NO leemos el blob URL desde fuera del override: en
+    // WebKitGTK headless el XHR/fetch contra un blob: URL falla con
+    // "A network error occurred" en cuanto la descarga nativa empieza.
+    // Tenemos que leer el Blob antes de que click() haga su trabajo.
+    await instalarCapturaDeDescarga();
 
     await irAGestionDatos();
-    await $('#exportJsonBtn').click();
+    const { texto, nombre } = await descargarYLeer('#exportJsonBtn');
 
-    await browser.waitUntil(
-      async () => await browser.execute(() => window.__exportedTexto !== null),
-      { timeout: 5_000, timeoutMsg: 'La exportación no produjo ningún Blob' },
-    );
-    const texto = await browser.execute(() => window.__exportedTexto);
-    const download = await browser.execute(() => window.__exportedDownload);
-    expect(download).toBe('planner.json');
+    // El archivo de la copia lleva la fecha (T-054), para no pisar la
+    // copia de otro día.
+    expect(nombre).toMatch(/^planificador-\d{4}-\d{2}-\d{2}\.json$/);
 
-    // El contenido es el JSON que produce ToJson: un array con un
-    // objeto por tarea, className DailyTask (porque las dos que
-    // creamos son diarias). Comprobamos nombres y tipos por nombre
-    // de clase, sin asumir orden.
-    const tareas = JSON.parse(texto);
-    expect(Array.isArray(tareas)).toBe(true);
-    expect(tareas).toHaveLength(2);
-    const nombres = tareas.map(t => t.name).sort();
+    // El contenido es la copia de seguridad: un objeto con la versión
+    // del formato y las tareas dentro. Comprobamos nombres y tipos por
+    // nombre de clase, sin asumir orden.
+    const copia = JSON.parse(texto);
+    expect(copia.app).toBe('planificador-semanal');
+    expect(copia.version).toBe(2);
+    expect(typeof copia.exportedAt).toBe('string');
+    expect(Array.isArray(copia.tasks)).toBe(true);
+    expect(copia.tasks).toHaveLength(2);
+    const nombres = copia.tasks.map(t => t.name).sort();
     expect(nombres).toEqual(['Tarea A', 'Tarea B']);
-    for (const t of tareas) {
+    for (const t of copia.tasks) {
       expect(t.className).toBe('DailyTask');
       expect(t.total).toBe(1);
     }
@@ -233,15 +198,9 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     // estado actual de la app (las mismas dos tareas A y B).
     await irAGestionDatos();
 
-    // Capturamos una nueva exportación del estado actual (el override
-    // de Blob + click del test anterior sigue montado).
-    await browser.execute(() => { window.__exportedTexto = null; });
-    await $('#exportJsonBtn').click();
-    await browser.waitUntil(
-      async () => await browser.execute(() => window.__exportedTexto !== null),
-      { timeout: 5_000, timeoutMsg: 'La exportación no produjo ningún Blob' },
-    );
-    const exportado = await browser.execute(() => window.__exportedTexto);
+    // Capturamos una nueva exportación del estado actual (la captura
+    // de la descarga del test anterior sigue montada).
+    const { texto } = await descargarYLeer('#exportJsonBtn');
 
     // Borramos todo (aceptando el diálogo de la app).
     await $('#clearAllBtn').click();
@@ -256,14 +215,8 @@ describe('Gestión de datos: importar, exportar, borrar y PDF', () => {
     // contenido del blob a un File y disparamos 'change' en el input.
     const nombre = 'exportado.json';
     await irAGestionDatos();
-    await browser.execute(({ contenido, nombre }) => {
-      const input = document.getElementById('importJsonInput');
-      const file = new File([contenido], nombre, { type: 'application/json' });
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      input.files = dt.files;
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    }, { contenido: exportado, nombre });
+    await cargarTextoEnInput('#importJsonInput', texto, nombre);
+    await pulsarEnDialogo('aceptar');
     await esperarStatus('#dataStatus', '✅ 2 tarea(s) importada(s)');
 
     // La lista vuelve a ser la misma que antes de borrar.

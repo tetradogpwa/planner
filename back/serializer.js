@@ -6,6 +6,21 @@ import { addDays, formatLocalDate, parseLocalDate, today }    from './calendar.j
 
 // ── JSON → objetos ────────────────────────────────────────────────────────────
 
+/** Convierte el texto de un archivo en el objeto JSON que contiene.
+ *
+ *  Lanza un `Error` con mensaje en español cuando el texto no es un JSON
+ *  válido. */
+export function ParseJson(dataStr) {
+  try {
+    return JSON.parse(dataStr);
+  } catch (e) {
+    console.warn('[serializer] el JSON no se ha podido leer:', e);
+    // El `cause` guarda el error original: el mensaje que ve el
+    // usuario sigue siendo este, pero al depurar se sabe por qué.
+    throw new Error('JSON inválido: el archivo no contiene un JSON válido', { cause: e });
+  }
+}
+
 /** Convierte un JSON (el formato que produce `ToJson`) en una lista de
  *  tareas.
  *
@@ -23,16 +38,16 @@ import { addDays, formatLocalDate, parseLocalDate, today }    from './calendar.j
  *  offset en días respecto al origen) a una fecha real. Si no se pasa
  *  ningún origen, la migración usa la fecha de la migración (hoy). */
 export function FromJson(dataStr, opts = {}) {
-  let datos;
-  try {
-    datos = JSON.parse(dataStr);
-  } catch (e) {
-    console.warn('[serializer] el JSON no se ha podido leer:', e);
-    // El `cause` guarda el error original: el mensaje que ve el
-    // usuario sigue siendo este, pero al depurar se sabe por qué.
-    throw new Error('JSON inválido: el archivo no contiene un JSON válido', { cause: e });
-  }
+  return TareasDeDatos(ParseJson(dataStr), opts).tareas;
+}
 
+/** Las tareas de un JSON ya leído: un array de tareas o el envoltorio
+ *  { tasks: [...] }.
+ *
+ *  Devuelve las tareas leídas y cuántas se han descartado por no ser
+ *  reconocibles (un `className` que no existe, una entrada que no es un
+ *  objeto). */
+export function TareasDeDatos(datos, opts = {}) {
   // Aceptamos un array de tareas o el envoltorio { tasks: [...] }.
   const lista = Array.isArray(datos)
     ? datos
@@ -42,12 +57,19 @@ export function FromJson(dataStr, opts = {}) {
     throw new Error('JSON inválido: el archivo no contiene una lista de tareas');
   }
 
+  const tareas = [];
+  let descartadas = 0;
   try {
-    return lista.map(raw => processTask(raw, opts)).filter(Boolean);
+    for (const raw of lista) {
+      const tarea = processTask(raw, opts);
+      if (tarea) tareas.push(tarea);
+      else descartadas += 1;
+    }
   } catch (e) {
     console.warn('[serializer] alguna tarea del JSON no se ha podido leer:', e);
     throw new Error('JSON inválido: alguna tarea del archivo no se ha podido leer', { cause: e });
   }
+  return { tareas, descartadas };
 }
 
 /** Dice si el JSON usa el formato viejo (tareas sin `startDate`). Esas
@@ -170,4 +192,11 @@ function processTask(raw, opts) {
 
 export function ToJson(tasks) {
   return TaskBase.toJson(tasks);
+}
+
+/** Las tareas como un array de objetos JSON planos (lo mismo que
+ *  `ToJson`, pero sin pasar por el texto): es lo que va dentro de una
+ *  copia de seguridad (T-054). */
+export function ToJsonArray(tasks) {
+  return TaskBase.toJsonArray(tasks);
 }

@@ -383,23 +383,34 @@ export function getPreferences() {
     saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {};
   } catch { /* sin almacenamiento: valores por defecto */ }
 
+  return sanitizePreferences(saved);
+}
+
+/** Unas preferencias válidas a partir de un objeto cualquiera: los
+ *  valores que no valen (un tema que no existe, un tamaño fuera de
+ *  rango) se descartan y se usa el valor por defecto.
+ *
+ *  Se usa también al importar una copia de seguridad (T-054): las
+ *  preferencias del archivo pueden ser de otra versión de la app, y
+ *  aplicarlas tal cual dejaría la interfaz en un estado imposible. */
+export function sanitizePreferences(saved = {}) {
   const sizes = {};
   for (const { id } of SIZE_ROLES) {
-    const pct = Number(saved.sizes?.[id]);
+    const pct = Number(saved?.sizes?.[id]);
     if (pct >= SIZE_MIN && pct <= SIZE_MAX) sizes[id] = pct;
   }
-  const base = BASES[saved.custom?.base] ? saved.custom.base : DEFAULTS.custom.base;
+  const base = BASES[saved?.custom?.base] ? saved.custom.base : DEFAULTS.custom.base;
   const colors = {};
-  for (const [key, value] of Object.entries(saved.custom?.colors ?? {})) {
+  for (const [key, value] of Object.entries(saved?.custom?.colors ?? {})) {
     if (key in BASES.dark.colors && isHexColor(value)) colors[key] = value.toLowerCase();
   }
   const navIconSize = (() => {
-    const n = Number(saved.custom?.navIconSize);
+    const n = Number(saved?.custom?.navIconSize);
     return Number.isFinite(n) && n >= NAV_ICON_MIN && n <= NAV_ICON_MAX ? n : null;
   })();
   // Esquema explícito del tema personalizado. Si es null, schemeFor()
   // usará el esquema del `base` seleccionado.
-  const scheme = (saved.custom?.scheme === 'light' || saved.custom?.scheme === 'dark')
+  const scheme = (saved?.custom?.scheme === 'light' || saved?.custom?.scheme === 'dark')
     ? saved.custom.scheme
     : null;
   // savedId identifica al tema guardado actualmente aplicado. Solo se
@@ -409,16 +420,16 @@ export function getPreferences() {
   // nos ahorramos una lectura de localStorage.
   const savedThemes = getSavedThemes();
   const savedIds = new Set(savedThemes.map(t => t.id));
-  const savedId = (typeof saved.custom?.savedId === 'string' && savedIds.has(saved.custom.savedId))
+  const savedId = (typeof saved?.custom?.savedId === 'string' && savedIds.has(saved.custom.savedId))
     ? saved.custom.savedId
     : null;
 
   return {
-    theme: THEMES.includes(saved.theme) ? saved.theme : DEFAULTS.theme,
-    textScale: TEXT_SCALES.includes(saved.textScale) ? saved.textScale : DEFAULTS.textScale,
+    theme: THEMES.includes(saved?.theme) ? saved.theme : DEFAULTS.theme,
+    textScale: TEXT_SCALES.includes(saved?.textScale) ? saved.textScale : DEFAULTS.textScale,
     sizes,
-    autoLight: normalizeAutoTarget(saved.autoLight, 'light', savedThemes),
-    autoDark:  normalizeAutoTarget(saved.autoDark,  'dark',  savedThemes),
+    autoLight: normalizeAutoTarget(saved?.autoLight, 'light', savedThemes),
+    autoDark:  normalizeAutoTarget(saved?.autoDark,  'dark',  savedThemes),
     custom: { base, colors, navIconSize, scheme, savedId },
   };
 }

@@ -71,6 +71,13 @@ export class TaskBase{
     }
 
    static toJson(tasks){
+        return JSON.stringify(TaskBase.toJsonArray(tasks));
+    }
+
+    /** Las tareas como un array de objetos JSON planos (sin pasar por el
+     *  texto): es lo que se guarda dentro de una copia de seguridad
+     *  (T-054), donde las tareas van dentro de un objeto mayor. */
+    static toJsonArray(tasks){
         // Serializa recursivamente para que las tareas anidadas
         // (LimitedTimeTask / OneTimeTask) también lleven su className.
         const serialize = t => {
@@ -80,7 +87,7 @@ export class TaskBase{
             }
             return obj;
         };
-        return JSON.stringify(tasks.map(serialize));
+        return tasks.map(serialize);
     }
 
 }

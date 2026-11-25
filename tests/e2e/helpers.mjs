@@ -339,6 +339,116 @@ export async function readFixtureFromSpec(rutaAbsoluta) {
   return fs.readFile(rutaAbsoluta, 'utf8');
 }
 
+/** Carga un JSON (un texto) en un input de archivos, como si el
+ *  usuario hubiera elegido ese archivo en el diálogo del sistema.
+ *  Se usa para importar el archivo que la propia app acaba de
+ *  exportar (sin tocar el disco). */
+export async function cargarTextoEnInput(selector, contenido, nombre = 'copia.json') {
+  await browser.execute(({ selector, contenido, nombre }) => {
+    const input = document.querySelector(selector);
+    if (!input) throw new Error(`No existe ${selector}`);
+    const file = new File([contenido], nombre, { type: 'application/json' });
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, { selector, contenido, nombre });
+}
+
+/** Instala la captura de las descargas de la app: envuelve
+ *  URL.createObjectURL y el clic de los <a> para quedarse con el
+ *  contenido del archivo y con su nombre, en vez de dejar que la
+ *  descarga se vaya al disco.
+ *
+ *  Por qué NO se lee el blob URL desde fuera del override: en
+ *  WebKitGTK headless el XHR/fetch contra un blob: URL falla con
+ *  "A network error occurred" en cuanto la descarga nativa empieza.
+ *  Hay que leer el Blob antes de que click() haga su trabajo. */
+export async function instalarCapturaDeDescarga() {
+  await browser.execute(() => {
+    window.__exportedTexto = null;
+    window.__exportedDownload = null;
+    if (!window.__origCreateObjectURL) {
+      window.__origCreateObjectURL = URL.createObjectURL;
+    }
+    URL.createObjectURL = function (blob) {
+      window.__lastBlob = blob;
+      return window.__origCreateObjectURL.call(URL, blob);
+    };
+    if (!window.__origAnchorClick) {
+      window.__origAnchorClick = HTMLAnchorElement.prototype.click;
+    }
+    HTMLAnchorElement.prototype.click = function () {
+      if (this.href && this.href.startsWith('blob:') && window.__lastBlob) {
+        const blob = window.__lastBlob;
+        const download = this.download;
+        window.__lastBlob = null;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          window.__exportedTexto = reader.result;
+          window.__exportedDownload = download;
+        };
+        reader.readAsText(blob);
+      }
+      return window.__origAnchorClick.apply(this, arguments);
+    };
+  });
+}
+
+/** Pulsa el botón que descarga un archivo y devuelve su contenido y su
+ *  nombre. Necesita `instalarCapturaDeDescarga` antes. */
+export async function descargarYLeer(selector) {
+  await browser.execute(() => {
+    window.__exportedTexto = null;
+    window.__exportedDownload = null;
+  });
+  await $(selector).click();
+  await browser.waitUntil(
+    async () => await browser.execute(() => window.__exportedTexto !== null),
+    { timeout: 5_000, timeoutMsg: 'La exportación no produjo ningún Blob' },
+  );
+  return {
+    texto: await browser.execute(() => window.__exportedTexto),
+    nombre: await browser.execute(() => window.__exportedDownload),
+  };
+}
+
+/** Instala un listener de `planner:changed` que guarda en
+ *  window.__changed los eventos que dispara la app (acción y mensaje).
+ *  Se reinstala en cada uso porque una recarga de la app borra los
+ *  listeners de la página. */
+export async function escucharCambios() {
+  await browser.execute(() => {
+    window.__changed = [];
+    if (window.__changedHandler) {
+      window.removeEventListener('planner:changed', window.__changedHandler);
+    }
+    window.__changedHandler = (e) => {
+      window.__changed.push({
+        action: e.detail?.action ?? null,
+        status: e.detail?.status ?? null,
+      });
+    };
+    window.addEventListener('planner:changed', window.__changedHandler);
+  });
+}
+
+/** Espera al diálogo de la app y pulsa el botón pedido ('aceptar' o
+ *  'cancelar'). Espera a que el diálogo se cierre. */
+export async function pulsarEnDialogo(accion = 'aceptar') {
+  await $('.dialogo-capa .dialogo').waitForDisplayed({ timeout: 5_000 });
+  await $(`.dialogo-capa .dialogo-btn[data-accion="${accion}"]`).click();
+  await browser.waitUntil(
+    async () => (await $$('.dialogo-capa')).length === 0,
+    { timeout: 5_000, timeoutMsg: 'El diálogo no se cerró' },
+  );
+}
+
+/** El texto del mensaje del diálogo que está abierto. */
+export async function mensajeDelDialogo() {
+  return (await $('.dialogo-capa .dialogo-mensaje').getText()).trim();
+}
+
 /** Devuelve, para cada celda de la vista Semana (0 lunes … 6 domingo),
  *  los textos de las insignias que contiene (.task-badge). Las
  *  insignias se pintan en mayúsculas con CSS; los textos aquí son los

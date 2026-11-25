@@ -174,6 +174,43 @@ export class Context {
     Context.#guardarMarcas({});
   }
 
+  /** Todas las marcas de «hecho», como una copia:
+   *  { <id de tarea>: { <fecha ISO>: [<números de vez>] } }.
+   *
+   *  Es una copia: la que se guarda en la copia de seguridad (T-054) no
+   *  cambia cuando la app siga marcando cosas. */
+  static GetAllMarks() {
+    const marcas = Context.#leerMarcas();
+    const copia = {};
+    for (const [id, porDia] of Object.entries(marcas)) {
+      const dias = {};
+      for (const [dia, veces] of Object.entries(porDia ?? {})) {
+        if (Array.isArray(veces)) dias[dia] = [...veces];
+      }
+      copia[id] = dias;
+    }
+    return copia;
+  }
+
+  /** Sustituye TODAS las marcas de «hecho» por las dadas: al importar
+   *  una copia de seguridad, las marcas del archivo sustituyen a las
+   *  que había (T-054). */
+  static SetAllMarks(marcas) {
+    const nuevas = {};
+    if (marcas && typeof marcas === 'object' && !Array.isArray(marcas)) {
+      for (const [id, porDia] of Object.entries(marcas)) {
+        if (!porDia || typeof porDia !== 'object' || Array.isArray(porDia)) continue;
+        const dias = {};
+        for (const [dia, veces] of Object.entries(porDia)) {
+          if (!Array.isArray(veces) || veces.length === 0) continue;
+          dias[dia] = [...veces].sort((a, b) => a - b);
+        }
+        if (Object.keys(dias).length > 0) nuevas[id] = dias;
+      }
+    }
+    Context.#guardarMarcas(nuevas);
+  }
+
   // ── Deshacer un borrado (T-053) ───────────────────────────────────────
   //
   // Borrar una tarea (o todas) ya no es irreversible: la interfaz

@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { FromJson, ToJson, usaFormatoAntiguo, faltanIds } from '../../back/serializer.js';
+import { FromJson, ToJson, usaFormatoAntiguo, faltanIds, TareasDeDatos } from '../../back/serializer.js';
 import {
   createDailyTask,
   createNDaysTask,
@@ -107,6 +107,21 @@ test('solo tareas de tipo desconocido: lista vacía y sin error', () => {
   // válido: no es un error y no invalida el resto del JSON.
   const json = JSON.stringify([{ className: 'TipoQueNoExiste', name: 'X' }]);
   assert.deepEqual(FromJson(json), []);
+});
+
+test('tareasDeDatos dice cuántas tareas se han descartado', () => {
+  // Al importar hay que avisar de cuántas tareas se pierden (T-054):
+  // las de un tipo desconocido y las que ni siquiera son un objeto.
+  const json = JSON.stringify([
+    { className: 'TipoQueNoExiste', name: 'X' },
+    { className: 'DailyTask', name: 'Agua', total: 1, startDate: '2026-11-23', nDays: 1 },
+    null,
+  ]);
+  const { tareas, descartadas } = TareasDeDatos(JSON.parse(json));
+
+  assert.equal(tareas.length, 1);
+  assert.equal(tareas[0].Name, 'Agua');
+  assert.equal(descartadas, 2);
 });
 
 // ── Migración del formato viejo (T-045) ─────────────────────────────────

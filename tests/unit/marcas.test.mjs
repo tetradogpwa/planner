@@ -135,3 +135,52 @@ test('consultar una marca con datos que no valen devuelve false (no lanza)', () 
   assert.equal(Context.IsMarked('tarea-1', '2026-02-31', 0), false);
   assert.equal(Context.IsMarked('', '2026-11-25', 0), false);
 });
+
+// ── Todas las marcas (copia de seguridad, T-054) ───────────────────────
+
+test('GetAllMarks devuelve todas las marcas, por id y por fecha', () => {
+  Context.ClearAllMarks();
+  Context.Mark('tarea-a', '2026-11-25', 0);
+  Context.Mark('tarea-a', '2026-11-26', 1);
+  Context.Mark('tarea-b', '2026-11-25', 0);
+
+  const marcas = Context.GetAllMarks();
+  assert.deepEqual(Object.keys(marcas).sort(), ['tarea-a', 'tarea-b']);
+  assert.deepEqual(marcas['tarea-a']['2026-11-25'], [0]);
+  assert.deepEqual(marcas['tarea-a']['2026-11-26'], [1]);
+  assert.deepEqual(marcas['tarea-b']['2026-11-25'], [0]);
+});
+
+test('GetAllMarks devuelve una copia: lo que se guarda no se puede tocar', () => {
+  Context.ClearAllMarks();
+  Context.Mark('tarea-a', '2026-11-25', 0);
+
+  const marcas = Context.GetAllMarks();
+  marcas['tarea-a']['2026-11-25'].push(9);
+  delete marcas['tarea-a'];
+
+  assert.equal(Context.IsMarked('tarea-a', '2026-11-25', 0), true);
+  assert.deepEqual(Context.GetAllMarks()['tarea-a']['2026-11-25'], [0]);
+});
+
+test('SetAllMarks sustituye todas las marcas por las dadas', () => {
+  Context.ClearAllMarks();
+  Context.Mark('tarea-vieja', '2026-11-25', 0);
+
+  Context.SetAllMarks({
+    'tarea-nueva': { '2026-11-27': [0, 1] },
+  });
+
+  assert.equal(Context.IsMarked('tarea-vieja', '2026-11-25', 0), false);
+  assert.equal(Context.IsMarked('tarea-nueva', '2026-11-27', 0), true);
+  assert.equal(Context.IsMarked('tarea-nueva', '2026-11-27', 1), true);
+});
+
+test('SetAllMarks con marcas que no valen deja la lista de marcas vacía', () => {
+  Context.ClearAllMarks();
+  Context.Mark('tarea-a', '2026-11-25', 0);
+
+  Context.SetAllMarks('esto no son marcas');
+
+  assert.deepEqual(Context.GetAllMarks(), {});
+});

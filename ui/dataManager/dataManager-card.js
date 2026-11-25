@@ -1,6 +1,8 @@
-import { FromJson, ToJson } from '../../back/serializer.js';
-import { emitChanged }         from '../../api.js';
-import { abrirDialogo, mostrarAviso } from '../avisos.js';
+import { backupFileName, backupToJson, parseBackup } from '../../back/backup.js';
+import { emitChanged }                                    from '../../api.js';
+import { formatLocalDate, parseLocalDate }                from '../../back/calendar.js';
+import { abrirDialogo, mostrarAviso }                      from '../avisos.js';
+import { getPreferences, sanitizePreferences, setPreferences } from '../settings/preferences.js';
 
 export class DataManagerCard {
   constructor(root, context) {
@@ -18,13 +20,21 @@ export class DataManagerCard {
   }
 
   mount() {
-    // Exportar JSON
+    // Exportar la copia de seguridad. No solo van las tareas: también la
+    // fecha de inicio del planificador, las marcas de «hecho» y las
+    // preferencias, que antes se perdían al exportar (T-054).
     this.root.querySelector('#exportJsonBtn').onclick = () => {
-      const blob = new Blob([ToJson(this.context.Tasks)], { type: 'application/json' });
+      const texto = backupToJson({
+        tasks:       this.context.Tasks,
+        completions: this.context.GetAllMarks(),
+        startDate:   formatLocalDate(this.context.StartDate),
+        preferences: getPreferences(),
+      });
+      const blob = new Blob([texto], { type: 'application/json' });
       const url  = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement('a'), {
         href:     url,
-        download: 'planner.json',
+        download: backupFileName(),
       });
       a.click();
       // Liberamos el blob, pero NO de inmediato: el clic encola la
@@ -39,24 +49,24 @@ export class DataManagerCard {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = ev => {
+      reader.onload = async ev => {
         // Primero se lee y se valida el archivo. La lista del usuario no
         // se toca hasta saber que el JSON es bueno: antes, importar un
         // archivo corrupto borraba todas las tareas y decía "0
         // tarea(s) importada(s)" (T-031 / R-01).
-        let tareas;
+        let copia;
         try {
           // `origin`: las tareas del formato viejo guardaban un offset
           // en días respecto al origen del planificador; al importarlas
           // ese offset se traduce a una fecha real (T-045).
-          tareas = FromJson(ev.target.result, { origin: this.context.StartDate });
+          copia = parseBackup(ev.target.result, { origin: this.context.StartDate });
         } catch (err) {
           console.warn('[datos] importación descartada:', err);
           this.#setStatus('❌ JSON inválido');
           return;
         }
 
-        if (tareas.length === 0) {
+        if (copia.tareas.length === 0) {
           // El JSON es válido pero no trae ninguna tarea que sepamos
           // leer. Tampoco borramos la lista: para vaciarla hay un botón
           // explícito ("Borrar"), y aquí el usuario no ha pedido nada.
@@ -64,11 +74,33 @@ export class DataManagerCard {
           return;
         }
 
+        // Antes de sustituir nada, se dice qué va a pasar: cuántas
+        // tareas hay ahora, cuántas traen el archivo y cuántas se han
+        // descartado por no reconocerlas (T-054).
+        const respuesta = await abrirDialogo({
+          titulo: 'Importar copia de seguridad',
+          mensaje: `Se van a sustituir ${this.context.Tasks.length} tareas por ${copia.tareas.length} (${copia.descartadas} descartadas)`,
+          textoAceptar: 'Confirmar',
+          textoCancelar: 'Cancelar',
+        });
+        if (respuesta !== 'aceptar') {
+          // Cancelar no toca nada: la lista sigue como estaba.
+          this.#setStatus('⚠ Importación cancelada; la lista no se ha modificado');
+          return;
+        }
+
         // Sustituimos la lista entera de golpe: una sola escritura en
         // localStorage y nunca una lista a medio rellenar.
-        this.context.Tasks = tareas;
+        this.context.Tasks = copia.tareas;
+        // Y con ellas, sus marcas de «hecho» (si el archivo las trae:
+        // los archivos antiguos no las tienen y se dejan las que había).
+        if (copia.completions) this.context.SetAllMarks(copia.completions);
+        // La fecha de inicio del planificador y las preferencias, si el
+        // archivo las trae.
+        if (copia.startDate) this.context.StartDate = parseLocalDate(copia.startDate);
+        if (copia.preferences) setPreferences(sanitizePreferences(copia.preferences));
 
-        const mensaje = `✅ ${tareas.length} tarea(s) importada(s)`;
+        const mensaje = `✅ ${copia.tareas.length} tarea(s) importada(s)`;
         this.#setStatus(mensaje);
         // Avisamos al resto de la app para que las demás vistas se
         // repinten y se anuncie el resultado.
