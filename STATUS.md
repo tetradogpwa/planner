@@ -5,21 +5,21 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 18:11 UTC
+Actualizado: 2026-11-25 18:27 UTC
 
 ## Ahora
 
-**T-074 · Sacar los temas guardados de preferences.js a ui/settings/savedThemes.js**
+**T-075 · Sacar el panel de contraste y la lista de temas guardados de settings-card.js**
 
 - Estado: Siguiente en la cola · intentos: 0 · devoluciones del revisor: 0
 - Dificultad: 🟡 media · Delicadeza: 🟡 media
-- Reto: Saca los temas guardados a su propio módulo, con importación circular entre ficheros. Si se enreda, el usuario puede perder sus temas guardados al abrir Ajustes.
+- Reto: Parte un fichero grande de Ajustes en tres sin cambiar textos ni identificadores. Un error en el reparto rompe el editor de apariencia o la lista de temas.
 
 ## Resumen
 
-- Abiertas: 29 (0 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 21 media · 🔴 1 difícil
-- Delicadeza: 🟢 4 baja · 🟡 18 media · 🔴 7 alta
+- Abiertas: 28 (0 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 20 media · 🔴 1 difícil
+- Delicadeza: 🟢 4 baja · 🟡 17 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -29,7 +29,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-074 | Pendiente | 🟡 media | 🟡 media | 0 | Sacar los temas guardados de preferences.js a ui/settings/savedThemes.js |
 | T-075 | Pendiente | 🟡 media | 🟡 media | 0 | Sacar el panel de contraste y la lista de temas guardados de settings-card.js |
 | T-076 | Pendiente | 🟡 media | 🟡 media | 0 | Borrar las funciones y la carpeta que nadie usa |
 | T-077 | Pendiente | 🟡 media | 🟡 media | 0 | Borrar el service worker desactivado (sw.js) |
@@ -60,12 +59,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-105 | Pendiente | 🟡 media | 🟡 media | 0 | El CI encuentra el hash del frontend en el binario |
 
 ## El reto de cada tarea
-
-### T-074 · Sacar los temas guardados de preferences.js a ui/settings/savedThemes.js
-
-🟡 media · delicadeza 🟡 media
-
-Saca los temas guardados a su propio módulo, con importación circular entre ficheros. Si se enreda, el usuario puede perder sus temas guardados al abrir Ajustes.
 
 ### T-075 · Sacar el panel de contraste y la lista de temas guardados de settings-card.js
 
@@ -237,8 +230,8 @@ Las pruebas automáticas de GitHub dejan de fallar al buscar la marca del fronte
 
 ## Últimas terminadas
 
+- T-074 · Sacar los temas guardados de preferences.js a ui/settings/savedThemes.js (2026-11-25, 1 intento)
 - T-073 · Sacar la matemática de color de preferences.js a back/color.js (2026-11-25, 1 intento)
 - T-072 · theme-boot.js: en tema automático seguir al sistema, no al esquema guardado (2026-11-25, 1 intento)
 - T-071 · 12-legal: el aviso del navegador se comprueba con contraste WCAG real (2026-11-25, 1 intento)
 - T-070 · 11-edicion-gratuita: un fetch fallido no prueba que un documento no se distribuye (2026-11-25, 1 intento)
-- T-069 · 08-mcp: «el puerto se cierra» exige que la app diga que paró (2026-11-25, 1 intento)
