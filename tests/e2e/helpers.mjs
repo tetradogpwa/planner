@@ -346,8 +346,8 @@ export async function insigniasPorCelda() {
 
 /** Indica en qué celdas (0 lunes … 6 domingo) de la vista Semana
  *  aparece una insignia cuyo texto empiece por el nombre en
- *  mayúsculas. La insignia puede llevar los sufijos ' · 0–12H' o
- *  ' · 12–24H' cuando la tarea tiene Veces/día > 1. */
+ *  mayúsculas. La insignia puede llevar el sufijo ' · 1/2', ' · 2/2'…
+ *  cuando la tarea tiene Veces/día > 1. */
 export async function celdasCon(nombre) {
   const objetivo = nombre.toUpperCase();
   const porCelda = await insigniasPorCelda();

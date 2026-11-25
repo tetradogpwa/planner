@@ -1,6 +1,7 @@
 import { GetNWeeks, today } from '../../back/calendar.js';
 import { DAY_NAMES } from '../../back/dayNames.js';
 import { escapeHtml } from '../escape.js';
+import { slotLabel } from '../slotLabel.js';
 
 export class PrintCard {
   constructor(root, context) {
@@ -56,7 +57,8 @@ export class PrintCard {
 
         const badges = tasks.flatMap(t =>
           Array.from({ length: t.Total }, (_, i) => {
-            const slot = t.Total > 1 ? (i === 0 ? ' (0-12h)' : ' (12-24h)') : '';
+            const etiqueta = slotLabel(t.Total, i);
+            const slot = etiqueta ? ` (${etiqueta})` : '';
             // El nombre lo escribe el usuario (teclado, importado de un
             // JSON o creado por un asistente): si se mete sin escapar en
             // el HTML, `<img src=x onerror=…>` deja de ser texto y pasa a

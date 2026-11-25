@@ -164,7 +164,7 @@ describe('Formulario de tareas: tipos de repetición', () => {
     expect(await celdasCon('Ciclo quincenal')).toEqual(celdasDeDiasSemana([0, 2], hoy()));
   });
 
-  it('con Veces/día = 2, una tarea diaria muestra dos insignias con los tramos horarios', async () => {
+  it('con Veces/día = 2, una tarea diaria muestra dos insignias, una por vez', async () => {
     // Volvemos a la vista Tareas para crear una nueva tarea.
     await $('button.nav-item[data-view="tasks"]').click();
     await $('#view-tasks-heading').waitForDisplayed();
@@ -178,8 +178,8 @@ describe('Formulario de tareas: tipos de repetición', () => {
     const celdas = await celdasCon('Dos veces');
     // Aparece todos los días desde el día en que se creó.
     expect(celdas).toEqual(celdasDesde(hoy()));
-    // Y en cada una de esas celdas hay dos insignias con los tramos
-    // horarios (en las anteriores no hay ninguna: la tarea no existía).
+    // Y en cada una de esas celdas hay dos insignias, una por vez
+    // (en las anteriores no hay ninguna: la tarea no existía).
     const detalle = await browser.execute(() => {
       const cells = Array.from(document.querySelectorAll('#view-week .day-cell'));
       return cells.map(cell =>
@@ -189,7 +189,7 @@ describe('Formulario de tareas: tipos de repetición', () => {
       );
     });
     detalle.forEach((badges, i) => {
-      if (celdas[i]) expect(badges).toEqual(['DOS VECES · 0–12H', 'DOS VECES · 12–24H']);
+      if (celdas[i]) expect(badges).toEqual(['DOS VECES · 1/2', 'DOS VECES · 2/2']);
       else          expect(badges).toEqual([]);
     });
   });

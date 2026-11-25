@@ -255,7 +255,7 @@ describe('Marcar las tareas como hechas en la vista Semana (T-050)', () => {
       const celda = await celdaDeHoy();
       const casillas = await casillasDe(celda);
 
-      // Dos apariciones de «Doble» (0–12H y 12–24H).
+      // Dos apariciones de «Doble» (la vez 1/2 y la vez 2/2).
       expect(casillas.length).toBe(2);
       expect(await progresoDe(celda)).toBe('0/2 hechas');
 

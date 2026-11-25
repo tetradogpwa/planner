@@ -1,6 +1,7 @@
 import { Context }         from '../../../context.js';
 import { PlannerApi }      from '../../../api.js';
 import { formatLocalDate } from '../../../back/calendar.js';
+import { slotLabel }       from '../../slotLabel.js';
 
 function colorIndex(name) {
   let h = 0;
@@ -134,7 +135,7 @@ export class TaskItemCard {
     const item = document.createElement('div');
     item.className = 'task-item';
 
-    const slot  = hasSlot ? (vez === 0 ? '0–12H' : '12–24H') : '';
+    const slot  = slotLabel(task.Total, vez);
     const check = document.createElement('input');
     check.type        = 'checkbox';
     check.className   = 'task-check';
