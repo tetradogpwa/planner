@@ -46,7 +46,7 @@ export const SIZE_STEP = 5;
 export const SIZE_ROLES = [
   { id: 'title',  label: 'Títulos de sección',          sample: 'Gestión de datos',          base: 1.25 },
   { id: 'label',  label: 'Etiquetas y subtítulos',      sample: 'Tipo de repetición',        base: 0.8125, upper: true },
-  { id: 'nav',    label: 'Menú lateral',                sample: 'Semana actual',             base: 0.9375 },
+  { id: 'nav',    label: 'Menú lateral',                sample: 'Próximas semanas',        base: 0.9375 },
   { id: 'button', label: 'Botones',                     sample: 'Añadir tarea',              base: 1 },
   { id: 'input',  label: 'Campos de texto',             sample: 'Ej: Gym',                   base: 1 },
   { id: 'chip',   label: 'Opciones seleccionables',     sample: 'Días específicos',          base: 0.875 },

@@ -1,11 +1,11 @@
 {
-  "name": "Planificador Semanal",
+  "name": "Planificador",
   "short_name": "Planificador",
   "description": "Organiza tus hábitos y tareas con repeticiones inteligentes",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f8fafc",
-  "theme_color": "#6366f1",
+  "theme_color": "#111827",
   "orientation": "portrait-primary",
   "scope": "./",
   "icons": [

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Planificador Semanal Profesional</title>
+  <title>Planificador</title>
   <script src="./theme-boot.js"></script>
   <script src="./vendor/html2pdf.bundle.min.js" defer></script>
   <link rel="stylesheet" href="index.css">
@@ -27,7 +27,7 @@
   <button class="hamburger" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
-  <h1>📅 Planner</h1>
+  <h1><span aria-hidden="true">📅</span> Planificador</h1>
   <div class="topbar-spacer"></div>
 </header>
 
@@ -40,15 +40,15 @@
     <div class="sidebar-nav">
       <button class="nav-item active" data-view="tasks">
         <span class="nav-icon" aria-hidden="true">🧩</span>
-        <span class="nav-label">Gestión tareas</span>
+        <span class="nav-label">Tareas</span>
       </button>
       <button class="nav-item" data-view="week">
         <span class="nav-icon" aria-hidden="true">📆</span>
-        <span class="nav-label">Semana actual</span>
+        <span class="nav-label">Semana</span>
       </button>
       <button class="nav-item" data-view="allWeeks">
         <span class="nav-icon" aria-hidden="true">📊</span>
-        <span class="nav-label">Todas semanas</span>
+        <span class="nav-label">Próximas semanas</span>
       </button>
 
       <hr class="sidebar-divider"/>

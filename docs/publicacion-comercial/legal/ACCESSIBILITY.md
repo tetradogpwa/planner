@@ -79,9 +79,9 @@ globales están disponibles desde cualquier vista (los que usan
 
 | Combinación | Acción |
 |-------------|--------|
-| `Alt` + `1` | Ir a Gestión de tareas |
-| `Alt` + `2` | Ir a Semana actual |
-| `Alt` + `3` | Ir a Todas las semanas |
+| `Alt` + `1` | Ir a Tareas |
+| `Alt` + `2` | Ir a Semana |
+| `Alt` + `3` | Ir a Próximas semanas |
 | `Alt` + `4` | Ir a **Ajustes › Datos** |
 | `Alt` + `5` | Ir a **Ajustes › Imprimir y PDF** |
 | `Alt` + `6` | Ir a **Ajustes › Apariencia** |
