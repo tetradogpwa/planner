@@ -5,21 +5,21 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 17:28 UTC
+Actualizado: 2026-11-25 17:43 UTC
 
 ## Ahora
 
-**T-071 · 12-legal: el aviso del navegador se comprueba con contraste WCAG real**
+**T-072 · theme-boot.js: en tema automático seguir al sistema, no al esquema guardado**
 
 - Estado: Siguiente en la cola · intentos: 0 · devoluciones del revisor: 0
 - Dificultad: 🟡 media · Delicadeza: 🟡 media
-- Reto: Mueve el cálculo de contraste a un fichero común y lo usa en dos pruebas de la app. Si se cuela un error, el aviso legal puede quedar ilegible o la comprobación se equivoca.
+- Reto: Cambia cómo se decide el tema al arrancar y añade cinco pruebas unitarias. Si se cuela, la app puede arrancar en el color equivocado y parpadear.
 
 ## Resumen
 
-- Abiertas: 32 (0 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 24 media · 🔴 1 difícil
-- Delicadeza: 🟢 4 baja · 🟡 21 media · 🔴 7 alta
+- Abiertas: 31 (0 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 23 media · 🔴 1 difícil
+- Delicadeza: 🟢 4 baja · 🟡 20 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -29,7 +29,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-071 | Pendiente | 🟡 media | 🟡 media | 0 | 12-legal: el aviso del navegador se comprueba con contraste WCAG real |
 | T-072 | Pendiente | 🟡 media | 🟡 media | 0 | theme-boot.js: en tema automático seguir al sistema, no al esquema guardado |
 | T-073 | Pendiente | 🟡 media | 🟡 media | 0 | Sacar la matemática de color de preferences.js a back/color.js |
 | T-074 | Pendiente | 🟡 media | 🟡 media | 0 | Sacar los temas guardados de preferences.js a ui/settings/savedThemes.js |
@@ -63,12 +62,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-105 | Pendiente | 🟡 media | 🟡 media | 0 | El CI encuentra el hash del frontend en el binario |
 
 ## El reto de cada tarea
-
-### T-071 · 12-legal: el aviso del navegador se comprueba con contraste WCAG real
-
-🟡 media · delicadeza 🟡 media
-
-Mueve el cálculo de contraste a un fichero común y lo usa en dos pruebas de la app. Si se cuela un error, el aviso legal puede quedar ilegible o la comprobación se equivoca.
 
 ### T-072 · theme-boot.js: en tema automático seguir al sistema, no al esquema guardado
 
@@ -258,8 +251,8 @@ Las pruebas automáticas de GitHub dejan de fallar al buscar la marca del fronte
 
 ## Últimas terminadas
 
+- T-071 · 12-legal: el aviso del navegador se comprueba con contraste WCAG real (2026-11-25, 1 intento)
 - T-070 · 11-edicion-gratuita: un fetch fallido no prueba que un documento no se distribuye (2026-11-25, 1 intento)
 - T-069 · 08-mcp: «el puerto se cierra» exige que la app diga que paró (2026-11-25, 1 intento)
 - T-063 · Aislar el CSS de cada tarjeta (2026-11-25, 5 intentos)
 - T-060 · Pruebas de context.js, ui/a11y.js y preferences.js (2026-11-25, 4 intentos)
-- T-062 · Una base común para las tarjetas: errores visibles y plantillas en caché (2026-11-25, 4 intentos)
