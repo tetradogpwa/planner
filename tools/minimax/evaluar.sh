@@ -73,6 +73,18 @@ PROMPT="$REGLAS
 Tareas a evaluar (${#IDS[@]}): ${IDS[*]}
 $TAREAS"
 
+# En el reintento, MiniMax tiene que saber por qué se rechazó su línea
+# (si no, repite la misma).
+if [[ -n "${EVAL_RECHAZOS:-}" ]]; then
+  PROMPT+="
+
+---
+
+ATENCIÓN: en tu respuesta anterior estas líneas se rechazaron. Corrígelas
+(motivo de 220 caracteres o menos, solo en español, formato exacto):
+$EVAL_RECHAZOS"
+fi
+
 echo "▸ MiniMax evalúa ${#IDS[@]} tarea(s) (registro: $LOG)"
 # Temporales a su carpeta y limpieza de /tmp al salir (limpieza.sh).
 source "$ROOT/tools/minimax/limpieza.sh"
@@ -122,7 +134,9 @@ if [[ "$GUARDADAS" -lt "${#IDS[@]}" && -z "${EVAL_REINTENTO:-}" ]]; then
     echo "↻ Se vuelven a pedir: ${FALTAN[*]}"
     # Con `exec` no saltaría la trampa EXIT: se limpia antes a mano.
     limpieza_acabar; trap - EXIT
-    EVAL_REINTENTO=1 exec bash "$0" "${FALTAN[@]}"
+    RECHAZOS="$(grep -a '^Error:' "$LOG" | sort -u | head -10)"
+    [[ -z "$RECHAZOS" ]] && RECHAZOS="Faltaba la línea RETO: de estas tareas o estaba mal formada."
+    EVAL_REINTENTO=1 EVAL_RECHAZOS="$RECHAZOS" exec bash "$0" "${FALTAN[@]}"
   fi
 fi
 exit 0
