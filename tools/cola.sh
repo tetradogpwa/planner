@@ -29,8 +29,8 @@
 #
 # STATUS.md: antes de cada tarea, MiniMax evalúa las tareas abiertas que
 # aún no tienen evaluación (tools/minimax/evaluar.sh) y el script
-# reescribe STATUS.md (`tasks.mjs estado-md`). Si ha cambiado, lo
-# commitea aparte ("STATUS: …") y hace `git push` de main: el usuario
+# reescribe STATUS.md (`tasks.mjs estado-md`). Si ha cambiado (o la
+# cola, .tasks/tasks.json), los commitea aparte ("STATUS: …") y hace `git push` de main: el usuario
 # lo pidió así (25-nov-2026) y acepta que con él se suban también los
 # commits de las tareas. Sin red, el push falla con un aviso y la cola
 # sigue. PLANNER_SIN_PUSH=1 lo desactiva.
@@ -385,9 +385,13 @@ evaluar_nuevas() {
 
 publicar_estado() {  # publicar_estado <motivo>
   en_rama_buena || return 0      # nunca commitear ni subir desde otra rama
-  $TASKS estado-md >> "$LOG" 2>&1 || return 0     # 1 = sin cambios
-  git add -- STATUS.md >> "$LOG" 2>&1
-  if ! git commit -q -m "STATUS: $1" -- STATUS.md >> "$LOG" 2>&1; then
+  $TASKS estado-md >> "$LOG" 2>&1   # 1 = STATUS.md sin cambios
+  # La cola (.tasks/tasks.json) va en el mismo commit: así GitHub guarda
+  # su historial y una copia, y nunca acumula días sin commitear (un
+  # checkout o un stash la devolvería entera a un estado viejo).
+  git diff --quiet HEAD -- STATUS.md .tasks/tasks.json 2>/dev/null && return 0
+  git add -- STATUS.md .tasks/tasks.json >> "$LOG" 2>&1
+  if ! git commit -q -m "STATUS: $1" -- STATUS.md .tasks/tasks.json >> "$LOG" 2>&1; then
     say "   ⚠ No se pudo commitear STATUS.md (ver $LOG)"
     return 0
   fi

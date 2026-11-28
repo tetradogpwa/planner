@@ -29,9 +29,9 @@ name: CI
 on:
   push:
     branches: [main]
-    # tools/cola.sh publica STATUS.md con un commit propio en cada cambio
-    # de la cola: ese commit no toca código y no necesita CI.
-    paths-ignore: ['STATUS.md']
+    # tools/cola.sh publica STATUS.md y la cola (.tasks/) con un commit
+    # propio en cada cambio: ese commit no toca código y no necesita CI.
+    paths-ignore: ['STATUS.md', '.tasks/**']
   pull_request:
     branches: [main]
   # Lanzar a mano: Actions → CI → Run workflow.
