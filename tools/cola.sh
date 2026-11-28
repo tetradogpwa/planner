@@ -369,6 +369,45 @@ aprobar_y_commitear() {  # aprobar_y_commitear <id>
   return 0
 }
 
+# ── Apartar el trabajo de una tarea que se deja para una persona ────
+# Si una tarea agota sus intentos (o su revisión falla dos veces) y la
+# cola sigue con otra, lo que dejó en el árbol se colaría en el commit de
+# la siguiente (le pasó a T-060 con T-061 y a T-058 con T-059). Se aparta
+# en un parche (.tasks/logs/<id>-apartado-*.patch) y se apunta en la tarea.
+
+apartar_cambios() {  # apartar_cambios <id> <motivo>
+  local id="$1" motivo="$2" base actual parche ficheros
+  base="$(cat "$ESTADO/$id.base" 2>/dev/null)"
+  [[ -z "$base" ]] && base="$(campo "$id" baseTree)"
+  [[ -z "$base" ]] && return 0
+  actual="$(arbol_actual)"
+  mapfile -t ficheros < <(git diff --name-only "$base" "$actual" -- . ':(exclude).tasks' ':(exclude)STATUS.md')
+  [[ "${#ficheros[@]}" -eq 0 ]] && return 0
+  parche=".tasks/logs/$id-apartado-$(date +%Y%m%d-%H%M%S).patch"
+  if ! git diff --binary "$base" "$actual" -- "${ficheros[@]}" > "$parche" || [[ ! -s "$parche" ]]; then
+    say "   ⚠ No se pudo guardar el parche de $id: no se aparta nada (la siguiente tarea puede arrastrarlo)."
+    return 0
+  fi
+  # Cada fichero vuelve a como estaba en la foto de la tarea (los nuevos
+  # se borran). `git checkout <foto> -- f` conserva los permisos; el
+  # `reset` deja el índice como estaba (sin nada preparado).
+  local f fallos=0
+  for f in "${ficheros[@]}"; do
+    if git cat-file -e "$base:$f" 2>/dev/null; then
+      git checkout -q "$base" -- "$f" >> "$LOG" 2>&1 || fallos=$((fallos+1))
+    else
+      rm -f -- "$f"
+    fi
+    git reset -q -- "$f" >> "$LOG" 2>&1
+  done
+  if [[ "$fallos" -eq 0 ]]; then
+    say "   ▸ Lo que dejó $id está apartado en $parche (se recupera con: git apply $parche): la siguiente tarea empieza con el árbol limpio."
+    $TASKS amend "$id" --nota "Cola: el trabajo del último intento ($motivo) está apartado en $parche (git apply para recuperarlo). El próximo intento empieza de cero: lee ese parche y reutiliza lo que valga." >> "$LOG" 2>&1
+  else
+    say "   ⚠ $fallos fichero(s) de $id no se pudieron devolver a su estado (ver $LOG); el parche completo está en $parche."
+  fi
+}
+
 # ── STATUS.md ───────────────────────────────────────────────────────
 # MiniMax evalúa las tareas nuevas y STATUS.md se publica en GitHub.
 # Nada de esto puede parar la cola: si falla, se avisa y se sigue.
@@ -430,6 +469,7 @@ while :; do
   if [[ "$est" == "pendiente" ]]; then
     if [[ "${INTENTOS[$id]:-0}" -ge "$MAX_INTENTOS" ]]; then
       say "✗ [$id] Agotó los intentos de este recorrido ($MAX_INTENTOS). Se deja pendiente para que la mire una persona."
+      apartar_cambios "$id" "agotó los intentos"
       SALTAR["$id"]=1
       FALLIDAS=$((FALLIDAS+1))
       continue
@@ -491,6 +531,7 @@ while :; do
         FALLOS_REVISION[$id]=$(( ${FALLOS_REVISION[$id]:-0} + 1 ))
         if [[ "${FALLOS_REVISION[$id]}" -ge 2 ]]; then
           say "↻ [$id] se queda en revisión: la revisión automática falla otra vez; se sigue con la cola."
+          apartar_cambios "$id" "revisión fallida"
           SALTAR["$id"]=1
         else
           say "↻ [$id] se queda en revisión: la revisión automática falló."
