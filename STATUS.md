@@ -5,13 +5,13 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-28 14:24 UTC
+Actualizado: 2026-11-28 14:29 UTC
 
 ## Ahora
 
 **T-078 · Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237**
 
-- Estado: En revisión (M3) · intentos: 2 · devoluciones del revisor: 1
+- Estado: Siguiente en la cola · intentos: 2 · devoluciones del revisor: 2
 - Dificultad: 🟢 fácil · Delicadeza: 🟡 media
 - Reto: Sustituye números repetidos por las constantes que ya existen en cuatro ficheros. Si se equivoca con el puerto, el servidor de asistentes no arranca.
 
@@ -29,7 +29,7 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-078 | En revisión (M3) | 🟢 fácil | 🟡 media | 2 | Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 |
+| T-078 | Pendiente | 🟢 fácil | 🟡 media | 2 | Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 |
 | T-079 | Pendiente | 🟡 media | 🔴 alta | 0 | MCP en Rust: ningún .lock().unwrap() (mutex envenenado) |
 | T-082 | Pendiente | 🟡 media | 🟡 media | 0 | MCP en Rust: validar índice, vista y spec antes de llamar al frontend |
 | T-083 | Pendiente | 🟢 fácil | 🟡 media | 0 | El servidor MCP se arranca desde un solo sitio del frontend |
