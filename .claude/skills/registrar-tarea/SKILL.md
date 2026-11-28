@@ -61,6 +61,38 @@ node tools/tasks/tasks.mjs amend T-004 --request "Lo nuevo que pide" [--criterio
   (`tests/e2e/specs/`) la demuestra, y "`bash tools/test.sh` sale en ✓".
 - Si `amend` falla porque la tarea ya está hecha, la herramienta te dice
   cómo crear la relacionada: hazlo.
+
+### Forma de tarea que MiniMax saca a la primera
+
+Medido sobre T-024…T-068: las tareas con notas concretas pasaron en el
+primer intento; las que no llevaban notas o tenían varias partes
+volvieron una y otra vez (T-058 y T-060 agotaron los 4 intentos sin
+entregar nada útil). Antes de registrar, comprueba en el código lo que
+vas a escribir (ficheros, líneas, nombres): MiniMax lo sigue al pie de
+la letra.
+
+- **Un solo tema, de 1 a 4 ficheros.** Si salen más, pártela en tareas
+  que se puedan aprobar por separado (y créalas en el orden en que
+  dependen unas de otras: la cola va por orden de creación).
+- **Primera nota: «Ficheros que tocas: …».** Lo que no está ahí, no se
+  toca.
+- **Pasos numerados** con fichero, línea aproximada (`~l.120`) y qué
+  cambiar; si la parte delicada es corta (Rust async, un `Drop`, un
+  cerrojo), escribe el código casi literal.
+- **La prueba en rojo, concreta:** qué romper a propósito para ver la
+  prueba fallar y que hay que restaurarlo después.
+- **Dos notas fijas al final:** «Empieza editando el código: no
+  construyas herramientas de medición» y «Al terminar, `git status
+  --porcelain` solo muestra: <ficheros> (y .tasks/). Sin sondas ni
+  ficheros de diagnóstico».
+- **Criterios que se comprueban con un comando** (`grep`, `wc -l`,
+  `cargo test`, una spec concreta). Nada de porcentajes de cobertura.
+- **Comprueba la premisa.** Una tarea que viene de una revisión puede
+  partir de un dato falso (T-084 iba a meter el texto con anuncios en
+  la política de privacidad de la edición gratuita, que no los tiene).
+  Si toca textos legales, recuerda que `legal/` es la edición gratuita
+  que se distribuye y `docs/publicacion-comercial/legal/` el modelo con
+  anuncios, que no se incluye en la app.
 - Si haces `amend` sobre una tarea **en curso**, MiniMax no verá el
   cambio hasta el siguiente intento: compruébalo en la revisión y, si
   falta, devuélvela con `feedback`.

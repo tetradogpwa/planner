@@ -22,8 +22,16 @@ Tras reiniciar el PC la cola estará parada: es lo normal.
 
 ## 2. Si la cola está parada y hay tareas abiertas, lanzarla
 
-Antes, `git status`: si hay cambios de Claude (herramientas, docs) sin
-commitear, commitéalos aparte; `cola.sh` usa `HEAD` como foto y se
+Antes, `git status -sb`. La cola solo trabaja en `main` y se niega a
+arrancar en otra rama: si el usuario está en otra (p. ej. la de los
+textos comerciales, `feature/ads-monetization`), sus commits ya están
+guardados ahí; los cambios sin commitear de la cola (la tarea en curso o
+en revisión) no tocan esos ficheros, así que `git switch main` se los
+lleva sin conflicto. Díselo al usuario: su rama queda intacta y vuelve a
+ella con `git switch <rama>` (con la cola parada).
+
+Si hay cambios de Claude (herramientas, docs) sin commitear,
+commitéalos aparte; `cola.sh` usa `HEAD` como foto y se
 colarían en el commit de la tarea. Los cambios de una tarea en curso o en
 revisión se dejan: son trabajo de MiniMax.
 
