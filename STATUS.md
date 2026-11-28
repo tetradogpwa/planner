@@ -5,20 +5,20 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-25 20:26 UTC
+Actualizado: 2026-11-28 14:24 UTC
 
 ## Ahora
 
 **T-078 · Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237**
 
-- Estado: Siguiente en la cola · intentos: 1 · devoluciones del revisor: 1
+- Estado: En revisión (M3) · intentos: 2 · devoluciones del revisor: 1
 - Dificultad: 🟢 fácil · Delicadeza: 🟡 media
 - Reto: Sustituye números repetidos por las constantes que ya existen en cuatro ficheros. Si se equivoca con el puerto, el servidor de asistentes no arranca.
 
 ## Resumen
 
 - Abiertas: 25 (0 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 17 media · 🔴 1 difícil
+- Dificultad: 🟢 8 fácil · 🟡 16 media · 🔴 1 difícil
 - Delicadeza: 🟢 4 baja · 🟡 14 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
@@ -29,11 +29,10 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-078 | Pendiente | 🟢 fácil | 🟡 media | 1 | Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 |
+| T-078 | En revisión (M3) | 🟢 fácil | 🟡 media | 2 | Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 |
 | T-079 | Pendiente | 🟡 media | 🔴 alta | 0 | MCP en Rust: ningún .lock().unwrap() (mutex envenenado) |
 | T-082 | Pendiente | 🟡 media | 🟡 media | 0 | MCP en Rust: validar índice, vista y spec antes de llamar al frontend |
 | T-083 | Pendiente | 🟢 fácil | 🟡 media | 0 | El servidor MCP se arranca desde un solo sitio del frontend |
-| T-084 | Pendiente | 🟡 media | 🔴 alta | 0 | PRIVACY.md y DATA_SAFETY.md: las dos ediciones y los datos locales |
 | T-085 | Pendiente | 🟢 fácil | 🟡 media | 0 | THIRD_PARTY_LICENSES.md sin ficheros que no existen, con prueba |
 | T-087 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de consentimiento atrapa el foco |
 | T-088 | Pendiente | 🟡 media | 🟡 media | 0 | El modal legal es un diálogo accesible |
@@ -54,6 +53,7 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-103 | Pendiente | 🟢 fácil | 🟡 media | 0 | Una sola función para bloquear la app detrás de una pantalla |
 | T-104 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de términos atrapa el foco y bloquea la app de detrás |
 | T-105 | Pendiente | 🟡 media | 🟡 media | 0 | El CI encuentra el hash del frontend en el binario |
+| T-106 | Pendiente | 🟢 fácil | 🔴 alta | 0 | PRIVACY.md y DATA_SAFETY.md nombran todos los datos que la app guarda en el dispositivo |
 
 ## El reto de cada tarea
 
@@ -80,12 +80,6 @@ Rechaza en Rust índices, vistas y tareas mal formadas con mensajes en español,
 🟢 fácil · delicadeza 🟡 media
 
 Crea una función única para arrancar el servidor de asistentes y la usa en dos sitios, con prueba. Si se cuela, el arranque automático deja de funcionar.
-
-### T-084 · PRIVACY.md y DATA_SAFETY.md: las dos ediciones y los datos locales
-
-🟡 media · delicadeza 🔴 alta
-
-Corrige los textos legales sobre anuncios y datos guardados, sin tocar los términos con fecha. Un texto falso o incompleto engañaría al usuario sobre qué datos se guardan.
 
 ### T-085 · THIRD_PARTY_LICENSES.md sin ficheros que no existen, con prueba
 
@@ -206,6 +200,12 @@ La pantalla de términos atrapa el teclado y bloquea la app de detrás. Es un a�
 🟡 media · delicadeza 🟡 media · sigue a T-040
 
 Las pruebas automáticas de GitHub dejan de fallar al buscar la marca del frontend en el binario. Tres piezas y una prueba nueva; lo difícil es el enlazador. Un fallo solo daría un hash raro en «Acerca de».
+
+### T-106 · PRIVACY.md y DATA_SAFETY.md nombran todos los datos que la app guarda en el dispositivo
+
+🟢 fácil · delicadeza 🔴 alta · sigue a T-067
+
+Solo reescribe dos documentos de privacidad y añade una prueba que los revisa. El trabajo es fácil, pero si el texto queda falso o incompleto, el usuario creería que la app guarda o envía datos que no es así.
 
 ## Últimas terminadas
 
