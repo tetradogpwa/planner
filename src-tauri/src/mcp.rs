@@ -201,6 +201,48 @@ pub struct AbrirVistaArgs {
     pub view: String,
 }
 
+// ── Validación de los argumentos (antes de llamar al frontend) ───────
+//
+// El frontend (`mcp-bridge.js`) también valida, pero solo después de
+// que la llamada haya llegado al webview. Estas funciones la rechazan
+// antes, en Rust, con un mensaje en español: el cliente MCP se
+// equivoca y lo sabe sin esperas.
+
+/// Vistas que acepta el frontend en `navigate(view)` (api.js): las
+/// cuatro canónicas y los alias heredados que abren Ajustes en su
+/// pestaña.
+const VISTAS: [&str; 9] = [
+    "tasks", "week", "allWeeks", "ajustes",
+    "settings", "data", "print", "legal", "accessibility",
+];
+
+/// El índice de una tarea es su posición en la lista: no puede ser
+/// negativo.
+fn validar_indice(indice: Option<i64>) -> Result<(), String> {
+    match indice {
+        Some(i) if i < 0 => Err("El índice no puede ser negativo".to_string()),
+        _ => Ok(()),
+    }
+}
+
+/// La vista tiene que ser una de las que acepta el frontend.
+fn validar_vista(vista: &str) -> Result<(), String> {
+    if VISTAS.contains(&vista) {
+        Ok(())
+    } else {
+        Err(format!("Vista inválida: '{vista}'"))
+    }
+}
+
+/// El spec de la tarea tiene que ser un objeto JSON.
+fn validar_spec(spec: &serde_json::Value) -> Result<(), String> {
+    if spec.is_object() {
+        Ok(())
+    } else {
+        Err("La tarea debe ser un objeto".to_string())
+    }
+}
+
 // ── ServerHandler: herramientas que se exponen al cliente MCP ─────────
 
 #[derive(Clone)]
@@ -243,6 +285,9 @@ impl PlannerServer {
         &self,
         Parameters(args): Parameters<ReferenciaTarea>,
     ) -> Result<CallToolResult, McpError> {
+        if let Err(msg) = validar_indice(args.index) {
+            return Err(McpError::invalid_params(msg, None));
+        }
         self.call_frontend("ver_tarea", serde_json::json!({
             "id":    args.id,
             "index": args.index,
@@ -255,6 +300,9 @@ impl PlannerServer {
         &self,
         Parameters(args): Parameters<CrearTareaArgs>,
     ) -> Result<CallToolResult, McpError> {
+        if let Err(msg) = validar_spec(&args.spec) {
+            return Err(McpError::invalid_params(msg, None));
+        }
         self.call_frontend("crear_tarea", args.spec).await
     }
 
@@ -264,6 +312,12 @@ impl PlannerServer {
         &self,
         Parameters(args): Parameters<EditarTareaArgs>,
     ) -> Result<CallToolResult, McpError> {
+        if let Err(msg) = validar_indice(args.index) {
+            return Err(McpError::invalid_params(msg, None));
+        }
+        if let Err(msg) = validar_spec(&args.spec) {
+            return Err(McpError::invalid_params(msg, None));
+        }
         self.call_frontend("editar_tarea", serde_json::json!({
             "id":    args.id,
             "index": args.index,
@@ -280,6 +334,9 @@ impl PlannerServer {
         &self,
         Parameters(args): Parameters<ReferenciaTarea>,
     ) -> Result<CallToolResult, McpError> {
+        if let Err(msg) = validar_indice(args.index) {
+            return Err(McpError::invalid_params(msg, None));
+        }
         self.call_frontend("borrar_tarea", serde_json::json!({
             "id":    args.id,
             "index": args.index,
@@ -339,6 +396,9 @@ impl PlannerServer {
         &self,
         Parameters(args): Parameters<AbrirVistaArgs>,
     ) -> Result<CallToolResult, McpError> {
+        if let Err(msg) = validar_vista(&args.view) {
+            return Err(McpError::invalid_params(msg, None));
+        }
         self.call_frontend("abrir_vista", serde_json::json!({ "view": args.view })).await
     }
 
@@ -786,6 +846,7 @@ pub fn mcp_token_regenerate(app: AppHandle) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::bloquear;
+    use super::{validar_indice, validar_spec, validar_vista};
     use std::sync::{Arc, Mutex};
 
     /// Un mutex envenenado no debe reventar la app.
@@ -811,5 +872,81 @@ mod tests {
 
         // El mutex está envenenado, pero el valor sigue ahí.
         assert_eq!(*bloquear(&m), 42);
+    }
+
+    /// Un índice negativo no es la posición de ninguna tarea.
+    #[test]
+    fn validar_indice_rechaza_un_indice_negativo() {
+        assert_eq!(
+            validar_indice(Some(-1)),
+            Err("El índice no puede ser negativo".to_string())
+        );
+    }
+
+    /// Un índice dentro de la lista se acepta.
+    #[test]
+    fn validar_indice_acepta_un_indice_valido() {
+        assert_eq!(validar_indice(Some(0)), Ok(()));
+        assert_eq!(validar_indice(Some(3)), Ok(()));
+    }
+
+    /// Si no viene índice, la referencia va por id: no hay nada que validar.
+    #[test]
+    fn validar_indice_acepta_un_indice_ausente() {
+        assert_eq!(validar_indice(None), Ok(()));
+    }
+
+    /// Las vistas que acepta el frontend (`navigate` en api.js): las
+    /// cuatro canónicas y los alias heredados que abren Ajustes.
+    #[test]
+    fn validar_vista_acepta_las_vistas_del_frontend() {
+        for vista in [
+            "tasks", "week", "allWeeks", "ajustes",
+            "settings", "data", "print", "legal", "accessibility",
+        ] {
+            assert_eq!(validar_vista(vista), Ok(()), "debería aceptar {vista}");
+        }
+    }
+
+    /// Una vista que el frontend no conoce se rechaza en Rust.
+    #[test]
+    fn validar_vista_rechaza_una_vista_desconocida() {
+        assert_eq!(
+            validar_vista("inventada"),
+            Err("Vista inválida: 'inventada'".to_string())
+        );
+    }
+
+    /// Una vista vacía tampoco es una vista.
+    #[test]
+    fn validar_vista_rechaza_una_vista_vacia() {
+        assert_eq!(validar_vista(""), Err("Vista inválida: ''".to_string()));
+    }
+
+    /// El spec de una tarea es un objeto JSON.
+    #[test]
+    fn validar_spec_acepta_un_objeto() {
+        let spec = serde_json::json!({ "name": "Tarea" });
+        assert_eq!(validar_spec(&spec), Ok(()));
+    }
+
+    /// Una lista no es una tarea: se rechaza.
+    #[test]
+    fn validar_spec_rechaza_un_array() {
+        let spec = serde_json::json!([1, 2]);
+        assert_eq!(
+            validar_spec(&spec),
+            Err("La tarea debe ser un objeto".to_string())
+        );
+    }
+
+    /// Un texto suelto tampoco es una tarea: se rechaza.
+    #[test]
+    fn validar_spec_rechaza_un_string() {
+        let spec = serde_json::json!("Tarea");
+        assert_eq!(
+            validar_spec(&spec),
+            Err("La tarea debe ser un objeto".to_string())
+        );
     }
 }
