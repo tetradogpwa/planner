@@ -26,7 +26,9 @@ const ESTADO = {
 };
 
 const ABIERTAS = ['en_curso', 'en_revision', 'pendiente'];
-const MAX_INTENTOS = 4;   // el mismo límite que tools/cola.sh
+// cola.sh da hasta 4 intentos por recorrido y cuenta en memoria; aquí
+// solo se ve el total de la tarea (attempts), de todos los recorridos.
+const AVISO_INTENTOS = 3;
 
 const celda = (texto) => String(texto).replace(/\|/g, '\\|').replace(/\s*\n\s*/g, ' ');
 
@@ -37,8 +39,8 @@ function delicadeza(t) {
   return t.reto ? `${ICONO_DELICADEZA[t.reto.delicadeza] ?? ''} ${t.reto.delicadeza}` : '—';
 }
 
-/** Devoluciones del revisor en el intento actual de la cola: las
- *  correcciones que ha recibido la tarea en total. */
+/** Correcciones que ha recibido la tarea en total (del revisor y del
+ *  supervisor), en todos los recorridos de la cola. */
 const devoluciones = (t) => t.feedback?.length ?? 0;
 
 export function generarEstado(db, fecha = new Date()) {
@@ -72,11 +74,11 @@ export function generarEstado(db, fecha = new Date()) {
     const verbo = activa ? ESTADO[activa.status] : 'Siguiente en la cola';
     out.push(`**${foco.id} · ${foco.title}**`);
     out.push('');
-    out.push(`- Estado: ${verbo} · intentos: ${foco.attempts} · devoluciones del revisor: ${devoluciones(foco)}`);
+    out.push(`- Estado: ${verbo} · intentos en total: ${foco.attempts} · correcciones recibidas: ${devoluciones(foco)}`);
     out.push(`- Dificultad: ${dificultad(foco)} · Delicadeza: ${delicadeza(foco)}`);
     if (foco.reto?.motivo) out.push(`- Reto: ${foco.reto.motivo}`);
-    if (foco.attempts >= MAX_INTENTOS - 1) {
-      out.push(`- ⚠ Va por su intento ${foco.attempts} de ${MAX_INTENTOS}: si no sale, se quedará para que la mire el supervisor.`);
+    if (foco.attempts >= AVISO_INTENTOS) {
+      out.push(`- ⚠ Ya lleva ${foco.attempts} intentos: le está costando. Si no sale, se quedará para que el supervisor la parta o la aclare.`);
     }
   }
   out.push('');

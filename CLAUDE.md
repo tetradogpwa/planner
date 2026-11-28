@@ -147,4 +147,5 @@ aislados en `tests/e2e/.tmp/`. Las dependencias npm de los E2E viven en
   datos reales del usuario.
 - Una prueba solo vale si falla al romper el código que prueba.
 - Toda tarea que cambie comportamiento trae su prueba; ninguna prueba se
-  borra, se rebaja ni se salta para que pase.
+  borra, se rebaja ni se salta para que pase. (Las pruebas de código que
+  la tarea elimina se van con él, y la tarea lo dice.)

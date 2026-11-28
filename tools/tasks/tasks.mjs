@@ -373,7 +373,7 @@ switch (cmd) {
     if (/[^\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}]/u.test(motivo)) {
       fail('--motivo tiene caracteres de otro alfabeto: escríbelo en español');
     }
-    if (motivo.length > 260) fail(`--motivo demasiado largo (${motivo.length} caracteres; máximo 220)`);
+    if (motivo.length > 260) fail(`--motivo demasiado largo (${motivo.length} caracteres): el límite es 260 y lo ideal, 220 o menos`);
     task.reto = { dificultad, delicadeza, motivo, at: now() };
     log(task, 'reto evaluado', `${dificultad} · delicadeza ${delicadeza}`);
     save(db);

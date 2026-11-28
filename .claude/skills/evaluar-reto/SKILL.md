@@ -51,8 +51,9 @@ lo que pruebe sean los datos del usuario.
   prueba de la app»… Los nombres de ficheros y de tareas sí se pueden
   citar entre comillas invertidas, pero el motivo tiene que entenderse
   sin ellos.
-- **Máximo 220 caracteres.** Primero qué cambia para el usuario o para
-  la app, luego qué es lo difícil o lo arriesgado.
+- **220 caracteres o menos** (con más de 260 la línea se rechaza y se
+  vuelve a pedir). Primero qué cambia para el usuario o para la app,
+  luego qué es lo difícil o lo arriesgado.
 - No repitas el título ni cuentes los pasos: di el **porqué** de la
   dificultad y de la delicadeza.
 - No inventes números ni datos que no estén en la tarea.

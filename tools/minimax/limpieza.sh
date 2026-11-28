@@ -11,8 +11,9 @@
 #   1. Durante la ejecución, TMPDIR apunta a /tmp/minimax-<ID>-XXXXXX
 #      (lo usan mktemp, tools/test.sh, Node y Python).
 #   2. Al salir (también si falla o se agota el tiempo) se borra esa
-#      carpeta y todo lo que se haya **creado** desde que empezó en
-#      /tmp/opencode y en /tmp, salvo:
+#      carpeta y lo que se haya **creado** desde que empezó en
+#      /tmp/opencode. Lo nuevo en /tmp solo se apunta en el registro:
+#      podría ser del usuario (28-nov: nada lo distingue). Se respeta:
 #        - lo que no es del usuario, los sockets y los enlaces;
 #        - lo que algún proceso tiene abierto o usa como carpeta;
 #        - las carpetas de otros programas (Claude, VS Code, MCP…).
@@ -57,7 +58,7 @@ otro_opencode_activo() {
 }
 
 limpieza_acabar() {
-  local e nombre nacido abiertos borrado=()
+  local e nombre nacido abiertos borrado=() vistos=()
   [[ -n "${TAREA_TMP:-}" && -d "$TAREA_TMP" ]] && rm -rf -- "$TAREA_TMP"
 
   # Con otro proyecto usando OpenCode a la vez, solo se borra la carpeta
@@ -89,7 +90,15 @@ limpieza_acabar() {
     [[ "$nacido" =~ ^[0-9]+$ ]] && (( nacido >= LIMPIEZA_INICIO )) || continue
     # Coincidencia por texto: ante la duda (p. ej. /tmp/a y /tmp/ab) se deja.
     [[ -n "$abiertos" ]] && grep -qF -- "$e" <<<"$abiertos" && continue
-    rm -rf -- "$e" && borrado+=("$e")
+    # En /tmp no se borra: nada distingue lo de MiniMax de lo que haya
+    # creado el usuario mientras tanto (una descarga, su mktemp…). Solo
+    # se apunta, para ver si MiniMax sigue escribiendo fuera de su
+    # carpeta. /tmp/opencode sí es de OpenCode.
+    if [[ "$e" == "$LIMPIEZA_RAIZ/opencode/"* ]]; then
+      rm -rf -- "$e" && borrado+=("$e")
+    else
+      vistos+=("$e")
+    fi
   done < <(
     find "$LIMPIEZA_RAIZ" -mindepth 1 -maxdepth 1 -print0 2>/dev/null
     [[ -d "$LIMPIEZA_RAIZ/opencode" ]] &&
@@ -100,10 +109,14 @@ limpieza_acabar() {
     {
       echo
       if (( ${#borrado[@]} )); then
-        echo "── Limpieza: borrados ${#borrado[@]} temporales que dejó MiniMax:"
+        echo "── Limpieza: borrados ${#borrado[@]} temporales de OpenCode:"
         printf '   %s\n' "${borrado[@]}"
       else
-        echo "── Limpieza: MiniMax no dejó temporales fuera de su carpeta."
+        echo "── Limpieza: OpenCode no dejó temporales en su carpeta."
+      fi
+      if (( ${#vistos[@]} )); then
+        echo "── Aparecieron en $LIMPIEZA_RAIZ durante la ejecución (no se borran: pueden ser del usuario):"
+        printf '   %s\n' "${vistos[@]}"
       fi
     } >> "$LIMPIEZA_LOG"
   fi

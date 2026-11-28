@@ -120,6 +120,8 @@ if [[ "$GUARDADAS" -lt "${#IDS[@]}" && -z "${EVAL_REINTENTO:-}" ]]; then
   done
   if [[ "${#FALTAN[@]}" -gt 0 ]]; then
     echo "↻ Se vuelven a pedir: ${FALTAN[*]}"
+    # Con `exec` no saltaría la trampa EXIT: se limpia antes a mano.
+    limpieza_acabar; trap - EXIT
     EVAL_REINTENTO=1 exec bash "$0" "${FALTAN[@]}"
   fi
 fi
