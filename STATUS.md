@@ -5,7 +5,7 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-28 14:50 UTC
+Actualizado: 2026-11-28 14:51 UTC
 
 ## Ahora
 
@@ -17,9 +17,9 @@ Actualizado: 2026-11-28 14:50 UTC
 
 ## Resumen
 
-- Abiertas: 26 (2 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 16 media · 🔴 1 difícil
-- Delicadeza: 🟢 4 baja · 🟡 13 media · 🔴 7 alta
+- Abiertas: 26 (1 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 16 media · 🔴 2 difícil
+- Delicadeza: 🟢 4 baja · 🟡 13 media · 🔴 8 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -54,7 +54,7 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-105 | Pendiente | 🟡 media | 🟡 media | 0 | El CI encuentra el hash del frontend en el binario |
 | T-106 | Pendiente | 🟢 fácil | 🔴 alta | 0 | PRIVACY.md y DATA_SAFETY.md nombran todos los datos que la app guarda en el dispositivo |
 | T-107 | Pendiente | — sin evaluar | — | 0 | Las sugerencias de contraste del editor cambian el color que falla |
-| T-108 | Pendiente | — sin evaluar | — | 0 | Editar un color con un tema predefinido activo parte de ese tema y aplica el cambio |
+| T-108 | Pendiente | 🔴 difícil | 🔴 alta | 0 | Editar un color con un tema predefinido activo parte de ese tema y aplica el cambio |
 
 ## El reto de cada tarea
 
@@ -210,9 +210,9 @@ Aún no la ha evaluado MiniMax.
 
 ### T-108 · Editar un color con un tema predefinido activo parte de ese tema y aplica el cambio
 
-— sin evaluar · delicadeza — · sigue a T-075
+🔴 difícil · delicadeza 🔴 alta · sigue a T-075
 
-Aún no la ha evaluado MiniMax.
+Al editar un color con un tema predefinido se pierde el borrador y el color elegido. Toca cómo se guardan las preferencias de tema, así que un fallo deja el tema del usuario descuadrado, y las dos pruebas nuevas conduCEN la app real y son lentas y frágiles.
 
 ## Últimas terminadas
 
