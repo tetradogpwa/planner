@@ -868,7 +868,7 @@ check_frontend_embebido() {
 # Se busca con una MARCA delante ("PLANNER_FRONTEND_HASH="): el hash
 # va en un literal único y contiguo (ver `FRONTEND_HASH_MARCADO` en
 # `src-tauri/src/lib.rs`). Buscar el hash "pegado al nombre del
-# producto" depended de cómo el enlazador colocara cada texto: en
+# producto" dependía de cómo el enlazador colocara cada texto: en
 # local coincidía y en el CI no, y la comprobación fallaba sin que
 # hubiera nada que corregir en el frontend.
 hash_frontend_binario() {
