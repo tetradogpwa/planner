@@ -6487,11 +6487,11 @@
     {
       "id": "T-079",
       "title": "MCP en Rust: ningún .lock().unwrap() (mutex envenenado)",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-25T15:19:53Z",
-      "updated": "2026-11-25T15:54:09Z",
-      "attempts": 0,
+      "updated": "2026-11-28T15:40:36Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-25T15:19:53Z",
@@ -6512,7 +6512,7 @@
         "Al terminar, `git status --porcelain` solo muestra: src-tauri/src/mcp.rs (y .tasks/). No dejes sondas, scripts de diagnóstico ni carpetas temporales en el repo; si creas alguno para investigar, bórralo antes de entregar."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "a5db638440d569439d14dcb43c782eb3beda6ea7",
       "history": [
         {
           "at": "2026-11-25T15:19:53Z",
@@ -6527,6 +6527,26 @@
           "at": "2026-11-25T15:54:09Z",
           "event": "reto evaluado",
           "note": "media · delicadeza alta"
+        },
+        {
+          "at": "2026-11-28T15:17:37Z",
+          "event": "foto del árbol",
+          "note": "a5db638440"
+        },
+        {
+          "at": "2026-11-28T15:17:37Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3.1-Flash en OpenCode) empieza; registro en .tasks/logs/T-079-20261128-161737.log"
+        },
+        {
+          "at": "2026-11-28T15:25:10Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-11-28T15:40:36Z",
+          "event": "estado → hecha",
+          "note": "Aprobada por la revisión automática; pruebas en verde y commit hecho."
         }
       ],
       "reto": {
@@ -6534,7 +6554,8 @@
         "delicadeza": "alta",
         "motivo": "Sustituye 22 bloqueos que abortan la app en Rust por una recuperación segura y añade una prueba. Un fallo aquí puede tumbar la app entera al usar el servidor de asistentes.",
         "at": "2026-11-25T15:54:09Z"
-      }
+      },
+      "firstTree": "a5db638440d569439d14dcb43c782eb3beda6ea7"
     },
     {
       "id": "T-080",
