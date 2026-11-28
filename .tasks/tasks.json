@@ -6679,11 +6679,11 @@
     {
       "id": "T-082",
       "title": "MCP en Rust: validar índice, vista y spec antes de llamar al frontend",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": null,
       "created": "2026-11-25T15:19:53Z",
-      "updated": "2026-11-28T15:42:16Z",
-      "attempts": 1,
+      "updated": "2026-11-28T15:57:38Z",
+      "attempts": 2,
       "requests": [
         {
           "at": "2026-11-25T15:19:53Z",
@@ -6709,7 +6709,7 @@
           "note": "No se ha implementado nada: `node tools/tasks/tasks.mjs diff T-082 --total` dice \"Sin cambios desde la foto\", el fichero adjunto `T-082.diff` está vacío (0 bytes), `git status --porcelain` solo muestra `.tasks/tasks.json` y en `src-tauri/src/mcp.rs` no existe ni `validar_indice` ni `validar_vista` ni `validar_spec` (grep sin resultados). El log del worker `.tasks/logs/T-082-20261128-164039.log` solo contiene el enunciado y el banner de limpieza: la ejecución terminó sin editar nada. Repite la tarea desde el principio: implementa las tres validaciones en `src-tauri/src/mcp.rs`.\nAñade en `src-tauri/src/mcp.rs` tres funciones puras: `validar_indice(i: Option<i64>) -> Result<(), String>` (si viene y es< 0, error \"El índice no puede ser negativo\"; si es `None` o >= 0, Ok), `validar_vista(v: &str) -> Result<(), String>` y `validar_spec(s: &serde_json::Value) -> Result<(), String>` (si no es `Value::Object`, error \"La tarea debe ser un objeto\"). Devuelve siempre el fallo como `McpError::invalid_params(msg, None)`.\n`validar_vista` debe aceptar exactamente el conjunto de vistas que el frontend acepta: `api.js:41-51` define `VIEWS = ['tasks','week','allWeeks','ajustes']` y `VIEW_TAB_ALIAS` con los alias `settings`, `data`, `print`, `legal`, `accessibility`; `mcp-bridge.js:54` llama a `api.navigate(view)`, que lanza 'Vista inválida' para cualquier otro nombre. Acepta por tanto las 4 vistas + los 5 alias (son 9 nombres válidos) y rechaza el resto con mensaje en español; no copies solo la lista de 4 de `VIEWS` ni la de 8 de la descripción de la herramienta (`:337`), porque `ajustes` también es válida en el frontend.\nLlama a las validaciones en cada herramienta antes de `call_frontend`, sin tocar `mcp-bridge.js` (su validación se queda como segunda barrera): `ver_tarea` (`:246`) y `borrar_tarea` (`:283`) validan `args.index`; `editar_tarea` (`:267`) valida `args.index` y `args.spec`; `crear_tarea` (`:258`) valida `args.spec`; `abrir_vista` (`:342`) valida `args.view`. El error debe devolverse con `Err(McpError::invalid_params(msg, None))` antes de llamar al frontend.\nAñade en el `mod tests` de `src-tauri/src/mcp.rs` al menos 6 casos nuevos (hoy solo hay 1, el de T-079): casos válidos e inválidos de cada una de las tres funciones (índice negativo / índice válido / índice ausente; vista conocida / vista desconocida / vista vacía; spec objeto / spec array / spec string). Las pruebas deben llamar a las funciones y comprobar el `Err` con el mensaje en español, y se ponen en rojo si `validar_vista` acepta cualquier cosa o si `validar_spec` acepta un valor que no es objeto.\nEjecuta `cargo test` (para las validaciones) y `bash tools/test.sh` y déjalo en ✓ antes de terminar; el criterio \"bash tools/test.sh sale en ✓\" no está cumplido porque no hay ningún cambio y no consta ejecución. Al entregar, `git status --porcelain` debe mostrar solo `src-tauri/src/mcp.rs` (y `.tasks/`), sin sondas ni ficheros de diagnóstico."
         }
       ],
-      "baseTree": "fc912da2e008d579ba427a3db368d1ad7ea90a49",
+      "baseTree": "29bf9bdb6216d4ef618232044f048b9ba6a2d8ca",
       "history": [
         {
           "at": "2026-11-25T15:19:53Z",
@@ -6744,6 +6744,26 @@
           "at": "2026-11-28T15:42:16Z",
           "event": "devuelta a MiniMax",
           "note": "No se ha implementado nada: `node tools/tasks/tasks.mjs diff T-082 --total` dice \"Sin cambios desde la foto\", el fichero adjunto `T-082.diff` está vacío (0 bytes), `git status --porcelain` solo muestra `.tasks/tasks.json` y en `src-tauri/src/mcp.rs` no existe ni `validar_indice` ni `validar_vista` ni `validar_spec` (grep sin resultados). El log del worker `.tasks/logs/T-082-20261128-164039.log` solo contiene el enunciado y el banner de limpieza: la ejecución terminó sin editar nada. Repite la tarea desde el principio: implementa las tres validaciones en `src-tauri/src/mcp.rs`.\nAñade en `src-tauri/src/mcp.rs` tres funciones puras: `validar_indice(i: Option<i64>) -> Result<(), String>` (si viene y es< 0, error \"El índice no puede ser negativo\"; si es `None` o >= 0, Ok), `validar_vista(v: &str) -> Result<(), String>` y `validar_spec(s: &serde_json::Value) -> Result<(), String>` (si no es `Value::Object`, error \"La tarea debe ser un objeto\"). Devuelve siempre el fallo como `McpError::invalid_params(msg, None)`.\n`validar_vista` debe aceptar exactamente el conjunto de vistas que el frontend acepta: `api.js:41-51` define `VIEWS = ['tasks','week','allWeeks','ajustes']` y `VIEW_TAB_ALIAS` con los alias `settings`, `data`, `print`, `legal`, `accessibility`; `mcp-bridge.js:54` llama a `api.navigate(view)`, que lanza 'Vista inválida' para cualquier otro nombre. Acepta por tanto las 4 vistas + los 5 alias (son 9 nombres válidos) y rechaza el resto con mensaje en español; no copies solo la lista de 4 de `VIEWS` ni la de 8 de la descripción de la herramienta (`:337`), porque `ajustes` también es válida en el frontend.\nLlama a las validaciones en cada herramienta antes de `call_frontend`, sin tocar `mcp-bridge.js` (su validación se queda como segunda barrera): `ver_tarea` (`:246`) y `borrar_tarea` (`:283`) validan `args.index`; `editar_tarea` (`:267`) valida `args.index` y `args.spec`; `crear_tarea` (`:258`) valida `args.spec`; `abrir_vista` (`:342`) valida `args.view`. El error debe devolverse con `Err(McpError::invalid_params(msg, None))` antes de llamar al frontend.\nAñade en el `mod tests` de `src-tauri/src/mcp.rs` al menos 6 casos nuevos (hoy solo hay 1, el de T-079): casos válidos e inválidos de cada una de las tres funciones (índice negativo / índice válido / índice ausente; vista conocida / vista desconocida / vista vacía; spec objeto / spec array / spec string). Las pruebas deben llamar a las funciones y comprobar el `Err` con el mensaje en español, y se ponen en rojo si `validar_vista` acepta cualquier cosa o si `validar_spec` acepta un valor que no es objeto.\nEjecuta `cargo test` (para las validaciones) y `bash tools/test.sh` y déjalo en ✓ antes de terminar; el criterio \"bash tools/test.sh sale en ✓\" no está cumplido porque no hay ningún cambio y no consta ejecución. Al entregar, `git status --porcelain` debe mostrar solo `src-tauri/src/mcp.rs` (y `.tasks/`), sin sondas ni ficheros de diagnóstico."
+        },
+        {
+          "at": "2026-11-28T15:42:20Z",
+          "event": "foto del árbol",
+          "note": "29bf9bdb62"
+        },
+        {
+          "at": "2026-11-28T15:42:20Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3.1-Flash en OpenCode) empieza; registro en .tasks/logs/T-082-20261128-164220.log"
+        },
+        {
+          "at": "2026-11-28T15:48:09Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-11-28T15:57:38Z",
+          "event": "estado → hecha",
+          "note": "Aprobada por la revisión automática; pruebas en verde y commit hecho."
         }
       ],
       "reto": {

@@ -5,21 +5,21 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-28 15:42 UTC
+Actualizado: 2026-11-28 15:57 UTC
 
 ## Ahora
 
-**T-082 · MCP en Rust: validar índice, vista y spec antes de llamar al frontend**
+**T-083 · El servidor MCP se arranca desde un solo sitio del frontend**
 
-- Estado: Siguiente en la cola · intentos en total: 1 · correcciones recibidas: 1
-- Dificultad: 🟡 media · Delicadeza: 🟡 media
-- Reto: Rechaza en Rust índices, vistas y tareas mal formadas con mensajes en español, con seis casos de prueba. Si se cuela, el servidor de asistentes acepta o rechaza de más.
+- Estado: Siguiente en la cola · intentos en total: 0 · correcciones recibidas: 0
+- Dificultad: 🟢 fácil · Delicadeza: 🟡 media
+- Reto: Crea una función única para arrancar el servidor de asistentes y la usa en dos sitios, con prueba. Si se cuela, el arranque automático deja de funcionar.
 
 ## Resumen
 
-- Abiertas: 24 (0 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 16 media · 🔴 1 difícil
-- Delicadeza: 🟢 4 baja · 🟡 14 media · 🔴 6 alta
+- Abiertas: 23 (0 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 15 media · 🔴 1 difícil
+- Delicadeza: 🟢 4 baja · 🟡 13 media · 🔴 6 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -29,7 +29,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-082 | Pendiente | 🟡 media | 🟡 media | 1 | MCP en Rust: validar índice, vista y spec antes de llamar al frontend |
 | T-083 | Pendiente | 🟢 fácil | 🟡 media | 0 | El servidor MCP se arranca desde un solo sitio del frontend |
 | T-085 | Pendiente | 🟢 fácil | 🟡 media | 0 | THIRD_PARTY_LICENSES.md sin ficheros que no existen, con prueba |
 | T-087 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de consentimiento atrapa el foco |
@@ -55,12 +54,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-108 | Pendiente | 🟡 media | 🟡 media | 0 | Editar un color con un tema predefinido activo parte de ese tema y aplica el cambio |
 
 ## El reto de cada tarea
-
-### T-082 · MCP en Rust: validar índice, vista y spec antes de llamar al frontend
-
-🟡 media · delicadeza 🟡 media
-
-Rechaza en Rust índices, vistas y tareas mal formadas con mensajes en español, con seis casos de prueba. Si se cuela, el servidor de asistentes acepta o rechaza de más.
 
 ### T-083 · El servidor MCP se arranca desde un solo sitio del frontend
 
@@ -202,8 +195,8 @@ Al editar un color con un tema predefinido, el cambio se guardará y partirá de
 
 ## Últimas terminadas
 
+- T-082 · MCP en Rust: validar índice, vista y spec antes de llamar al frontend (2026-11-28, 2 intentos)
 - T-079 · MCP en Rust: ningún .lock().unwrap() (mutex envenenado) (2026-11-28, 1 intento)
 - T-105 · El CI encuentra el hash del frontend en el binario (2026-11-28, 1 intento)
 - T-078 · Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 (2026-11-28, 3 intentos)
 - T-077 · Borrar el service worker desactivado (sw.js) (2026-11-25, 1 intento)
-- T-076 · Borrar las funciones y la carpeta que nadie usa (2026-11-25, 1 intento)
