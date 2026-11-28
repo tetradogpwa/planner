@@ -5,7 +5,7 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-28 14:51 UTC
+Actualizado: 2026-11-28 15:17 UTC
 
 ## Ahora
 
@@ -17,9 +17,9 @@ Actualizado: 2026-11-28 14:51 UTC
 
 ## Resumen
 
-- Abiertas: 26 (1 sin evaluar)
-- Dificultad: 🟢 7 fácil · 🟡 16 media · 🔴 2 difícil
-- Delicadeza: 🟢 4 baja · 🟡 13 media · 🔴 8 alta
+- Abiertas: 25 (0 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 17 media · 🔴 1 difícil
+- Delicadeza: 🟢 4 baja · 🟡 14 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -51,10 +51,9 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-102 | Pendiente | 🔴 difícil | 🔴 alta | 0 | MCP en Rust: arrancar y parar el servidor por turnos |
 | T-103 | Pendiente | 🟢 fácil | 🟡 media | 0 | Una sola función para bloquear la app detrás de una pantalla |
 | T-104 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de términos atrapa el foco y bloquea la app de detrás |
-| T-105 | Pendiente | 🟡 media | 🟡 media | 0 | El CI encuentra el hash del frontend en el binario |
 | T-106 | Pendiente | 🟢 fácil | 🔴 alta | 0 | PRIVACY.md y DATA_SAFETY.md nombran todos los datos que la app guarda en el dispositivo |
-| T-107 | Pendiente | — sin evaluar | — | 0 | Las sugerencias de contraste del editor cambian el color que falla |
-| T-108 | Pendiente | 🔴 difícil | 🔴 alta | 0 | Editar un color con un tema predefinido activo parte de ese tema y aplica el cambio |
+| T-107 | Pendiente | 🟡 media | 🟡 media | 0 | Las sugerencias de contraste del editor cambian el color que falla |
+| T-108 | Pendiente | 🟡 media | 🟡 media | 0 | Editar un color con un tema predefinido activo parte de ese tema y aplica el cambio |
 
 ## El reto de cada tarea
 
@@ -190,12 +189,6 @@ La lógica que deja la app de detrás sin poder recibir el ratón ni el teclado 
 
 La pantalla de términos atrapa el teclado y bloquea la app de detrás. Es un añadido pequeño, pero si sale mal el foco se pierde y la app queda inservible con el teclado.
 
-### T-105 · El CI encuentra el hash del frontend en el binario
-
-🟡 media · delicadeza 🟡 media · sigue a T-040
-
-Las pruebas automáticas de GitHub dejan de fallar al buscar la marca del frontend en el binario. Tres piezas y una prueba nueva; lo difícil es el enlazador. Un fallo solo daría un hash raro en «Acerca de».
-
 ### T-106 · PRIVACY.md y DATA_SAFETY.md nombran todos los datos que la app guarda en el dispositivo
 
 🟢 fácil · delicadeza 🔴 alta · sigue a T-067
@@ -204,20 +197,20 @@ Solo reescribe dos documentos de privacidad y añade una prueba que los revisa. 
 
 ### T-107 · Las sugerencias de contraste del editor cambian el color que falla
 
-— sin evaluar · delicadeza — · sigue a T-075
+🟡 media · delicadeza 🟡 media · sigue a T-075
 
-Aún no la ha evaluado MiniMax.
+Los botones de sugerencia de contraste pasarán a cambiar el color correcto. Son dos ficheros y una lógica corta, pero hay que traducir el papel del color a su clave real.
 
 ### T-108 · Editar un color con un tema predefinido activo parte de ese tema y aplica el cambio
 
-🔴 difícil · delicadeza 🔴 alta · sigue a T-075
+🟡 media · delicadeza 🟡 media · sigue a T-075
 
-Al editar un color con un tema predefinido se pierde el borrador y el color elegido. Toca cómo se guardan las preferencias de tema, así que un fallo deja el tema del usuario descuadrado, y las dos pruebas nuevas conduCEN la app real y son lentas y frágiles.
+Al editar un color con un tema predefinido, el cambio se guardará y partirá de ese tema. Toca cómo se guardan las preferencias y sus pruebas manejan la app real, que son más lentas.
 
 ## Últimas terminadas
 
+- T-105 · El CI encuentra el hash del frontend en el binario (2026-11-28, 1 intento)
 - T-078 · Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 (2026-11-28, 3 intentos)
 - T-077 · Borrar el service worker desactivado (sw.js) (2026-11-25, 1 intento)
 - T-076 · Borrar las funciones y la carpeta que nadie usa (2026-11-25, 1 intento)
 - T-075 · Sacar el panel de contraste y la lista de temas guardados de settings-card.js (2026-11-25, 2 intentos)
-- T-074 · Sacar los temas guardados de preferences.js a ui/settings/savedThemes.js (2026-11-25, 1 intento)

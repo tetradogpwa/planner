@@ -7849,11 +7849,11 @@
     {
       "id": "T-105",
       "title": "El CI encuentra el hash del frontend en el binario",
-      "status": "pendiente",
+      "status": "hecha",
       "relatedTo": "T-040",
       "created": "2026-11-25T16:30:41Z",
-      "updated": "2026-11-25T17:28:10Z",
-      "attempts": 0,
+      "updated": "2026-11-28T15:17:33Z",
+      "attempts": 1,
       "requests": [
         {
           "at": "2026-11-25T16:30:41Z",
@@ -7874,7 +7874,7 @@
         "Empieza editando el código: no construyas herramientas de medición. Al terminar, git status --porcelain solo muestra los tres ficheros (y .tasks/)."
       ],
       "feedback": [],
-      "baseTree": null,
+      "baseTree": "bb1c7ee3f99b4b0ff5ee6ef53d06074e709f23a8",
       "history": [
         {
           "at": "2026-11-25T16:30:41Z",
@@ -7884,6 +7884,26 @@
           "at": "2026-11-25T17:28:10Z",
           "event": "reto evaluado",
           "note": "media · delicadeza media"
+        },
+        {
+          "at": "2026-11-28T14:51:16Z",
+          "event": "foto del árbol",
+          "note": "bb1c7ee3f9"
+        },
+        {
+          "at": "2026-11-28T14:51:16Z",
+          "event": "estado → en_curso",
+          "note": "MiniMax (minimax/MiniMax-M3.1-Flash en OpenCode) empieza; registro en .tasks/logs/T-105-20261128-155116.log"
+        },
+        {
+          "at": "2026-11-28T15:05:38Z",
+          "event": "estado → en_revision",
+          "note": "MiniMax ha terminado"
+        },
+        {
+          "at": "2026-11-28T15:17:33Z",
+          "event": "estado → hecha",
+          "note": "Aprobada por la revisión automática; pruebas en verde y commit hecho."
         }
       ],
       "reto": {
@@ -7891,7 +7911,8 @@
         "delicadeza": "media",
         "motivo": "Las pruebas automáticas de GitHub dejan de fallar al buscar la marca del frontend en el binario. Tres piezas y una prueba nueva; lo difícil es el enlazador. Un fallo solo daría un hash raro en «Acerca de».",
         "at": "2026-11-25T17:28:10Z"
-      }
+      },
+      "firstTree": "bb1c7ee3f99b4b0ff5ee6ef53d06074e709f23a8"
     },
     {
       "id": "T-106",
@@ -7945,7 +7966,7 @@
       "status": "pendiente",
       "relatedTo": "T-075",
       "created": "2026-11-28T14:36:07Z",
-      "updated": "2026-11-28T14:36:07Z",
+      "updated": "2026-11-28T14:51:48Z",
       "attempts": 0,
       "requests": [
         {
@@ -7973,8 +7994,19 @@
         {
           "at": "2026-11-28T14:36:07Z",
           "event": "creada"
+        },
+        {
+          "at": "2026-11-28T14:51:48Z",
+          "event": "reto evaluado",
+          "note": "media · delicadeza media"
         }
-      ]
+      ],
+      "reto": {
+        "dificultad": "media",
+        "delicadeza": "media",
+        "motivo": "Los botones de sugerencia de contraste pasarán a cambiar el color correcto. Son dos ficheros y una lógica corta, pero hay que traducir el papel del color a su clave real.",
+        "at": "2026-11-28T14:51:48Z"
+      }
     },
     {
       "id": "T-108",
@@ -7982,7 +8014,7 @@
       "status": "pendiente",
       "relatedTo": "T-075",
       "created": "2026-11-28T14:36:07Z",
-      "updated": "2026-11-28T14:51:07Z",
+      "updated": "2026-11-28T14:51:48Z",
       "attempts": 0,
       "requests": [
         {
@@ -8016,13 +8048,18 @@
           "at": "2026-11-28T14:51:07Z",
           "event": "reto evaluado",
           "note": "difícil · delicadeza alta"
+        },
+        {
+          "at": "2026-11-28T14:51:48Z",
+          "event": "reto evaluado",
+          "note": "media · delicadeza media"
         }
       ],
       "reto": {
-        "dificultad": "difícil",
-        "delicadeza": "alta",
-        "motivo": "Al editar un color con un tema predefinido se pierde el borrador y el color elegido. Toca cómo se guardan las preferencias de tema, así que un fallo deja el tema del usuario descuadrado, y las dos pruebas nuevas conduCEN la app real y son lentas y frágiles.",
-        "at": "2026-11-28T14:51:07Z"
+        "dificultad": "media",
+        "delicadeza": "media",
+        "motivo": "Al editar un color con un tema predefinido, el cambio se guardará y partirá de ese tema. Toca cómo se guardan las preferencias y sus pruebas manejan la app real, que son más lentas.",
+        "at": "2026-11-28T14:51:48Z"
       }
     }
   ]
