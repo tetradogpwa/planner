@@ -5,13 +5,13 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-28 15:40 UTC
+Actualizado: 2026-11-28 15:42 UTC
 
 ## Ahora
 
 **T-082 · MCP en Rust: validar índice, vista y spec antes de llamar al frontend**
 
-- Estado: Siguiente en la cola · intentos en total: 0 · correcciones recibidas: 0
+- Estado: Siguiente en la cola · intentos en total: 1 · correcciones recibidas: 1
 - Dificultad: 🟡 media · Delicadeza: 🟡 media
 - Reto: Rechaza en Rust índices, vistas y tareas mal formadas con mensajes en español, con seis casos de prueba. Si se cuela, el servidor de asistentes acepta o rechaza de más.
 
@@ -29,7 +29,7 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-082 | Pendiente | 🟡 media | 🟡 media | 0 | MCP en Rust: validar índice, vista y spec antes de llamar al frontend |
+| T-082 | Pendiente | 🟡 media | 🟡 media | 1 | MCP en Rust: validar índice, vista y spec antes de llamar al frontend |
 | T-083 | Pendiente | 🟢 fácil | 🟡 media | 0 | El servidor MCP se arranca desde un solo sitio del frontend |
 | T-085 | Pendiente | 🟢 fácil | 🟡 media | 0 | THIRD_PARTY_LICENSES.md sin ficheros que no existen, con prueba |
 | T-087 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de consentimiento atrapa el foco |
