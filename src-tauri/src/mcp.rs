@@ -68,6 +68,21 @@ use tauri::Wry;
 use tauri::{Emitter, Manager};
 use tokio::sync::oneshot;
 
+// ── Bloqueo de los mutex ─────────────────────────────────────────────
+
+/// Toma el lock de un `Mutex` aunque esté **envenenado**.
+///
+/// Un mutex se envenena cuando el hilo que lo tenía entra en pánico
+/// mientras lo sujetaba. Con `panic = "abort"` (perfil release) ese
+/// pánico ya tumba la app entera, así que reventar el lock de un mutex
+/// envenenado la tumbaría también (y por el mismo motivo: aborta el
+/// proceso). Con `unwrap_or_else(|e| e.into_inner())` el guard se queda
+/// con los datos que hubiera y la app sigue viva: un mutex envenenado
+/// puede dejar datos a medias, pero es preferible a perder la sesión.
+fn bloquear<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+    m.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 // ── Estado compartido del servidor ───────────────────────────────────
 
 /// Mapa de respuestas pendientes: id de la llamada al canal que el
@@ -366,13 +381,13 @@ impl PlannerServer {
 
         // Canal oneshot: el frontend lo resolverá con `mcp_reply`.
         let (tx, rx) = oneshot::channel::<McpReply>();
-        self.pending.lock().unwrap().insert(id.clone(), tx);
+        bloquear(&self.pending).insert(id.clone(), tx);
 
         // Emitimos el evento al webview. Si no hay ventana principal
         // (p.ej. el usuario la cerró), devolvemos un error claro.
         let payload = serde_json::json!({ "id": id, "tool": tool, "args": args });
         if let Err(err) = self.app.emit("mcp:call", payload) {
-            self.pending.lock().unwrap().remove(&id);
+            bloquear(&self.pending).remove(&id);
             return Err(McpError::internal_error(
                 format!("No se pudo enviar la llamada al frontend: {err}"),
                 None,
@@ -390,7 +405,7 @@ impl PlannerServer {
                 ));
             }
             Err(_elapsed) => {
-                self.pending.lock().unwrap().remove(&id);
+                bloquear(&self.pending).remove(&id);
                 return Err(McpError::internal_error(
                     "El frontend no respondió en 10 s. ¿Ha aceptado términos y consentimiento?",
                     None,
@@ -433,7 +448,7 @@ async fn auth_middleware(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
     let provided = header.strip_prefix("Bearer ").unwrap_or("");
-    let expected = state.token.lock().unwrap().clone().unwrap_or_default();
+    let expected = bloquear(&state.token).clone().unwrap_or_default();
     // Comparación en tiempo constante para evitar timing attacks.
     let matches = !expected.is_empty()
         && provided.len() == expected.len()
@@ -474,13 +489,13 @@ pub async fn start(
     // estado. Da igual que el puerto cambie o no: queremos volver a
     // enlazar para que la UI nunca diga "activo" en un puerto que no
     // está realmente escuchando.
-    if state.token.lock().unwrap().is_some() {
-        if let Some(handle) = state.task.lock().unwrap().take() {
+    if bloquear(&state.token).is_some() {
+        if let Some(handle) = bloquear(&state.task).take() {
             handle.abort();
         }
-        *state.token.lock().unwrap() = None;
-        *state.port.lock().unwrap() = None;
-        state.pending.lock().unwrap().clear();
+        *bloquear(&state.token) = None;
+        *bloquear(&state.port) = None;
+        bloquear(&state.pending).clear();
         // Damos un instante al task anterior para soltar el socket.
         tokio::time::sleep(std::time::Duration::from_millis(20)).await;
     }
@@ -522,15 +537,15 @@ pub async fn start(
         Ok(l) => l,
         Err(msg) => {
             // Limpiamos lo que pudiéramos haber movido al rearrancar.
-            *state.token.lock().unwrap() = None;
-            *state.port.lock().unwrap() = None;
+            *bloquear(&state.token) = None;
+            *bloquear(&state.port) = None;
             return Err(msg);
         }
     };
 
     // A partir de aquí el servidor está en marcha. Movemos estado.
-    *state.token.lock().unwrap() = Some(token.clone());
-    *state.port.lock().unwrap() = Some(port);
+    *bloquear(&state.token) = Some(token.clone());
+    *bloquear(&state.port) = Some(port);
 
     let pending = state.pending.clone();
     let app_for_task = app.clone();
@@ -563,27 +578,27 @@ pub async fn start(
         }
     });
 
-    *state.task.lock().unwrap() = Some(handle);
+    *bloquear(&state.task) = Some(handle);
     Ok(())
 }
 
 /// Detiene el servidor. Limpia token, puerto y la tarea en background.
 pub fn stop(app: &AppHandle<Wry>) {
     let state = app.state::<McpState>();
-    *state.token.lock().unwrap() = None;
-    *state.port.lock().unwrap() = None;
-    if let Some(handle) = state.task.lock().unwrap().take() {
+    *bloquear(&state.token) = None;
+    *bloquear(&state.port) = None;
+    if let Some(handle) = bloquear(&state.task).take() {
         handle.abort();
     }
     // Las respuestas pendientes se cancelan al soltar el oneshot.
-    state.pending.lock().unwrap().clear();
+    bloquear(&state.pending).clear();
 }
 
 /// Devuelve el estado actual: (activo, puerto) si lo está.
 pub fn status(app: &AppHandle<Wry>) -> (bool, Option<u16>) {
     let state = app.state::<McpState>();
-    let active = state.token.lock().unwrap().is_some();
-    let port   = *state.port.lock().unwrap();
+    let active = bloquear(&state.token).is_some();
+    let port   = *bloquear(&state.port);
     (active, port)
 }
 
@@ -600,7 +615,7 @@ pub fn mcp_reply(
     payload: serde_json::Value,
 ) -> Result<(), String> {
     let state = app.state::<McpState>();
-    let tx = state.pending.lock().unwrap().remove(&id);
+    let tx = bloquear(&state.pending).remove(&id);
     match tx {
         Some(tx) => {
             // Si el frontend no escucha ya, `send` falla, pero no
@@ -739,7 +754,7 @@ fn crear_directorio(dir: &Path) -> Result<(), String> {
 /// tras regenerar el token, el viejo deja de servir al instante.
 pub fn set_token(app: &AppHandle<Wry>, token: &str) {
     let state = app.state::<McpState>();
-    let mut slot = state.token.lock().unwrap();
+    let mut slot = bloquear(&state.token);
     if slot.is_some() {
         *slot = Some(token.to_string());
     }
@@ -764,4 +779,37 @@ pub fn mcp_token_regenerate(app: AppHandle) -> Result<String, String> {
     let token = token_nuevo(&app)?;
     set_token(&app, &token);
     Ok(token)
+}
+
+// ── Pruebas ──────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::bloquear;
+    use std::sync::{Arc, Mutex};
+
+    /// Un mutex envenenado no debe reventar la app.
+    ///
+    /// Con `panic = "abort"` (perfil release) un pánico aborta el
+    /// proceso entero: si el código reventara el lock de un mutex
+    /// envenenado, la app moriría. `bloquear` tiene que devolver el
+    /// valor igualmente.
+    #[test]
+    fn bloquear_devuelve_el_valor_de_un_mutex_envenenado() {
+        let m = Arc::new(Mutex::new(42));
+
+        // Envenenamos el mutex: un hilo toma el lock y entra en pánico
+        // mientras lo tiene. Los tests se compilan con panic=unwind
+        // (el perfil de test ignora `panic = "abort"`), así que el hilo
+        // muere y el mutex queda envenenado.
+        let m2 = Arc::clone(&m);
+        let _ = std::thread::spawn(move || {
+            let _guarda = m2.lock().unwrap_or_else(|e| e.into_inner());
+            panic!("envenenamos el mutex a propósito");
+        })
+        .join();
+
+        // El mutex está envenenado, pero el valor sigue ahí.
+        assert_eq!(*bloquear(&m), 42);
+    }
 }
