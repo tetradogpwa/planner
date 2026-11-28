@@ -5,21 +5,21 @@
 > de cada tarea (dificultad y delicadeza) la hace MiniMax con
 > `tools/minimax/evaluar.sh`. No lo edites a mano: se sobrescribe.
 
-Actualizado: 2026-11-28 14:29 UTC
+Actualizado: 2026-11-28 14:50 UTC
 
 ## Ahora
 
-**T-078 · Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237**
+**T-079 · MCP en Rust: ningún .lock().unwrap() (mutex envenenado)**
 
-- Estado: Siguiente en la cola · intentos: 2 · devoluciones del revisor: 2
-- Dificultad: 🟢 fácil · Delicadeza: 🟡 media
-- Reto: Sustituye números repetidos por las constantes que ya existen en cuatro ficheros. Si se equivoca con el puerto, el servidor de asistentes no arranca.
+- Estado: Siguiente en la cola · intentos en total: 0 · correcciones recibidas: 0
+- Dificultad: 🟡 media · Delicadeza: 🔴 alta
+- Reto: Sustituye 22 bloqueos que abortan la app en Rust por una recuperación segura y añade una prueba. Un fallo aquí puede tumbar la app entera al usar el servidor de asistentes.
 
 ## Resumen
 
-- Abiertas: 25 (0 sin evaluar)
-- Dificultad: 🟢 8 fácil · 🟡 16 media · 🔴 1 difícil
-- Delicadeza: 🟢 4 baja · 🟡 14 media · 🔴 7 alta
+- Abiertas: 26 (2 sin evaluar)
+- Dificultad: 🟢 7 fácil · 🟡 16 media · 🔴 1 difícil
+- Delicadeza: 🟢 4 baja · 🟡 13 media · 🔴 7 alta
 
 **Dificultad**: cuánto trabajo y riesgo de equivocarse tiene la tarea.
 **Delicadeza**: cuánto daño haría un error que se colara (datos del
@@ -29,7 +29,6 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 
 | Tarea | Estado | Dificultad | Delicadeza | Intentos | Título |
 |---|---|---|---|---|---|
-| T-078 | Pendiente | 🟢 fácil | 🟡 media | 2 | Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 |
 | T-079 | Pendiente | 🟡 media | 🔴 alta | 0 | MCP en Rust: ningún .lock().unwrap() (mutex envenenado) |
 | T-082 | Pendiente | 🟡 media | 🟡 media | 0 | MCP en Rust: validar índice, vista y spec antes de llamar al frontend |
 | T-083 | Pendiente | 🟢 fácil | 🟡 media | 0 | El servidor MCP se arranca desde un solo sitio del frontend |
@@ -54,14 +53,10 @@ usuario, seguridad, textos legales, lo que ve todo el mundo).
 | T-104 | Pendiente | 🟡 media | 🟡 media | 0 | La pantalla de términos atrapa el foco y bloquea la app de detrás |
 | T-105 | Pendiente | 🟡 media | 🟡 media | 0 | El CI encuentra el hash del frontend en el binario |
 | T-106 | Pendiente | 🟢 fácil | 🔴 alta | 0 | PRIVACY.md y DATA_SAFETY.md nombran todos los datos que la app guarda en el dispositivo |
+| T-107 | Pendiente | — sin evaluar | — | 0 | Las sugerencias de contraste del editor cambian el color que falla |
+| T-108 | Pendiente | — sin evaluar | — | 0 | Editar un color con un tema predefinido activo parte de ese tema y aplica el cambio |
 
 ## El reto de cada tarea
-
-### T-078 · Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237
-
-🟢 fácil · delicadeza 🟡 media
-
-Sustituye números repetidos por las constantes que ya existen en cuatro ficheros. Si se equivoca con el puerto, el servidor de asistentes no arranca.
 
 ### T-079 · MCP en Rust: ningún .lock().unwrap() (mutex envenenado)
 
@@ -207,10 +202,22 @@ Las pruebas automáticas de GitHub dejan de fallar al buscar la marca del fronte
 
 Solo reescribe dos documentos de privacidad y añade una prueba que los revisa. El trabajo es fácil, pero si el texto queda falso o incompleto, el usuario creería que la app guarda o envía datos que no es así.
 
+### T-107 · Las sugerencias de contraste del editor cambian el color que falla
+
+— sin evaluar · delicadeza — · sigue a T-075
+
+Aún no la ha evaluado MiniMax.
+
+### T-108 · Editar un color con un tema predefinido activo parte de ese tema y aplica el cambio
+
+— sin evaluar · delicadeza — · sigue a T-075
+
+Aún no la ha evaluado MiniMax.
+
 ## Últimas terminadas
 
+- T-078 · Un solo sitio para el prefijo 'saved:' y para el puerto MCP 41237 (2026-11-28, 3 intentos)
 - T-077 · Borrar el service worker desactivado (sw.js) (2026-11-25, 1 intento)
 - T-076 · Borrar las funciones y la carpeta que nadie usa (2026-11-25, 1 intento)
 - T-075 · Sacar el panel de contraste y la lista de temas guardados de settings-card.js (2026-11-25, 2 intentos)
 - T-074 · Sacar los temas guardados de preferences.js a ui/settings/savedThemes.js (2026-11-25, 1 intento)
-- T-073 · Sacar la matemática de color de preferences.js a back/color.js (2026-11-25, 1 intento)
