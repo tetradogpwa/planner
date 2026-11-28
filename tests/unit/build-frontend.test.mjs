@@ -555,7 +555,7 @@ test('FRONTEND_HASH se usa en runtime (no lo elimina el enlazador)', () => {
   // Y en concreto: se expone al frontend.
   assert.match(
     LIB_RS,
-    /frontend_hash:\s*FRONTEND_HASH/,
+    /frontend_hash:\s*&?FRONTEND_HASH/,
     'AppInfo tiene que llevar el hash del frontend: así el hash está ' +
     'de verdad en el binario y se puede leer con `grep -a`',
   );
@@ -686,6 +686,101 @@ test('la comprobación lee el hash del binario de verdad', () => {
     /\[0-9a-f\]\{64\}/,
     'hash_frontend_binario tiene que buscar el SHA-256 en hexadecimal',
   );
+});
+
+/**
+ * Ejecuta la comprobación REAL del hash del binario
+ * (`hash_frontend_binario`, extraída tal cual de `tools/test.sh`)
+ * contra un fichero de mentira.
+ *
+ * Devuelve lo que imprime: el hash, o nada si no lo encuentra.
+ */
+function ejecutarHashFrontendBinario(bloque, binario) {
+  const dir = mkdtempSync(join(tmpdir(), 'planner-t105-'));
+  try {
+    const guion = join(dir, 'hash.sh');
+    writeFileSync(guion, `#!/usr/bin/env bash
+set -uo pipefail
+E2E_BIN="$1"
+
+${bloque}
+
+hash_frontend_binario
+`, 'utf8');
+    const res = spawnSync('bash', [guion, binario], { encoding: 'utf8' });
+    return (res.stdout ?? '').trim();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('la comprobación encuentra el hash aunque el enlazador no lo pegue al nombre', () => {
+  // El hash tiene que poder encontrarse en el binario SIN depender de
+  // cómo el enlazador coloque cada texto. Por eso va en un literal
+  // único con una marca delante ("PLANNER_FRONTEND_HASH=").
+  //
+  // Antes se buscaba el hash "pegado al nombre del producto"
+  // ("planner<versión><hash>"): en local coincidía y en el CI no, así
+  // que la comprobación fallaba sin que hubiera nada que corregir en
+  // el frontend (T-105).
+  const bloque = bloqueDe('hash_frontend_binario()', 'compilar_binario_pruebas()');
+  assert.match(
+    bloque,
+    /PLANNER_FRONTEND_HASH=/,
+    'hash_frontend_binario tiene que buscar el hash con la marca delante',
+  );
+
+  // Y la marca tiene que existir de verdad en el binario: el crate la
+  // define en un solo literal y la usa para el hash que se expone al
+  // frontend (si no, el enlazador se la llevaría).
+  assert.match(
+    LIB_RS,
+    /FRONTEND_HASH_MARCADO:\s*&str\s*=\s*concat!\("PLANNER_FRONTEND_HASH=",\s*env!\("FRONTEND_HASH"\)\)/,
+    'lib.rs tiene que definir el hash con la marca delante, en un solo literal',
+  );
+  assert.match(
+    LIB_RS,
+    /frontend_hash:\s*&FRONTEND_HASH_MARCADO/,
+    'AppInfo tiene que usar el hash marcado: si usara el hash solo, ' +
+    'el enlazador se llevaría el literal con la marca',
+  );
+
+  const dir = mkdtempSync(join(tmpdir(), 'planner-t105-'));
+  try {
+    const hash = 'a1b2c3d4'.repeat(8);   // 64 hexadecimales
+    const basura = Buffer.from([0x00, 0x01, 0x7f, 0x80, 0xff]);
+
+    // 1. Un binario con la marca: se encuentra el hash.
+    const conMarca = join(dir, 'con-marca.bin');
+    writeFileSync(conMarca, Buffer.concat([
+      basura,
+      Buffer.from(`PLANNER_FRONTEND_HASH=${hash}`, 'utf8'),
+      basura,
+    ]));
+    assert.equal(
+      ejecutarHashFrontendBinario(bloque, conMarca),
+      hash,
+      'la comprobación tiene que encontrar el hash en el binario',
+    );
+
+    // 2. Un binario con el hash pegado al nombre del producto pero SIN
+    //    la marca: no se encuentra nada (la marca es la que ancla el
+    //    hash dentro del literal).
+    const sinMarca = join(dir, 'sin-marca.bin');
+    writeFileSync(sinMarca, Buffer.concat([
+      basura,
+      Buffer.from(`planner0.1.0${hash}`, 'utf8'),
+      basura,
+    ]));
+    assert.equal(
+      ejecutarHashFrontendBinario(bloque, sinMarca),
+      '',
+      'sin la marca, la comprobación no tiene que dar un hash: si lo ' +
+      'diera, estaría leyendo un hexadecimal cualquiera del binario',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('la comprobación no deja traps colgados', () => {
@@ -1022,7 +1117,7 @@ test('el hash del frontend se muestra en «Acerca de»', () => {
   // «Acerca de».
   assert.match(
     LIB_RS,
-    /frontend_hash:\s*FRONTEND_HASH/,
+    /frontend_hash:\s*&?FRONTEND_HASH/,
     'AppInfo tiene que llevar el hash del frontend',
   );
 

@@ -865,14 +865,16 @@ check_frontend_embebido() {
 # frontend (se ve en «Acerca de»), así que está en el binario de
 # verdad: se lee con `grep -a` sobre el binario.
 #
-# Se busca con el nombre y la versión del producto delante
-# ("planner<versión><hash>"): en el binario van pegados (son las tres
-# cadenas de `AppInfo`, seguidas), así que el ancla los separa del
-# resto de hexadecimal que hay dentro.
+# Se busca con una MARCA delante ("PLANNER_FRONTEND_HASH="): el hash
+# va en un literal único y contiguo (ver `FRONTEND_HASH_MARCADO` en
+# `src-tauri/src/lib.rs`). Buscar el hash "pegado al nombre del
+# producto" depended de cómo el enlazador colocara cada texto: en
+# local coincidía y en el CI no, y la comprobación fallaba sin que
+# hubiera nada que corregir en el frontend.
 hash_frontend_binario() {
   [[ -f "$E2E_BIN" ]] || return 0
-  grep -aoE 'planner[0-9]+\.[0-9]+\.[0-9]+[0-9a-f]{64}' "$E2E_BIN" 2>/dev/null \
-    | grep -oaE '[0-9a-f]{64}$' | head -1
+  grep -aoE 'PLANNER_FRONTEND_HASH=[0-9a-f]{64}' "$E2E_BIN" 2>/dev/null \
+    | head -1 | cut -d= -f2
 }
 # Compila el binario de pruebas (debug, sin anuncios) en el directorio
 # de trabajo de los E2E.

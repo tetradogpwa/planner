@@ -54,6 +54,17 @@ pub mod frontend_version {
 /// sin tener que descompilarlo.
 pub const FRONTEND_HASH: &str = env!("FRONTEND_HASH");
 
+/// El hash con una marca delante y en un solo literal: tools/test.sh lo
+/// busca en el binario sin depender de cómo coloque el enlazador cada
+/// texto.
+///
+/// El hash solo (`FRONTEND_HASH`) y el nombre del producto son cadenas
+/// sueltas: el enlazador puede colocarlas donde quiera (y separarlas),
+/// así que no se puede buscar "el hash pegado al nombre". Con la marca
+/// delante, el hash va en un literal único y contiguo, y se puede
+/// encontrar en el binario con `grep -a`.
+pub const FRONTEND_HASH_MARCADO: &str = concat!("PLANNER_FRONTEND_HASH=", env!("FRONTEND_HASH"));
+
 /// Rutas (relativas a `dist/`) de los assets que se copiaron al
 /// frontend incrustado, en el mismo orden en que se calculó el hash.
 ///
@@ -195,7 +206,7 @@ fn get_app_info() -> AppInfo {
         product_name: env!("CARGO_PKG_NAME"),
         version: env!("CARGO_PKG_VERSION"),
         identifier: env!("CARGO_PKG_NAME"),
-        frontend_hash: FRONTEND_HASH,
+        frontend_hash: &FRONTEND_HASH_MARCADO["PLANNER_FRONTEND_HASH=".len()..],
     }
 }
 
