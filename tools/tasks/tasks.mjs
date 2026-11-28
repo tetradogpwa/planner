@@ -328,6 +328,9 @@ switch (cmd) {
   // ("haz la siguiente tarea"): hace lo mismo que run-task.sh antes y
   // después de lanzarlo, para que el supervisor pueda revisar el diff.
   case 'empezar': {
+    if (process.env.PLANNER_RUN_TASK === '1') {
+      fail('te ha lanzado tools/minimax/run-task.sh: no ejecutes empezar ni terminar, el script lo hace al acabar. Sigue con la tarea y escribe el resumen final.');
+    }
     const running = db.tasks.find(t => t.status === 'en_curso');
     if (running && (!rest[0] || running.id !== String(rest[0]).toUpperCase())) {
       console.log(`Ya hay una tarea en curso: ${running.id}. Termínala antes de empezar otra:\n`);
@@ -402,6 +405,9 @@ switch (cmd) {
   }
 
   case 'terminar': {
+    if (process.env.PLANNER_RUN_TASK === '1') {
+      fail('te ha lanzado tools/minimax/run-task.sh: no ejecutes empezar ni terminar, el script lo hace al acabar. Sigue con la tarea y escribe el resumen final.');
+    }
     const task = find(db, rest[0]);
     if (task.status !== 'en_curso') fail(`${task.id} no está en curso (está ${STATE_LABEL[task.status].toLowerCase()}).`);
     task.status = 'en_revision';

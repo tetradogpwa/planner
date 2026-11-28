@@ -42,9 +42,33 @@ limpieza_empezar() {
   trap limpieza_acabar EXIT
 }
 
+# ¿Hay un OpenCode de OTRO proyecto en marcha? Comparte /tmp y
+# /tmp/opencode con nosotros: lo que cree durante nuestra ejecución
+# parecería nuestro, y borrarlo le rompería el trabajo.
+otro_opencode_activo() {
+  local p cwd raiz
+  raiz="$(pwd -P)"
+  for p in $(pgrep -f "opencode" 2>/dev/null); do
+    [[ "$p" == "$$" ]] && continue
+    cwd="$(readlink "/proc/$p/cwd" 2>/dev/null)" || continue
+    [[ -n "$cwd" && "$cwd" != "$raiz" && "$cwd" != "$raiz/"* ]] && return 0
+  done
+  return 1
+}
+
 limpieza_acabar() {
   local e nombre nacido abiertos borrado=()
   [[ -n "${TAREA_TMP:-}" && -d "$TAREA_TMP" ]] && rm -rf -- "$TAREA_TMP"
+
+  # Con otro proyecto usando OpenCode a la vez, solo se borra la carpeta
+  # propia de la ejecución (arriba): el barrido de /tmp no distingue de
+  # quién es cada cosa.
+  if otro_opencode_activo; then
+    if [[ -n "${LIMPIEZA_LOG:-}" && -f "$LIMPIEZA_LOG" ]]; then
+      printf '\n── Limpieza: solo %s (hay OpenCode de otro proyecto en marcha; /tmp no se barre).\n' "$TAREA_TMP" >> "$LIMPIEZA_LOG"
+    fi
+    return 0
+  fi
 
   # Rutas de /tmp que algún proceso tiene abiertas o usa como carpeta.
   abiertos="$(for p in /proc/[0-9]*; do

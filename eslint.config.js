@@ -139,21 +139,6 @@ export default [
     },
   },
 
-  // `sw.js` es el service worker: vive en su propio ámbito, con
-  // `self`, `caches` y `clients`.
-  {
-    files: ['sw.js'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'script',
-      globals: { ...globals.serviceworker },
-    },
-    rules: {
-      'no-console': ['error', { allow: ['warn', 'error'] }],
-      'eqeqeq': ['error', 'always'],
-    },
-  },
-
   // ── `back/`: la capa más vieja ────────────────────────────────────
   {
     files: ['back/**/*.js'],

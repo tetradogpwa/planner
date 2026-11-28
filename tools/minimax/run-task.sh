@@ -41,11 +41,14 @@ OPENCODE="${OPENCODE_BIN:-$(command -v opencode || echo "$HOME/.opencode/bin/ope
 
 # OpenCode en un entorno limpio: nada de la sesión del supervisor llega a
 # MiniMax. PLANNER_ROLE=worker hace que el hook del supervisor no actúe.
+# PLANNER_RUN_TASK=1: tasks.mjs no deja a MiniMax hacer empezar/terminar
+# (este script ya lo hace; si no, la tarea pasa a revisión a medias).
 OPENCODE_CMD=(
   env -i
   HOME="$HOME" PATH="$PATH" LANG="${LANG:-C.UTF-8}" TERM="${TERM:-dumb}"
   ${CARGO_HOME:+CARGO_HOME="$CARGO_HOME"} ${RUSTUP_HOME:+RUSTUP_HOME="$RUSTUP_HOME"}
   PLANNER_ROLE=worker
+  PLANNER_RUN_TASK=1
   "$OPENCODE" run --standalone --agent "$AGENT" --model "$MINIMAX_MODEL" --auto
 )
 

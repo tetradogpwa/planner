@@ -34,6 +34,11 @@
 # lo pidió así (25-nov-2026) y acepta que con él se suban también los
 # commits de las tareas. Sin red, el push falla con un aviso y la cola
 # sigue. PLANNER_SIN_PUSH=1 lo desactiva.
+#
+# Solo trabaja sobre la rama main (PLANNER_RAMA para otra): commitea y
+# publica en la rama en la que está, así que en otra rama mezclaría las
+# tareas con ese trabajo y el push subiría esa rama entera. Si al
+# arrancar o entre tarea y tarea HEAD no está en main, se para y lo dice.
 # ────────────────────────────────────────────────────────────────────
 set -uo pipefail
 
@@ -42,6 +47,7 @@ ROOT="$PWD"
 TASKS="node $ROOT/tools/tasks/tasks.mjs"
 STORE="$ROOT/.tasks/tasks.json"
 
+RAMA_COLA="${PLANNER_RAMA:-main}"
 SOLO_TAREA=""
 SIN_REVISION=0
 MAX_TAREAS=0        # 0 = todas
@@ -121,8 +127,14 @@ diff_entre() {
 
 # ── Comprobación de la configuración ────────────────────────────────
 
+rama_actual() { git symbolic-ref --quiet --short HEAD 2>/dev/null || echo "(sin rama)"; }
+en_rama_buena() { [[ "$(rama_actual)" == "$RAMA_COLA" ]]; }
+
 check_config() {
   local ok=0
+  if en_rama_buena; then echo "✓ Rama: $RAMA_COLA"; else
+    echo "✗ Estás en la rama «$(rama_actual)»: la cola solo trabaja en «$RAMA_COLA» (git switch $RAMA_COLA)"; ok=1
+  fi
   if ! command -v node >/dev/null; then echo "✗ Falta node"; ok=1; fi
   if ! command -v git  >/dev/null; then echo "✗ Falta git"; ok=1; fi
   local bin
@@ -323,6 +335,10 @@ aprobar_y_commitear() {  # aprobar_y_commitear <id>
   titulo="$(campo "$id" title)"
   log_pruebas="logs/test-cola-$id-$(date +%Y%m%d-%H%M%S).log"
 
+  if ! en_rama_buena; then
+    say "■ HEAD ya no está en «$RAMA_COLA» (está en «$(rama_actual)»): no se commitea $id. La cola se para; $id se queda en revisión."
+    exit 1
+  fi
   say "   ▸ Pasando las pruebas antes del commit…"
   if ! bash tools/test.sh > "$log_pruebas" 2>&1; then
     say "   ✗ Las pruebas NO pasan (log: $log_pruebas). La tarea vuelve al trabajador."
@@ -368,6 +384,7 @@ evaluar_nuevas() {
 }
 
 publicar_estado() {  # publicar_estado <motivo>
+  en_rama_buena || return 0      # nunca commitear ni subir desde otra rama
   $TASKS estado-md >> "$LOG" 2>&1 || return 0     # 1 = sin cambios
   git add -- STATUS.md >> "$LOG" 2>&1
   if ! git commit -q -m "STATUS: $1" -- STATUS.md >> "$LOG" 2>&1; then
@@ -375,13 +392,19 @@ publicar_estado() {  # publicar_estado <motivo>
     return 0
   fi
   [[ "${PLANNER_SIN_PUSH:-0}" == "1" ]] && return 0
-  if timeout 120 git push -q origin HEAD:main >> "$LOG" 2>&1; then
+  if timeout 120 git push -q origin "HEAD:$RAMA_COLA" >> "$LOG" 2>&1; then
     say "   ↑ STATUS.md publicado en GitHub ($1)"
   else
     say "   ⚠ No se pudo subir a GitHub (ver $LOG); se reintentará en la próxima actualización"
   fi
   return 0
 }
+
+if ! en_rama_buena; then
+  say "■ La cola solo trabaja en la rama «$RAMA_COLA» y HEAD está en «$(rama_actual)»."
+  say "  Cambia de rama (git switch $RAMA_COLA) y vuelve a lanzarla. No se ha tocado nada."
+  exit 1
+fi
 
 recuperar
 
