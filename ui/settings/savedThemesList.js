@@ -11,7 +11,7 @@
 // ui/settings/settings-card.js.
 // ────────────────────────────────────────────────────────────────────
 
-import { BASES, autoTargetOptions } from './preferences.js';
+import { BASES, SAVED_PREFIX, autoTargetOptions } from './preferences.js';
 import { savedThemeScheme } from './savedThemes.js';
 import { escapeHtml, escapeAttr } from '../html.js';
 
@@ -40,7 +40,7 @@ export function renderSavedThemes(contenedor, temas, { editable, onRemove } = {}
     return `
         <div class="saved-theme-row">
           <label class="settings-option saved-theme-option">
-            <input type="radio" name="theme" value="saved:${escapeAttr(theme.id)}">
+            <input type="radio" name="theme" value="${SAVED_PREFIX}${escapeAttr(theme.id)}">
             <span aria-hidden="true">${icon}</span>
             <span class="saved-theme-name">${escapeHtml(theme.name)} <small>(creado por ti)</small></span>
           </label>
@@ -68,7 +68,7 @@ export function renderBaseOptions(contenedor, temas) {
       temas.map(t => {
         const scheme = savedThemeScheme(t);
         const icon = scheme === 'light' ? '☀' : '🌙';
-        return `<option value="saved:${escapeAttr(t.id)}">${icon} ${escapeHtml(t.name)}</option>`;
+        return `<option value="${SAVED_PREFIX}${escapeAttr(t.id)}">${icon} ${escapeHtml(t.name)}</option>`;
       }).join('')
     }</optgroup>`;
   contenedor.innerHTML = baseOptions + savedOptions;

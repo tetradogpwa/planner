@@ -10,7 +10,7 @@ import { initMonetization, needsConsent, hasAds } from './monetization.js';
 import { shortcuts }       from './ui/shortcuts/shortcuts-card.js';
 import { isEditable, focusHeading, bindRovingTabindex } from './ui/a11y.js';
 import { startMcpBridge }  from './mcp-bridge.js';
-import { leerEstadoMcp }   from './ui/mcp/mcp-state.js';
+import { leerEstadoMcp, PUERTO_POR_DEFECTO } from './ui/mcp/mcp-state.js';
 import './api.js';   // monta window.PlannerApi
 
 // ── Términos de uso ───────────────────────────────────────
@@ -381,7 +381,7 @@ if (window.__TAURI__?.core?.invoke && !/android/i.test(navigator.userAgent)) {
   try {
     const saved = leerEstadoMcp();
     if (saved.enabled) {
-      const port  = Number(saved.port) || 41237;
+      const port  = Number(saved.port) || PUERTO_POR_DEFECTO;
       const token = await window.__TAURI__.core.invoke('mcp_token');
       await window.__TAURI__.core.invoke('mcp_start', { port, token });
     }

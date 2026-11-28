@@ -9,6 +9,12 @@
 
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// tests/unit/ → tests/ → raíz del repo.
+const RAIZ = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 // ── Stubs de navegador ──────────────────────────────────────────────────
 
@@ -779,4 +785,36 @@ test('applyPreferences: un tema que no existe sigue al sistema', () => {
   mediaQuery.matches = true;
   applyPreferences(prefsDePrueba({ theme: 'fantasma' }));
   assert.equal(raiz.dataset.theme, 'dark');
+});
+
+// ── El prefijo de los temas guardados ────────────────────────────────────
+//
+// El prefijo ('saved:') está escrito en UN solo sitio: SAVED_PREFIX, en
+// preferences.js. Aquí se vigila que ningún otro fichero del frontend lo
+// escriba por su cuenta: si dos sitios construyen el valor a mano, basta
+// con que uno se quede atrás para que un tema guardado deje de
+// reconocerse (el radio, el desplegable y el valor guardado dejarían de
+// cuadrar).
+
+/** Los ficheros del frontend: `ui/` (con sus carpetas) e `index.js`. */
+function ficherosFrontend() {
+  const lista = [join(RAIZ, 'index.js')];
+  const recorrer = directorio => {
+    for (const nombre of readdirSync(directorio)) {
+      const ruta = join(directorio, nombre);
+      if (statSync(ruta).isDirectory()) recorrer(ruta);
+      else lista.push(ruta);
+    }
+  };
+  recorrer(join(RAIZ, 'ui'));
+  return lista;
+}
+
+test('el prefijo de los temas guardados está escrito en un solo sitio', () => {
+  const donde = ficherosFrontend()
+    .filter(ruta => readFileSync(ruta, 'utf8').includes('saved:'))
+    .map(ruta => relative(RAIZ, ruta));
+
+  assert.deepEqual(donde, ['ui/settings/preferences.js'],
+    'el prefijo solo puede escribirse en ui/settings/preferences.js');
 });

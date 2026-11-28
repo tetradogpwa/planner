@@ -19,6 +19,7 @@ import {
   deleteSavedTheme,
   saveSavedThemes,
   BASES,
+  SAVED_PREFIX,
 } from './preferences.js';
 import { montarTarjeta } from '../base-card.js';
 import { mostrarAviso } from '../avisos.js';
@@ -76,8 +77,8 @@ export class SettingsCard {
     this.root.addEventListener('change', (e) => {
       if (e.target.name === 'theme') {
         const value = e.target.value;
-        if (value.startsWith('saved:')) {
-          const result = applySavedTheme(value.slice('saved:'.length));
+        if (value.startsWith(SAVED_PREFIX)) {
+          const result = applySavedTheme(value.slice(SAVED_PREFIX.length));
           if (!result) {
             const { custom } = getPreferences();
             setPreferences({ theme: 'custom', custom: { ...custom, savedId: null } });
@@ -154,8 +155,8 @@ export class SettingsCard {
   loadBase() {
     const value = this.$('#customBase').value;
     const { theme, custom } = getPreferences();
-    if (value.startsWith('saved:')) {
-      const themeId = value.slice('saved:'.length);
+    if (value.startsWith(SAVED_PREFIX)) {
+      const themeId = value.slice(SAVED_PREFIX.length);
       const themeEntry = getSavedThemes().find(t => t.id === themeId);
       if (themeEntry) {
         if (theme !== 'custom') {
@@ -285,7 +286,7 @@ export class SettingsCard {
     this.$('#savedThemesStatus').textContent = `Tema «${theme.name}» restaurado.`;
     // El aviso ya no está: el foco vuelve al tema restaurado.
     const radios = Array.from(this.root.querySelectorAll('input[name="theme"]'));
-    const radio  = radios.find(r => r.value === `saved:${theme.id}`);
+    const radio  = radios.find(r => r.value === SAVED_PREFIX + theme.id);
     if (radio) radio.focus();
     else this.$('#customEditToggle')?.focus();
   }
@@ -316,7 +317,7 @@ export class SettingsCard {
     const radios = this.root.querySelectorAll('input[name="theme"]');
     let targetValue = null;
     if (prefs.theme === 'custom' && prefs.custom.savedId) {
-      targetValue = `saved:${prefs.custom.savedId}`;
+      targetValue = SAVED_PREFIX + prefs.custom.savedId;
     } else if (prefs.theme !== 'custom') {
       targetValue = prefs.theme;
     }

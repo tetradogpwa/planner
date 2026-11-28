@@ -20,7 +20,7 @@
 // script del WebView puede leerlo del `localStorage` (T-033).
 // ────────────────────────────────────────────────────────────────────
 
-import { guardarEstadoMcp, leerEstadoMcp } from './mcp-state.js';
+import { guardarEstadoMcp, leerEstadoMcp, PUERTO_POR_DEFECTO } from './mcp-state.js';
 import { montarTarjeta } from '../base-card.js';
 
 export class McpCard {
@@ -55,9 +55,11 @@ export class McpCard {
     }
 
     // Lee el estado guardado (y migra el formato viejo, que traía el
-    // token en claro: ese token se ignora y se borra).
+    // token en claro: ese token se ignora y se borra). El puerto llega
+    // ya normalizado: si no hay estado guardado, `leerEstadoMcp` devuelve
+    // el puerto por defecto (PUERTO_POR_DEFECTO), que es su único sitio.
     const saved = this.#readMcpState();
-    this.$('#mcpPort').value  = saved.port ?? 41237;
+    this.$('#mcpPort').value  = saved.port;
     this.$('#mcpEnabled').checked = !!saved.enabled;
 
     this.$('#mcpEnabled').addEventListener('change', () => this.#applyMcp());
@@ -162,7 +164,7 @@ export class McpCard {
   async #applyMcp() {
     const s = this.#readMcpState();
     s.enabled = this.$('#mcpEnabled').checked;
-    s.port    = Number(this.$('#mcpPort').value) || 41237;
+    s.port    = Number(this.$('#mcpPort').value) || PUERTO_POR_DEFECTO;
     this.#writeMcpState(s);
     this.#updateMcpUi();
 
@@ -193,7 +195,7 @@ export class McpCard {
   #updateMcpUi() {
     const enabled = this.$('#mcpEnabled').checked;
     this.$('#mcpConfig').hidden = !enabled;
-    const port  = Number(this.$('#mcpPort').value) || 41237;
+    const port  = Number(this.$('#mcpPort').value) || PUERTO_POR_DEFECTO;
     const token = this.$('#mcpToken').value;
     this.$('#mcpCmd').value =
       `claude mcp add --transport http planner http://127.0.0.1:${port}/mcp ` +
